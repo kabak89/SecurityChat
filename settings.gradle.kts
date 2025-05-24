@@ -16,4 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "SecurityChat"
 include(":androidApp")
+include(":desktopApp")
 include(":shared")

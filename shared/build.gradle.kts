@@ -27,6 +27,8 @@ kotlin {
         }
     }
 
+    jvm("desktop")
+
     sourceSets {
         commonMain.dependencies {
             //put your multiplatform dependencies here
