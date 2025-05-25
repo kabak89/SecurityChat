@@ -1,3 +1,4 @@
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -26,7 +27,9 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = "shared"
-            isStatic = true
+//            isStatic = true
+            export("com.arkivanov.decompose:decompose:3.3.0")
+            export("com.arkivanov.essenty:lifecycle:2.5.0")
         }
     }
 
