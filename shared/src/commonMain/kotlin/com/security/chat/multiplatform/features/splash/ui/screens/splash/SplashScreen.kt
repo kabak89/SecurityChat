@@ -16,7 +16,10 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SplashScreen(
     component: SplashComponent,
 ) {
-    val vm: SplashViewModel = koinViewModel(viewModelStoreOwner = component)
+    val vm: SplashViewModel = koinViewModel(
+        viewModelStoreOwner = component,
+        scope = component.getDiScope(),
+    )
 
     SplashContent(
         modifier = Modifier

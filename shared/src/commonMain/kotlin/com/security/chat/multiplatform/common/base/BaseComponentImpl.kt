@@ -13,11 +13,11 @@ abstract class BaseComponentImpl(
 
     init {
         lifecycle.doOnCreate {
-            println("ewqeqweqw BaseComponentImpl doOnCreate")
+            println("ewqeqweqw ${this::class.simpleName} doOnCreate")
         }
 
         lifecycle.doOnDestroy {
-            println("ewqeqweqw BaseComponentImpl doOnDestroy")
+            println("ewqeqweqw ${this::class.simpleName} doOnDestroy")
             viewModelStore.clear()
         }
     }
