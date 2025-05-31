@@ -1,18 +1,20 @@
 package com.security.chat.multiplatform.features.authorize.component
 
 import com.arkivanov.decompose.ComponentContext
+import com.security.chat.multiplatform.common.base.BaseComponent
+import com.security.chat.multiplatform.common.base.BaseComponentImpl
 
-interface LoginComponent {
+interface LoginComponent : BaseComponent {
     fun onSignInClicked()
 }
 
-class DefaultLoginComponent(
+class LoginComponentImpl(
+    private val goToSignIn: () -> Unit,
     componentContext: ComponentContext,
-    private val gotToSignIn: () -> Unit,
-) : LoginComponent, ComponentContext by componentContext {
+) : LoginComponent, BaseComponentImpl(componentContext = componentContext) {
 
     override fun onSignInClicked() {
-        gotToSignIn()
+        goToSignIn()
     }
 
 }

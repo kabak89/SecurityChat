@@ -10,20 +10,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SplashScreen(
     component: SplashComponent,
 ) {
-    Column(
+    val vm: SplashViewModel = koinViewModel(viewModelStoreOwner = component)
+
+    SplashContent(
         modifier = Modifier
+            .fillMaxSize(),
+        onAuthorizeClicked = component::onAuthorizeClicked,
+    )
+}
+
+@Composable
+private fun SplashContent(
+    modifier: Modifier = Modifier,
+    onAuthorizeClicked: () -> Unit,
+) {
+    Column(
+        modifier = modifier
             .background(Color.White)
             .fillMaxSize()
             .statusBarsPadding(),
     ) {
         Text("SplashScreen")
         Button(
-            onClick = { component.onAuthorizeClicked() },
+            onClick = onAuthorizeClicked,
             content = {
                 Text("go to auth")
             },

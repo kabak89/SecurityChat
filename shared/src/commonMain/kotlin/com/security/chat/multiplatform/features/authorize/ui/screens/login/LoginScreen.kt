@@ -10,20 +10,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.security.chat.multiplatform.features.authorize.component.LoginComponent
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LoginScreen(
     component: LoginComponent,
 ) {
-    Column(
+    val vm: LoginViewModel = koinViewModel(viewModelStoreOwner = component)
+
+    LoginContent(
         modifier = Modifier
+            .fillMaxSize(),
+        onSignInClicked = component::onSignInClicked,
+    )
+}
+
+@Composable
+private fun LoginContent(
+    modifier: Modifier = Modifier,
+    onSignInClicked: () -> Unit,
+) {
+    Column(
+        modifier = modifier
             .background(Color.White)
             .fillMaxSize()
             .statusBarsPadding(),
     ) {
         Text("LoginScreen")
         Button(
-            onClick = { component.onSignInClicked() },
+            onClick = onSignInClicked,
             content = {
                 Text("go to auth")
             },

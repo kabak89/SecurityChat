@@ -58,9 +58,9 @@ class DefaultAuthorizeComponent(
     ): AuthorizeComponent.Child =
         when (params) {
             is Params.LoginParams -> AuthorizeComponent.Child.Login(
-                component = DefaultLoginComponent(
+                component = LoginComponentImpl(
                     componentContext = componentContext,
-                    gotToSignIn = {
+                    goToSignIn = {
                         navigation.push(Params.SignInParams(itemId = 1))
                     },
                 ),

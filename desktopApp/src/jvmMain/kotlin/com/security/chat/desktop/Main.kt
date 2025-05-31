@@ -6,7 +6,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-import com.security.chat.multiplatform.DefaultRootComponent
+import com.security.chat.multiplatform.RootComponentImpl
 import com.security.chat.multiplatform.RootContent
 import javax.swing.SwingUtilities
 
@@ -14,7 +14,7 @@ fun main() {
     val lifecycle = LifecycleRegistry()
 
     val root = runOnUiThread {
-        DefaultRootComponent(
+        RootComponentImpl(
             componentContext = DefaultComponentContext(
                 lifecycle = lifecycle,
             ),

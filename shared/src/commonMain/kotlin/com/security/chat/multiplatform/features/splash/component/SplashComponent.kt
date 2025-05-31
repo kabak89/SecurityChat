@@ -1,23 +1,20 @@
 package com.security.chat.multiplatform.features.splash.component
 
 import com.arkivanov.decompose.ComponentContext
+import com.security.chat.multiplatform.common.base.BaseComponent
+import com.security.chat.multiplatform.common.base.BaseComponentImpl
 
-interface SplashComponent {
-    fun onItemClicked(id: Long)
+interface SplashComponent : BaseComponent {
     fun onAuthorizeClicked()
 }
 
-class DefaultSplashComponent(
-    private val onItemSelected: (id: Long) -> Unit,
+class SplashComponentImpl(
     private val goToAuthorize: () -> Unit,
     componentContext: ComponentContext,
-) : SplashComponent, ComponentContext by componentContext {
-
-    override fun onItemClicked(id: Long) {
-        onItemSelected(id)
-    }
+) : SplashComponent, BaseComponentImpl(componentContext = componentContext) {
 
     override fun onAuthorizeClicked() {
         goToAuthorize()
     }
+
 }

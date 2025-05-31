@@ -16,7 +16,7 @@ fun rootViewController(): UIViewController {
         },
         content = {
             val rootComponent = remember {
-                DefaultRootComponent(
+                RootComponentImpl(
                     componentContext = DefaultComponentContext(
                         lifecycle = ApplicationLifecycle(),
                     ),

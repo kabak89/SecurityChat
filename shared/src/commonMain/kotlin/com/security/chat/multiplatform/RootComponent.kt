@@ -13,13 +13,17 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.DefaultAuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
-import com.security.chat.multiplatform.features.splash.component.DefaultSplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
+import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
 import kotlinx.serialization.Serializable
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 
 interface RootComponent : BackHandlerOwner {
     val childStack: Value<ChildStack<*, Child>>
@@ -35,11 +39,25 @@ interface RootComponent : BackHandlerOwner {
     }
 }
 
-class DefaultRootComponent(
+class RootComponentImpl(
     componentContext: ComponentContext,
 ) : RootComponent, ComponentContext by componentContext {
 
-    private val navigation = StackNavigation<Params>()
+    init {
+        lifecycle.doOnCreate {
+            println("ewqeqweqw RootComponentImpl doOnCreate")
+            startKoin {
+                modules(diModules)
+            }
+        }
+
+        lifecycle.doOnDestroy {
+            println("ewqeqweqw RootComponentImpl doOnDestroy")
+            stopKoin()
+        }
+    }
+
+    private val navigation: StackNavigation<Params> = StackNavigation()
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> =
         childStack(
@@ -47,7 +65,12 @@ class DefaultRootComponent(
             serializer = Params.serializer(),
             initialConfiguration = Params.Splash,
             handleBackButton = true,
-            childFactory = ::createChild,
+            childFactory = { params, componentContext ->
+                createChild(
+                    params = params,
+                    componentContext = componentContext,
+                )
+            },
         )
 
     override fun onBackClicked() {
@@ -58,34 +81,32 @@ class DefaultRootComponent(
     private fun createChild(
         params: Params,
         componentContext: ComponentContext,
-    ): RootComponent.Child =
-        when (params) {
+    ): RootComponent.Child {
+        return when (params) {
             is Params.Splash -> {
                 RootComponent.Child.Splash(
-                    component = itemList(componentContext),
+                    component = createSplashComponent(componentContext = componentContext),
                 )
             }
 
             is Params.Authorize -> {
                 RootComponent.Child.Authorize(
-                    itemDetails(
-                        componentContext = componentContext,
-                    ),
+                    component = createAuthorizeComponent(componentContext = componentContext),
                 )
             }
         }
+    }
 
-    private fun itemList(
+    private fun createSplashComponent(
         componentContext: ComponentContext,
     ): SplashComponent {
-        return DefaultSplashComponent(
-            componentContext = componentContext,
-            onItemSelected = { navigation.push(Params.Authorize) },
+        return SplashComponentImpl(
             goToAuthorize = { navigation.push(Params.Authorize) },
+            componentContext = componentContext,
         )
     }
 
-    private fun itemDetails(
+    private fun createAuthorizeComponent(
         componentContext: ComponentContext,
     ): AuthorizeComponent {
         return DefaultAuthorizeComponent(
