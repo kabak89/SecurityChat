@@ -1,10 +1,13 @@
 package com.security.chat.multiplatform
 
+import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
 import com.security.chat.multiplatform.features.splash.domain.di.splashDomainModule
 import com.security.chat.multiplatform.features.splash.ui.di.splashUiModule
 
 val diModules = listOf(
+    coreThreadingModule,
+
     authorizeUiModule,
 
     splashDomainModule,

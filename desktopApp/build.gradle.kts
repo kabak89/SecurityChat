@@ -13,6 +13,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
 
             implementation(libs.decompose.extensions.compose)
+
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }

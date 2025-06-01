@@ -47,10 +47,15 @@ kotlin {
             implementation(compose.material3)
 
             implementation(libs.lifecycle.viewmodel.compose)
+            implementation(libs.lifecycle.runtime.compose)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.composeVM)
+
+            implementation(libs.kotlinx.coroutines.core)
+
+            implementation(libs.kode.remo)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -11,7 +11,12 @@ interface LoginComponent : BaseComponent {
 class LoginComponentImpl(
     private val goToSignIn: () -> Unit,
     componentContext: ComponentContext,
-) : LoginComponent, BaseComponentImpl(componentContext = componentContext) {
+) : LoginComponent,
+    BaseComponentImpl(
+        componentContext = componentContext,
+        //TODO
+        scopeId = "",
+    ) {
 
     override fun onSignInClicked() {
         goToSignIn()

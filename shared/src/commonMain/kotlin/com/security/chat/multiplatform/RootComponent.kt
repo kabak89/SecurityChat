@@ -10,7 +10,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.arkivanov.essenty.lifecycle.doOnCreate
@@ -101,7 +101,7 @@ class RootComponentImpl(
         componentContext: ComponentContext,
     ): SplashComponent {
         return SplashComponentImpl(
-            goToAuthorize = { navigation.push(Params.Authorize) },
+            goToAuthorize = { navigation.replaceAll(Params.Authorize) },
             componentContext = componentContext,
         )
     }

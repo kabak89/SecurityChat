@@ -1,14 +1,44 @@
 package com.security.chat.multiplatform.features.splash.ui.screens.splash
 
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.security.chat.multiplatform.common.core.domain.asLceState
+import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
+import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.features.splash.domain.SplashModel
+import com.security.chat.multiplatform.features.splash.domain.entity.UserState
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class SplashViewModel(
     private val splashModel: SplashModel,
-) : ViewModel() {
+) : BaseViewModel<SplashState, SplashEvent>() {
 
-    init {
-        println("ewqeqweqw SplashViewModel init")
+    override fun onPostStart() {
+        super.onPostStart()
+
+        splashModel.fetchUserState.jobFlow.asLceState()
+            .onEach { state ->
+                updateState { it.copy(isLoading = state.isLoading) }
+            }
+            .launchIn(viewModelScope)
+
+        splashModel.getUserStateFlow()
+            .onEach { state ->
+                when (state) {
+                    UserState.Unknown -> Unit
+                    UserState.Authorized -> TODO()
+                    UserState.NotAuthorized -> sendEvent(SplashEvent.UserDetermineAsNotAuthorized)
+                }
+            }
+            .launchIn(viewModelScope)
+
+        splashModel.fetchUserState.startOnSubscribe()
+    }
+
+    override fun createInitialState(): SplashState {
+        return SplashState(
+            isLoading = false,
+        )
     }
 
 }

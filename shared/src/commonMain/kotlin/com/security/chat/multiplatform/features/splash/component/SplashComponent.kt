@@ -4,7 +4,6 @@ import com.arkivanov.decompose.ComponentContext
 import com.security.chat.multiplatform.common.base.BaseComponent
 import com.security.chat.multiplatform.common.base.BaseComponentImpl
 import com.security.chat.multiplatform.common.base.DiScopeHolder
-import com.security.chat.multiplatform.common.base.DiScopeHolderImpl
 
 interface SplashComponent : BaseComponent, DiScopeHolder {
     fun onAuthorizeClicked()
@@ -14,8 +13,7 @@ class SplashComponentImpl(
     private val goToAuthorize: () -> Unit,
     componentContext: ComponentContext,
 ) : SplashComponent,
-    BaseComponentImpl(componentContext = componentContext),
-    DiScopeHolder by DiScopeHolderImpl(
+    BaseComponentImpl(
         componentContext = componentContext,
         scopeId = SCOPE_ID_SPLASH,
     ) {
