@@ -2,7 +2,6 @@ package com.security.chat.multiplatform.common.base
 
 import androidx.lifecycle.ViewModelStore
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -19,16 +18,14 @@ abstract class BaseComponentImpl(
     private var diScope: Scope? = null
 
     init {
-        lifecycle.doOnCreate {
-            println("component ${this::class.simpleName} created")
+        println("component ${this::class.simpleName} created")
 
-            diScope = getKoin().createScope(
-                scopeId = scopeId,
-                qualifier = named(scopeId),
-            )
+        diScope = getKoin().createScope(
+            scopeId = scopeId,
+            qualifier = named(scopeId),
+        )
 
-            println("scope $scopeId created")
-        }
+        println("scope $scopeId created")
 
         lifecycle.doOnDestroy {
             println("component ${this::class.simpleName} destroyed")

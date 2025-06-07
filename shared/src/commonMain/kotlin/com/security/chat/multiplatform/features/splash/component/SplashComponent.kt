@@ -24,4 +24,4 @@ class SplashComponentImpl(
 
 }
 
-internal const val SCOPE_ID_SPLASH = "splash"
+const val SCOPE_ID_SPLASH = "splash"

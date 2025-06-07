@@ -13,7 +13,6 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
-import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.DefaultAuthorizeComponent
@@ -44,12 +43,12 @@ class RootComponentImpl(
 ) : RootComponent, ComponentContext by componentContext {
 
     init {
-        lifecycle.doOnCreate {
-            println("ewqeqweqw RootComponentImpl doOnCreate")
-            startKoin {
-                modules(diModules)
-            }
+        println("ewqeqweqw RootComponentImpl doOnCreate")
+        startKoin {
+            modules(diModules)
         }
+//        lifecycle.doOnCreate {
+//        }
 
         lifecycle.doOnDestroy {
             println("ewqeqweqw RootComponentImpl doOnDestroy")

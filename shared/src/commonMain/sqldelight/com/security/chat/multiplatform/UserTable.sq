@@ -1,0 +1,10 @@
+CREATE TABLE UserTable (
+    id TEXT PRIMARY KEY NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO UserTable
+VALUES ?;
+
+getAll:
+SELECT * FROM UserTable;

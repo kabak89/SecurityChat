@@ -1,4 +1,3 @@
-
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,6 +6,18 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.sqldelight)
+}
+
+sqldelight {
+    databases {
+        create("ChatDb") {
+            packageName = "com.security.chat.multiplatform"
+            generateAsync = true
+            dialect(libs.sqlite.dialect)
+        }
+    }
+    linkSqlite = false
 }
 
 kotlin {
@@ -27,13 +38,13 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = "shared"
-//            isStatic = true
+            isStatic = true
             export("com.arkivanov.decompose:decompose:3.3.0")
             export("com.arkivanov.essenty:lifecycle:2.5.0")
         }
     }
 
-    jvm("desktop")
+    jvm()
 
     sourceSets {
         commonMain.dependencies {
@@ -56,6 +67,25 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
 
             implementation(libs.kode.remo)
+
+            implementation(libs.sqldelight.coroutines.extensions)
+
+            implementation(libs.multiplatform.settings)
+        }
+        androidMain.dependencies {
+            implementation(libs.sqldelight.driver.android)
+            implementation(libs.android.sqlcipher)
+            implementation(libs.sqlite.android)
+            implementation(libs.androidx.security)
+            implementation(libs.koin.android)
+
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.driver.native)
+            implementation(libs.sqliter.driver)
+        }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.driver.sqlite)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

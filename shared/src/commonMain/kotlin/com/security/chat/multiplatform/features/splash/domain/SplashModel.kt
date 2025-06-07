@@ -4,15 +4,14 @@ import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.splash.domain.entity.UserState
+import com.security.chat.multiplatform.features.splash.domain.repo.SplashRepo
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
-import kotlin.time.Duration.Companion.seconds
 
 interface SplashModel : ScopedModel {
     val fetchUserState: Task0<Unit>
@@ -21,6 +20,7 @@ interface SplashModel : ScopedModel {
 }
 
 class SplashModelImpl(
+    private val splashRepo: SplashRepo,
     dispatcherProvider: DispatcherProviderInterface,
     coroutineScope: CoroutineScope,
 ) : SplashModel,
@@ -33,9 +33,13 @@ class SplashModelImpl(
 
     override val fetchUserState: Task0<Unit> =
         task { ->
-            //TODO
-            delay(2.seconds)
-            stateFlow.update { it.copy(userState = UserState.NotAuthorized) }
+            val isUserAuthorized = splashRepo.isUserAuthorized()
+            val userState = if (isUserAuthorized) {
+                UserState.Authorized
+            } else {
+                UserState.NotAuthorized
+            }
+            stateFlow.update { it.copy(userState = userState) }
         }
 
     override fun getUserStateFlow(): Flow<UserState> {
