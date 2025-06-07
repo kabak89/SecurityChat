@@ -2,24 +2,111 @@ package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.features.authorize.component.SignInComponent
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SignInScreen(
     component: SignInComponent,
 ) {
-    Column(
+    try {
+        if (component.getDiScope().closed) return
+    } catch (e: Exception) {
+        println(e)
+        return
+    }
+
+    val vm: SignInViewModel = koinViewModel(
+        viewModelStoreOwner = component,
+        scope = component.getDiScope(),
+    )
+
+    val state = vm.viewState.collectAsStateWithLifecycle().value
+
+    SignInContent(
         modifier = Modifier
+            .fillMaxSize(),
+        state = state,
+        onUsernameTextChanged = vm::onUsernameTextChanged,
+        onPasswordTextChanged = vm::onPasswordTextChanged,
+        onSignInClicked = vm::onSignInClicked,
+    )
+}
+
+@Composable
+private fun SignInContent(
+    modifier: Modifier = Modifier,
+    state: SignInState,
+    onUsernameTextChanged: (String) -> Unit,
+    onPasswordTextChanged: (String) -> Unit,
+    onSignInClicked: () -> Unit,
+) {
+    Column(
+        modifier = modifier
             .background(Color.White)
             .fillMaxSize()
             .statusBarsPadding(),
     ) {
-        Text("SignInScreen")
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .semantics { contentType = ContentType.Username },
+            value = state.username,
+            onValueChange = onUsernameTextChanged,
+            placeholder = {
+                Text("Username")
+            },
+            enabled = !state.isLoading,
+        )
+        Spacer(Modifier.height(16.dp))
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .semantics { contentType = ContentType.Password },
+            value = state.password,
+            onValueChange = onPasswordTextChanged,
+            placeholder = {
+                Text("Password")
+            },
+            enabled = !state.isLoading,
+        )
+        Spacer(Modifier.height(16.dp))
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterHorizontally),
+            )
+        } else {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClick = onSignInClicked,
+                content = {
+                    Text("Sign In")
+                },
+            )
+        }
     }
 }
