@@ -21,7 +21,7 @@ interface AuthorizeComponent : BackHandlerOwner {
     //child scopes
     sealed interface Child {
 
-        class Login(val component: LoginComponent) : Child
+        class SignUp(val component: LoginComponent) : Child
         class SignIn(val component: SignInComponent) : Child
 
     }
@@ -38,7 +38,7 @@ class DefaultAuthorizeComponent(
         childStack(
             source = navigation,
             serializer = Params.serializer(),
-            initialConfiguration = Params.LoginParams,
+            initialConfiguration = Params.SignInParams,
             handleBackButton = true,
             childFactory = ::createChild,
         )
@@ -57,18 +57,21 @@ class DefaultAuthorizeComponent(
         componentContext: ComponentContext,
     ): AuthorizeComponent.Child =
         when (params) {
-            is Params.LoginParams -> AuthorizeComponent.Child.Login(
-                component = LoginComponentImpl(
+            is Params.SignInParams -> AuthorizeComponent.Child.SignIn(
+                component = DefaultSignInComponent(
                     componentContext = componentContext,
-                    goToSignIn = {
-                        navigation.push(Params.SignInParams(itemId = 1))
+                    onSignUp = {
+                        navigation.push(Params.SignUpParams(itemId = 1))
                     },
                 ),
             )
 
-            is Params.SignInParams -> AuthorizeComponent.Child.SignIn(
-                component = DefaultSignInComponent(
+            is Params.SignUpParams -> AuthorizeComponent.Child.SignUp(
+                component = LoginComponentImpl(
                     componentContext = componentContext,
+                    goToSignIn = {
+                        navigation.pop()
+                    },
                 ),
             )
         }
@@ -77,10 +80,10 @@ class DefaultAuthorizeComponent(
     @Serializable
     private sealed class Params {
         @Serializable
-        data object LoginParams : Params()
+        data object SignInParams : Params()
 
         @Serializable
-        data class SignInParams(val itemId: Long) : Params()
+        data class SignUpParams(val itemId: Long) : Params()
     }
 
 }

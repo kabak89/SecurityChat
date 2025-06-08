@@ -13,12 +13,12 @@ import com.security.chat.multiplatform.features.authorize.component.LoginCompone
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun LoginScreen(
+fun SignUpScreen(
     component: LoginComponent,
 ) {
-    val vm: LoginViewModel = koinViewModel(viewModelStoreOwner = component)
+    val vm: SignUpViewModel = koinViewModel(viewModelStoreOwner = component)
 
-    LoginContent(
+    SignUpContent(
         modifier = Modifier
             .fillMaxSize(),
         onSignInClicked = component::onSignInClicked,
@@ -26,7 +26,7 @@ fun LoginScreen(
 }
 
 @Composable
-private fun LoginContent(
+private fun SignUpContent(
     modifier: Modifier = Modifier,
     onSignInClicked: () -> Unit,
 ) {

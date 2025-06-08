@@ -6,7 +6,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
-import com.security.chat.multiplatform.features.authorize.ui.screens.login.LoginScreen
+import com.security.chat.multiplatform.features.authorize.ui.screens.login.SignUpScreen
 import com.security.chat.multiplatform.features.authorize.ui.screens.signin.SignInScreen
 
 @Composable
@@ -20,7 +20,7 @@ fun AuthorizeScreen(component: AuthorizeComponent) {
         ),
     ) {
         when (val child = it.instance) {
-            is AuthorizeComponent.Child.Login -> LoginScreen(component = child.component)
+            is AuthorizeComponent.Child.SignUp -> SignUpScreen(component = child.component)
             is AuthorizeComponent.Child.SignIn -> SignInScreen(component = child.component)
         }
     }

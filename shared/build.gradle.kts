@@ -71,6 +71,12 @@ kotlin {
             implementation(libs.sqldelight.coroutines.extensions)
 
             implementation(libs.multiplatform.settings)
+
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.auth)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
@@ -78,14 +84,17 @@ kotlin {
             implementation(libs.sqlite.android)
             implementation(libs.androidx.security)
             implementation(libs.koin.android)
+            implementation(libs.ktor.client.okhttp)
 
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.driver.native)
             implementation(libs.sqliter.driver)
+            implementation(libs.ktor.client.darwin)
         }
         jvmMain.dependencies {
             implementation(libs.sqldelight.driver.sqlite)
+            implementation(libs.ktor.client.apache)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

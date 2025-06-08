@@ -1,6 +1,8 @@
 package com.security.chat.multiplatform
 
 import com.security.chat.multiplatform.common.core.db.di.coreDbModule
+import com.security.chat.multiplatform.common.core.network.di.coreNetworkModule
+import com.security.chat.multiplatform.common.core.network.di.networkEngineModule
 import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
 import com.security.chat.multiplatform.common.platform.di.platformModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
@@ -16,6 +18,8 @@ val diModules = listOf(
     coreDbModule,
     settingsModule,
     platformModule,
+    coreNetworkModule,
+    networkEngineModule,
 
     authorizeUiModule,
 

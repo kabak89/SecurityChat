@@ -1,7 +1,9 @@
 package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,6 +51,7 @@ fun SignInScreen(
         onUsernameTextChanged = vm::onUsernameTextChanged,
         onPasswordTextChanged = vm::onPasswordTextChanged,
         onSignInClicked = vm::onSignInClicked,
+        onSignUpClicked = component::onSignUpClicked,
     )
 }
 
@@ -59,6 +62,7 @@ private fun SignInContent(
     onUsernameTextChanged: (String) -> Unit,
     onPasswordTextChanged: (String) -> Unit,
     onSignInClicked: () -> Unit,
+    onSignUpClicked: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -66,6 +70,21 @@ private fun SignInContent(
             .fillMaxSize()
             .statusBarsPadding(),
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Button(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp),
+                onClick = onSignUpClicked,
+                content = {
+                    Text("Sign Up")
+                },
+            )
+        }
+        Spacer(Modifier.height(16.dp))
         TextField(
             modifier = Modifier
                 .fillMaxWidth()
