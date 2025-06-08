@@ -15,7 +15,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
-import com.security.chat.multiplatform.features.authorize.component.DefaultAuthorizeComponent
+import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
 import com.security.chat.multiplatform.features.main.component.DefaultMainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
@@ -47,15 +47,13 @@ class RootComponentImpl(
 ) : RootComponent, ComponentContext by componentContext {
 
     init {
-        println("ewqeqweqw RootComponentImpl doOnCreate")
+        println("RootComponentImpl doOnCreate")
         startKoin {
             modules(diModules)
         }
-//        lifecycle.doOnCreate {
-//        }
 
         lifecycle.doOnDestroy {
-            println("ewqeqweqw RootComponentImpl doOnDestroy")
+            println("RootComponentImpl doOnDestroy")
             stopKoin()
         }
     }
@@ -125,7 +123,7 @@ class RootComponentImpl(
     private fun createAuthorizeComponent(
         componentContext: ComponentContext,
     ): AuthorizeComponent {
-        return DefaultAuthorizeComponent(
+        return AuthorizeComponentImpl(
             componentContext = componentContext,
             onFinished = { navigation.replaceAll(Params.Main) },
         )

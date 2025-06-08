@@ -21,13 +21,13 @@ interface AuthorizeComponent : BackHandlerOwner {
     //child scopes
     sealed interface Child {
 
-        class SignUp(val component: LoginComponent) : Child
+        class SignUp(val component: SignUpComponent) : Child
         class SignIn(val component: SignInComponent) : Child
 
     }
 }
 
-class DefaultAuthorizeComponent(
+class AuthorizeComponentImpl(
     private val onFinished: () -> Unit,
     componentContext: ComponentContext,
 ) : AuthorizeComponent, ComponentContext by componentContext {
@@ -57,36 +57,42 @@ class DefaultAuthorizeComponent(
         componentContext: ComponentContext,
     ): AuthorizeComponent.Child =
         when (params) {
-            is Params.SignInParams -> AuthorizeComponent.Child.SignIn(
-                component = DefaultSignInComponent(
-                    componentContext = componentContext,
-                    onSignUp = {
-                        navigation.push(Params.SignUpParams(itemId = 1))
-                    },
-                    onAuthorized = {
-                        onFinished()
-                    },
-                ),
-            )
+            is Params.SignInParams -> {
+                AuthorizeComponent.Child.SignIn(
+                    component = SignInComponentImpl(
+                        componentContext = componentContext,
+                        onSignUp = {
+                            navigation.push(Params.SignUpParams)
+                        },
+                        onAuthorized = {
+                            onFinished()
+                        },
+                    ),
+                )
+            }
 
-            is Params.SignUpParams -> AuthorizeComponent.Child.SignUp(
-                component = LoginComponentImpl(
-                    componentContext = componentContext,
-                    goToSignIn = {
-                        navigation.pop()
-                    },
-                ),
-            )
+            is Params.SignUpParams -> {
+                AuthorizeComponent.Child.SignUp(
+                    component = SignUpComponentImpl(
+                        componentContext = componentContext,
+                        goToSignIn = {
+                            navigation.pop()
+                        },
+                    ),
+                )
+            }
         }
 
     //scope params
     @Serializable
     private sealed class Params {
+
         @Serializable
         data object SignInParams : Params()
 
         @Serializable
-        data class SignUpParams(val itemId: Long) : Params()
+        data object SignUpParams : Params()
+
     }
 
 }

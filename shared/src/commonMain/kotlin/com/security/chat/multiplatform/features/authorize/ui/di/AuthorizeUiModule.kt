@@ -5,12 +5,15 @@ import com.security.chat.multiplatform.features.authorize.ui.screens.signin.Sign
 import com.security.chat.multiplatform.features.authorize.ui.screens.signup.SignUpViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val authorizeUiModule: Module =
     module {
-        viewModelOf(::SignUpViewModel)
+        viewModel {
+            SignUpViewModel(
+
+            )
+        }
 
         viewModel {
             SignInViewModel(

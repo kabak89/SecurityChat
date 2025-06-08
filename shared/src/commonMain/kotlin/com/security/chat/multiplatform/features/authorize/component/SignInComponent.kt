@@ -12,7 +12,7 @@ interface SignInComponent : BaseComponent, DiScopeHolder {
 
 }
 
-class DefaultSignInComponent(
+class SignInComponentImpl(
     private val onSignUp: () -> Unit,
     private val onAuthorized: () -> Unit,
     componentContext: ComponentContext,

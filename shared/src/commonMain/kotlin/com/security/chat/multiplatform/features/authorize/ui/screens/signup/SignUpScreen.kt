@@ -9,12 +9,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.security.chat.multiplatform.features.authorize.component.LoginComponent
+import com.security.chat.multiplatform.features.authorize.component.SignUpComponent
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SignUpScreen(
-    component: LoginComponent,
+    component: SignUpComponent,
 ) {
     val vm: SignUpViewModel = koinViewModel(viewModelStoreOwner = component)
 

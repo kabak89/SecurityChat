@@ -4,14 +4,14 @@ import com.arkivanov.decompose.ComponentContext
 import com.security.chat.multiplatform.common.base.BaseComponent
 import com.security.chat.multiplatform.common.base.BaseComponentImpl
 
-interface LoginComponent : BaseComponent {
+interface SignUpComponent : BaseComponent {
     fun onSignInClicked()
 }
 
-class LoginComponentImpl(
+class SignUpComponentImpl(
     private val goToSignIn: () -> Unit,
     componentContext: ComponentContext,
-) : LoginComponent,
+) : SignUpComponent,
     BaseComponentImpl(
         componentContext = componentContext,
         //TODO
