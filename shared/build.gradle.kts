@@ -76,7 +76,8 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.auth)
+
+            implementation(libs.sha256)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

@@ -6,11 +6,13 @@ import com.security.chat.multiplatform.common.base.BaseComponentImpl
 import com.security.chat.multiplatform.common.base.DiScopeHolder
 
 interface SplashComponent : BaseComponent, DiScopeHolder {
-    fun onAuthorizeClicked()
+    fun onGoAuthorization()
+    fun onUserAuthorized()
 }
 
 class SplashComponentImpl(
     private val goToAuthorize: () -> Unit,
+    private val goAuthorizedZone: () -> Unit,
     componentContext: ComponentContext,
 ) : SplashComponent,
     BaseComponentImpl(
@@ -18,10 +20,13 @@ class SplashComponentImpl(
         scopeId = SCOPE_ID_SPLASH,
     ) {
 
-    override fun onAuthorizeClicked() {
+    override fun onGoAuthorization() {
         goToAuthorize()
     }
 
+    override fun onUserAuthorized() {
+        goAuthorizedZone()
+    }
 }
 
 const val SCOPE_ID_SPLASH = "SCOPE_ID_SPLASH"

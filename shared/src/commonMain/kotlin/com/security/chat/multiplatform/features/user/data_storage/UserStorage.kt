@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.common.settings.EncryptedSettings
 interface UserStorage {
 
     suspend fun isUserAuthorized(): Boolean
+    suspend fun saveUserId(userId: String)
 
 }
 
@@ -16,6 +17,12 @@ class UserStorageImpl(
         return encryptedSettings.getString(KEY_USER_ID) != null
     }
 
+    override suspend fun saveUserId(userId: String) {
+        encryptedSettings.putString(
+            key = KEY_USER_ID,
+            value = userId,
+        )
+    }
 }
 
 private const val KEY_USER_ID = "KEY_USER_ID"

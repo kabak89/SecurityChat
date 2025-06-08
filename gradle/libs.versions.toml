@@ -11,6 +11,7 @@ lifecycleCompose = "2.9.0"
 koin = "4.0.2"
 coroutines = "1.10.1"
 remo = "1.2.0"
+sha256Kt = "1.0"
 sqldelight = "2.1.0"
 androidSqlCipher = "4.9.0"
 sqliteAndroid = "3.45.0"
@@ -45,6 +46,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 
 kode-remo = { module = "ru.kode:remo", version.ref = "remo" }
 
+sha256 = { module = "com.asyncant.crypto:sha256-kt", version.ref = "sha256Kt" }
 sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }

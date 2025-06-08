@@ -9,7 +9,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val signInDomainModule: Module =
+val authorizeDomainModule: Module =
     module {
         scope(named(SCOPE_ID_SIGN_IN)) {
             scopedOf(::SignInModelImpl) bind SignInModel::class

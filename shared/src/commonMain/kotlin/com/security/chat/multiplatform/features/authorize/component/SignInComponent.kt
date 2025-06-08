@@ -8,11 +8,13 @@ import com.security.chat.multiplatform.common.base.DiScopeHolder
 interface SignInComponent : BaseComponent, DiScopeHolder {
 
     fun onSignUpClicked()
+    fun onAuthorized()
 
 }
 
 class DefaultSignInComponent(
     private val onSignUp: () -> Unit,
+    private val onAuthorized: () -> Unit,
     componentContext: ComponentContext,
 ) : SignInComponent,
     BaseComponentImpl(
@@ -22,6 +24,10 @@ class DefaultSignInComponent(
 
     override fun onSignUpClicked() {
         onSignUp()
+    }
+
+    override fun onAuthorized() {
+        onAuthorized.invoke()
     }
 
 }

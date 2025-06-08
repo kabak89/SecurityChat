@@ -6,8 +6,8 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
-import com.security.chat.multiplatform.features.authorize.ui.screens.login.SignUpScreen
 import com.security.chat.multiplatform.features.authorize.ui.screens.signin.SignInScreen
+import com.security.chat.multiplatform.features.authorize.ui.screens.signup.SignUpScreen
 
 @Composable
 fun AuthorizeScreen(component: AuthorizeComponent) {

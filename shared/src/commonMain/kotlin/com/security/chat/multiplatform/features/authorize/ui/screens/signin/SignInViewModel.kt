@@ -5,6 +5,8 @@ import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
+import com.security.chat.multiplatform.features.authorize.domain.entity.AuthResult
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -22,6 +24,24 @@ class SignInViewModel(
                         username = domainState.username,
                         password = domainState.password,
                     )
+                }
+            }
+            .launchIn(viewModelScope)
+
+        signInModel.getAuthResultFlow()
+            .filterNotNull()
+            .onEach { result ->
+                when (result) {
+                    AuthResult.Success -> sendEvent(SignInEvent.Authorized)
+                    AuthResult.UserNotExists -> {
+                        //TODO
+                        println("UserNotExists")
+                    }
+
+                    AuthResult.WrongPassword -> {
+                        //TODO
+                        println("WrongPassword")
+                    }
                 }
             }
             .launchIn(viewModelScope)

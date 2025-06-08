@@ -5,15 +5,14 @@ import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.authorize.domain.entity.AuthResult
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInStateInfo
+import com.security.chat.multiplatform.features.authorize.domain.repo.SignInRepo
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
-import kotlin.time.Duration.Companion.seconds
 
 interface SignInModel : ScopedModel {
 
@@ -27,6 +26,7 @@ interface SignInModel : ScopedModel {
 }
 
 class SignInModelImpl(
+    private val signInRepo: SignInRepo,
     dispatcherProvider: DispatcherProviderInterface,
     coroutineScope: CoroutineScope,
 ) : SignInModel,
@@ -39,7 +39,15 @@ class SignInModelImpl(
 
     override val authorize: Task0<Unit> =
         task { ->
-            delay(2.seconds)
+            val username = stateFlow.value.username
+            val password = stateFlow.value.password
+
+            val result = signInRepo.authorize(
+                username = username,
+                password = password,
+            )
+
+            stateFlow.update { it.copy(authResult = result) }
         }
 
     override fun setUsername(userName: String) {

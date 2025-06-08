@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.authorize.ui.screens.login
+package com.security.chat.multiplatform.features.authorize.ui.screens.signup
 
 import androidx.lifecycle.ViewModel
 

@@ -8,14 +8,14 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-class InternalNetworkManager(
+class NetworkManager(
     @PublishedApi
     internal val httpClient: HttpClient,
     @PublishedApi
     internal val baseUrl: String,
 ) {
 
-    public suspend inline fun <reified Response> runGet(
+    suspend inline fun <reified Response> runGet(
         relativePath: String,
         request: Map<String, String> = emptyMap(),
     ): Response {
@@ -29,7 +29,7 @@ class InternalNetworkManager(
             .body()
     }
 
-    public suspend inline fun <reified Params, reified Response> runPost(
+    suspend inline fun <reified Params, reified Response> runPost(
         relativePath: String,
         request: Params,
     ): Response {

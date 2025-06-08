@@ -41,7 +41,8 @@ fun SplashScreen(
             .fillMaxSize(),
         state = state,
         events = vm.viewEvent,
-        onUserDetermineAsNotAuthorized = component::onAuthorizeClicked,
+        onUserNotAuthorized = component::onGoAuthorization,
+        onUserAuthorized = component::onUserAuthorized,
     )
 }
 
@@ -50,15 +51,15 @@ private fun SplashContent(
     modifier: Modifier = Modifier,
     state: SplashState,
     events: Flow<SplashEvent>,
-    onUserDetermineAsNotAuthorized: () -> Unit,
+    onUserNotAuthorized: () -> Unit,
+    onUserAuthorized: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                SplashEvent.UserDetermineAsNotAuthorized -> {
-                    onUserDetermineAsNotAuthorized()
-                }
+                SplashEvent.UserNotAuthorized -> onUserNotAuthorized()
+                SplashEvent.UserAuthorized -> onUserAuthorized()
             }
         },
     )

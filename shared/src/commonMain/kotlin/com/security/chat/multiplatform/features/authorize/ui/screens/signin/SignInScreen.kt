@@ -23,7 +23,9 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.features.authorize.component.SignInComponent
+import kotlinx.coroutines.flow.Flow
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -48,10 +50,12 @@ fun SignInScreen(
         modifier = Modifier
             .fillMaxSize(),
         state = state,
+        events = vm.viewEvent,
         onUsernameTextChanged = vm::onUsernameTextChanged,
         onPasswordTextChanged = vm::onPasswordTextChanged,
         onSignInClicked = vm::onSignInClicked,
         onSignUpClicked = component::onSignUpClicked,
+        onAuthorized = component::onAuthorized,
     )
 }
 
@@ -59,11 +63,23 @@ fun SignInScreen(
 private fun SignInContent(
     modifier: Modifier = Modifier,
     state: SignInState,
+    events: Flow<SignInEvent>,
     onUsernameTextChanged: (String) -> Unit,
     onPasswordTextChanged: (String) -> Unit,
     onSignInClicked: () -> Unit,
     onSignUpClicked: () -> Unit,
+    onAuthorized: () -> Unit,
 ) {
+    SingleEventEffect(
+        sideEffectFlow = events,
+        collector = { event ->
+            when (event) {
+                SignInEvent.Authorized -> {
+                    onAuthorized()
+                }
+            }
+        },
+    )
     Column(
         modifier = modifier
             .background(Color.White)

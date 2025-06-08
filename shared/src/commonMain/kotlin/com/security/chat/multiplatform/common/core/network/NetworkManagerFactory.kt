@@ -2,7 +2,7 @@ package com.security.chat.multiplatform.common.core.network
 
 interface NetworkManagerFactory {
 
-    fun build(baseUrl: String): InternalNetworkManager
+    fun build(baseUrl: String): NetworkManager
 
 }
 
@@ -10,8 +10,8 @@ internal class NetworkManagerFactoryImpl(
     private val httpClientFactory: HttpClientFactory,
 ) : NetworkManagerFactory {
 
-    override fun build(baseUrl: String): InternalNetworkManager {
-        return InternalNetworkManager(
+    override fun build(baseUrl: String): NetworkManager {
+        return NetworkManager(
             httpClient = httpClientFactory.build(),
             baseUrl = baseUrl,
         )

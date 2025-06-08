@@ -17,6 +17,9 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.DefaultAuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
+import com.security.chat.multiplatform.features.main.component.DefaultMainComponent
+import com.security.chat.multiplatform.features.main.component.MainComponent
+import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
@@ -34,6 +37,7 @@ interface RootComponent : BackHandlerOwner {
 
         class Splash(val component: SplashComponent) : Child
         class Authorize(val component: AuthorizeComponent) : Child
+        class Main(val component: MainComponent) : Child
 
     }
 }
@@ -93,15 +97,28 @@ class RootComponentImpl(
                     component = createAuthorizeComponent(componentContext = componentContext),
                 )
             }
+
+            Params.Main -> {
+                RootComponent.Child.Main(
+                    component = createMainComponent(componentContext = componentContext),
+                )
+            }
         }
+    }
+
+    private fun createMainComponent(componentContext: ComponentContext): MainComponent {
+        return DefaultMainComponent(
+            componentContext = componentContext,
+        )
     }
 
     private fun createSplashComponent(
         componentContext: ComponentContext,
     ): SplashComponent {
         return SplashComponentImpl(
-            goToAuthorize = { navigation.replaceAll(Params.Authorize) },
             componentContext = componentContext,
+            goToAuthorize = { navigation.replaceAll(Params.Authorize) },
+            goAuthorizedZone = { navigation.replaceAll(Params.Main) },
         )
     }
 
@@ -110,7 +127,7 @@ class RootComponentImpl(
     ): AuthorizeComponent {
         return DefaultAuthorizeComponent(
             componentContext = componentContext,
-            onFinished = { navigation.pop() },
+            onFinished = { navigation.replaceAll(Params.Main) },
         )
     }
 
@@ -123,6 +140,9 @@ class RootComponentImpl(
 
         @Serializable
         data object Authorize : Params
+
+        @Serializable
+        data object Main : Params
 
     }
 
@@ -143,6 +163,7 @@ fun RootContent(rootComponent: RootComponent) {
         when (val child = it.instance) {
             is RootComponent.Child.Splash -> SplashScreen(component = child.component)
             is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
+            is RootComponent.Child.Main -> MainScreen(component = child.component)
         }
     }
 }

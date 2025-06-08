@@ -63,6 +63,9 @@ class DefaultAuthorizeComponent(
                     onSignUp = {
                         navigation.push(Params.SignUpParams(itemId = 1))
                     },
+                    onAuthorized = {
+                        onFinished()
+                    },
                 ),
             )
 

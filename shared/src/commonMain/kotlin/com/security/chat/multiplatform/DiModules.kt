@@ -6,7 +6,8 @@ import com.security.chat.multiplatform.common.core.network.di.networkEngineModul
 import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
 import com.security.chat.multiplatform.common.platform.di.platformModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
-import com.security.chat.multiplatform.features.authorize.domain.di.signInDomainModule
+import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataModule
+import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
 import com.security.chat.multiplatform.features.splash.data.di.splashDataModule
 import com.security.chat.multiplatform.features.splash.domain.di.splashDomainModule
@@ -22,8 +23,8 @@ val diModules = listOf(
     networkEngineModule,
 
     authorizeUiModule,
-
-    signInDomainModule,
+    authorizeDomainModule,
+    authorizeDataModule,
 
     splashDomainModule,
     splashUiModule,

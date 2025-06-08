@@ -26,8 +26,8 @@ class SplashViewModel(
             .onEach { state ->
                 when (state) {
                     UserState.Unknown -> Unit
-                    UserState.Authorized -> TODO()
-                    UserState.NotAuthorized -> sendEvent(SplashEvent.UserDetermineAsNotAuthorized)
+                    UserState.Authorized -> sendEvent(SplashEvent.UserAuthorized)
+                    UserState.NotAuthorized -> sendEvent(SplashEvent.UserNotAuthorized)
                 }
             }
             .launchIn(viewModelScope)

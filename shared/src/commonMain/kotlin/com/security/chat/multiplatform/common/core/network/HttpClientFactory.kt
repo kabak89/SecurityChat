@@ -19,7 +19,7 @@ internal class HttpClientFactoryImpl(
 ) : HttpClientFactory {
 
     override fun build(): HttpClient {
-        val networkLogger: Logger? = object : Logger {
+        val networkLogger: Logger = object : Logger {
             override fun log(message: String) {
                 println(message)
             }
@@ -30,11 +30,10 @@ internal class HttpClientFactoryImpl(
                 json(json)
             }
             install(Logging) {
-                if (networkLogger != null) {
-                    logger = networkLogger
-                    level = LogLevel.ALL
-                }
+                logger = networkLogger
+                level = LogLevel.ALL
             }
+            expectSuccess = true
         }
     }
 }
