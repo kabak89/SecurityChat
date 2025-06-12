@@ -5,7 +5,7 @@ import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
-import com.security.chat.multiplatform.features.authorize.domain.entity.AuthResult
+import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -32,13 +32,13 @@ class SignInViewModel(
             .filterNotNull()
             .onEach { result ->
                 when (result) {
-                    AuthResult.Success -> sendEvent(SignInEvent.Authorized)
-                    AuthResult.UserNotExists -> {
+                    SignInResult.Success -> sendEvent(SignInEvent.Authorized)
+                    SignInResult.UserNotExists -> {
                         //TODO
                         println("UserNotExists")
                     }
 
-                    AuthResult.WrongPassword -> {
+                    SignInResult.WrongPassword -> {
                         //TODO
                         println("WrongPassword")
                     }
@@ -46,7 +46,7 @@ class SignInViewModel(
             }
             .launchIn(viewModelScope)
 
-        signInModel.authorize.jobFlow.asLceState()
+        signInModel.signIn.jobFlow.asLceState()
             .onEach { state ->
                 val isLoading = state.isLoading
 
@@ -78,7 +78,7 @@ class SignInViewModel(
     }
 
     fun onSignInClicked() {
-        signInModel.authorize.startOnSubscribe()
+        signInModel.signIn.startOnSubscribe()
     }
 
 }

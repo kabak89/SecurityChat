@@ -3,7 +3,7 @@ package com.security.chat.multiplatform.features.authorize.domain
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.features.authorize.domain.entity.AuthResult
+import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInStateInfo
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignInRepo
 import kotlinx.coroutines.CoroutineScope
@@ -16,11 +16,11 @@ import ru.kode.remo.Task0
 
 interface SignInModel : ScopedModel {
 
-    val authorize: Task0<Unit>
+    val signIn: Task0<Unit>
 
     fun setUsername(userName: String)
     fun setPassword(password: String)
-    fun getAuthResultFlow(): Flow<AuthResult?>
+    fun getAuthResultFlow(): Flow<SignInResult?>
     fun getStateFlow(): Flow<SignInStateInfo>
 
 }
@@ -37,17 +37,17 @@ class SignInModelImpl(
 
     private val stateFlow = MutableStateFlow(State())
 
-    override val authorize: Task0<Unit> =
+    override val signIn: Task0<Unit> =
         task { ->
             val username = stateFlow.value.username
             val password = stateFlow.value.password
 
-            val result = signInRepo.authorize(
+            val result = signInRepo.signIn(
                 username = username,
                 password = password,
             )
 
-            stateFlow.update { it.copy(authResult = result) }
+            stateFlow.update { it.copy(signInResult = result) }
         }
 
     override fun setUsername(userName: String) {
@@ -58,9 +58,9 @@ class SignInModelImpl(
         stateFlow.update { it.copy(password = password) }
     }
 
-    override fun getAuthResultFlow(): Flow<AuthResult?> {
+    override fun getAuthResultFlow(): Flow<SignInResult?> {
         return stateFlow
-            .map { it.authResult }
+            .map { it.signInResult }
             .distinctUntilChanged()
     }
 
@@ -78,7 +78,7 @@ class SignInModelImpl(
     private data class State(
         val username: String = "",
         val password: String = "",
-        val authResult: AuthResult? = null,
+        val signInResult: SignInResult? = null,
     )
 
 }

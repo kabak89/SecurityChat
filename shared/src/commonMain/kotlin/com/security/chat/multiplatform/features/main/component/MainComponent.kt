@@ -8,7 +8,7 @@ interface MainComponent : BackHandlerOwner {
 
 }
 
-class DefaultMainComponent(
+class MainComponentImpl(
     componentContext: ComponentContext,
 ) : MainComponent, ComponentContext by componentContext {
 

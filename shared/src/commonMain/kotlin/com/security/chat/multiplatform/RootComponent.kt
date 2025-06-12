@@ -17,8 +17,8 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
-import com.security.chat.multiplatform.features.main.component.DefaultMainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
+import com.security.chat.multiplatform.features.main.component.MainComponentImpl
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
@@ -105,7 +105,7 @@ class RootComponentImpl(
     }
 
     private fun createMainComponent(componentContext: ComponentContext): MainComponent {
-        return DefaultMainComponent(
+        return MainComponentImpl(
             componentContext = componentContext,
         )
     }
@@ -146,10 +146,8 @@ class RootComponentImpl(
 
 }
 
-//initial UI
 @Composable
 fun RootContent(rootComponent: RootComponent) {
-    //scope and UI corresponding
     Children(
         stack = rootComponent.childStack,
         animation = predictiveBackAnimation(
@@ -157,11 +155,12 @@ fun RootContent(rootComponent: RootComponent) {
             fallbackAnimation = stackAnimation(slide()),
             onBack = rootComponent::onBackClicked,
         ),
-    ) {
-        when (val child = it.instance) {
-            is RootComponent.Child.Splash -> SplashScreen(component = child.component)
-            is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
-            is RootComponent.Child.Main -> MainScreen(component = child.component)
-        }
-    }
+        content = {
+            when (val child = it.instance) {
+                is RootComponent.Child.Splash -> SplashScreen(component = child.component)
+                is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
+                is RootComponent.Child.Main -> MainScreen(component = child.component)
+            }
+        },
+    )
 }

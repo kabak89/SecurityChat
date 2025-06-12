@@ -55,7 +55,7 @@ fun SignInScreen(
         onPasswordTextChanged = vm::onPasswordTextChanged,
         onSignInClicked = vm::onSignInClicked,
         onSignUpClicked = component::onSignUpClicked,
-        onAuthorized = component::onAuthorized,
+        onAuthorized = component::onSuccessfulSignIn,
     )
 }
 

@@ -18,10 +18,11 @@ fun AuthorizeScreen(component: AuthorizeComponent) {
             fallbackAnimation = stackAnimation(slide()),
             onBack = component::onBackClicked,
         ),
-    ) {
-        when (val child = it.instance) {
-            is AuthorizeComponent.Child.SignUp -> SignUpScreen(component = child.component)
-            is AuthorizeComponent.Child.SignIn -> SignInScreen(component = child.component)
-        }
-    }
+        content = {
+            when (val child = it.instance) {
+                is AuthorizeComponent.Child.SignUp -> SignUpScreen(component = child.component)
+                is AuthorizeComponent.Child.SignIn -> SignInScreen(component = child.component)
+            }
+        },
+    )
 }

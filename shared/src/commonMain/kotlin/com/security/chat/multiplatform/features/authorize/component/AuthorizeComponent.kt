@@ -64,9 +64,7 @@ class AuthorizeComponentImpl(
                         onSignUp = {
                             navigation.push(Params.SignUpParams)
                         },
-                        onAuthorized = {
-                            onFinished()
-                        },
+                        onSignedIn = onFinished,
                     ),
                 )
             }
@@ -78,6 +76,7 @@ class AuthorizeComponentImpl(
                         goToSignIn = {
                             navigation.pop()
                         },
+                        onSignedUp = onFinished,
                     ),
                 )
             }
