@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
-abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
+public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
     ViewModelInterface<S, E> {
 
     private var loadingTriggered = false
@@ -66,7 +66,7 @@ abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
     /**
      * Method calls after subscription on [_viewState] is happened. Suitable for start loading data
      */
-    protected open fun onPostStart() = Unit
+    protected open fun onPostStart(): Unit = Unit
 
     @CallSuper
     override fun onViewActive() {

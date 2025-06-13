@@ -3,12 +3,12 @@ package com.security.chat.multiplatform.common.core.ui
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-interface ViewModelInterface<out S : Any, out E : Any> {
+public interface ViewModelInterface<out S : Any, out E : Any> {
 
-    val viewState: StateFlow<S>
-    val viewEvent: Flow<E>
+    public val viewState: StateFlow<S>
+    public val viewEvent: Flow<E>
 
-    fun onViewActive()
-    fun onViewInactive()
+    public fun onViewActive()
+    public fun onViewInactive()
 
 }

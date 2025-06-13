@@ -80,6 +80,7 @@ kotlin {
             implementation(libs.sha2)
 
             implementation(projects.common.coreUi)
+            implementation(projects.common.coreDomain)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

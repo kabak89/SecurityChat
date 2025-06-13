@@ -8,7 +8,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun <T : Any> SingleEventEffect(
+public fun <T : Any> SingleEventEffect(
     sideEffectFlow: Flow<T>,
     collector: (T) -> Unit,
 ) {

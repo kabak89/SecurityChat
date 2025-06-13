@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import ru.kode.remo.ReactiveModel as ReMo
 
-open class BaseModel(
+public open class BaseModel(
     dispatcher: CoroutineDispatcher,
     coroutineScope: CoroutineScope,
     errorMapper: ((Throwable) -> Throwable)? = null,

@@ -20,4 +20,7 @@ include(":androidApp")
 include(":desktopApp")
 include(":shared")
 
-include(":common:core-ui")
+include(
+    ":common:core-ui",
+    ":common:core-domain",
+)

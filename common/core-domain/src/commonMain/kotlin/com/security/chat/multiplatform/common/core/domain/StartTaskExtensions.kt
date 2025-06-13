@@ -11,7 +11,7 @@ import ru.kode.remo.Task3
  * Lazy start task when subscribers count will be > 0. Fast task sometimes emit result faster then
  * someone subscribes to it
  */
-fun Task0<*>.startOnSubscribe(): Job {
+public fun Task0<*>.startOnSubscribe(): Job {
     return start(
         scheduled = StartScheduled.Lazily(
             minResultsSubscribers = 1,
@@ -24,7 +24,7 @@ fun Task0<*>.startOnSubscribe(): Job {
  * Lazy start task when subscribers count will be > 0. Fast task sometimes emit result faster then
  * someone subscribes to it
  */
-fun <P1, R> Task1<P1, R>.startOnSubscribe(
+public fun <P1, R> Task1<P1, R>.startOnSubscribe(
     argument: P1,
 ): Job {
     return start(
@@ -40,7 +40,7 @@ fun <P1, R> Task1<P1, R>.startOnSubscribe(
  * Lazy start task when subscribers count will be > 0. Fast task sometimes emit result faster then
  * someone subscribes to it
  */
-fun <P1, P2, R> Task2<P1, P2, R>.startOnSubscribe(
+public fun <P1, P2, R> Task2<P1, P2, R>.startOnSubscribe(
     argument1: P1,
     argument2: P2,
 ): Job {
@@ -58,7 +58,7 @@ fun <P1, P2, R> Task2<P1, P2, R>.startOnSubscribe(
  * Lazy start task when subscribers count will be > 0. Fast task sometimes emit result faster then
  * someone subscribes to it
  */
-fun <P1, P2, P3, R> Task3<P1, P2, P3, R>.startOnSubscribe(
+public fun <P1, P2, P3, R> Task3<P1, P2, P3, R>.startOnSubscribe(
     argument1: P1,
     argument2: P2,
     argument3: P3,
@@ -77,14 +77,14 @@ fun <P1, P2, P3, R> Task3<P1, P2, P3, R>.startOnSubscribe(
 /**
  * Extension to start task with default params
  */
-fun Task0<*>.start(): Job {
+public fun Task0<*>.start(): Job {
     return start()
 }
 
 /**
  * Extension to start task with default params
  */
-fun <P1, R> Task1<P1, R>.start(
+public fun <P1, R> Task1<P1, R>.start(
     argument: P1,
 ): Job {
     return start(argument = argument)
@@ -93,7 +93,7 @@ fun <P1, R> Task1<P1, R>.start(
 /**
  * Extension to start task with default params
  */
-fun <P1, P2, R> Task2<P1, P2, R>.start(
+public fun <P1, P2, R> Task2<P1, P2, R>.start(
     argument1: P1,
     argument2: P2,
 ): Job {
@@ -106,7 +106,7 @@ fun <P1, P2, R> Task2<P1, P2, R>.start(
 /**
  * Extension to start task with default params
  */
-fun <P1, P2, P3, R> Task3<P1, P2, P3, R>.start(
+public fun <P1, P2, P3, R> Task3<P1, P2, P3, R>.start(
     argument1: P1,
     argument2: P2,
     argument3: P3,
