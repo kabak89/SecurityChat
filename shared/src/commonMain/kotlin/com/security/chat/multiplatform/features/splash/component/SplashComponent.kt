@@ -1,9 +1,9 @@
 package com.security.chat.multiplatform.features.splash.component
 
 import com.arkivanov.decompose.ComponentContext
-import com.security.chat.multiplatform.common.base.BaseComponent
-import com.security.chat.multiplatform.common.base.BaseComponentImpl
-import com.security.chat.multiplatform.common.base.DiScopeHolder
+import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
+import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
 interface SplashComponent : BaseComponent, DiScopeHolder {
     fun onGoAuthorization()

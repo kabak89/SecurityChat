@@ -19,3 +19,5 @@ rootProject.name = "SecurityChat"
 include(":androidApp")
 include(":desktopApp")
 include(":shared")
+
+include(":common:core-ui")

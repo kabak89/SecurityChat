@@ -78,6 +78,8 @@ kotlin {
             implementation(libs.ktor.client.core)
 
             implementation(libs.sha2)
+
+            implementation(projects.common.coreUi)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

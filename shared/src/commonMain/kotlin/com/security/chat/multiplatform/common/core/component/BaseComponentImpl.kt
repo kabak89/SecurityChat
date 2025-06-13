@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.common.base
+package com.security.chat.multiplatform.common.core.component
 
 import androidx.lifecycle.ViewModelStore
 import com.arkivanov.decompose.ComponentContext
