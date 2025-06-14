@@ -81,6 +81,7 @@ kotlin {
 
             implementation(projects.common.coreUi)
             implementation(projects.common.coreDomain)
+            implementation(projects.common.coreComponent)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
@@ -89,7 +90,6 @@ kotlin {
             implementation(libs.androidx.security)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
-
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.driver.native)
@@ -100,9 +100,7 @@ kotlin {
             implementation(libs.sqldelight.driver.sqlite)
             implementation(libs.ktor.client.apache)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
+        commonTest.dependencies { }
     }
 }
 

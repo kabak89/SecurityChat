@@ -3,9 +3,10 @@ package com.security.chat.multiplatform.common.core.component
 import androidx.lifecycle.ViewModelStore
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
-import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.koin.core.context.loadKoinModules
@@ -14,7 +15,7 @@ import org.koin.core.scope.Scope
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-abstract class BaseComponentImpl(
+public abstract class BaseComponentImpl(
     componentContext: ComponentContext,
     scopeId: String,
 ) : BaseComponent, ComponentContext by componentContext, DiScopeHolder {
@@ -40,9 +41,11 @@ abstract class BaseComponentImpl(
                         println("error in coroutine scope in $scopeId DI scope: $e")
                     }
 
-                    val dispatcherProvider: DispatcherProviderInterface = get()
-
-                    CoroutineScope(dispatcherProvider.IO + SupervisorJob() + errorHandler)
+                    //TODO
+//                    val dispatcherProvider: DispatcherProviderInterface = get()
+//                    CoroutineScope(dispatcherProvider.IO + SupervisorJob() + errorHandler)
+                    //TODO
+                    CoroutineScope(Dispatchers.IO + SupervisorJob() + errorHandler)
                 } bind CoroutineScope::class
             }
         }

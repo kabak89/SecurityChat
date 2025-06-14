@@ -23,4 +23,5 @@ include(":shared")
 include(
     ":common:core-ui",
     ":common:core-domain",
+    ":common:core-component",
 )

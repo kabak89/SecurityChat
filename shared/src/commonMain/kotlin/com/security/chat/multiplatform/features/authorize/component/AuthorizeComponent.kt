@@ -61,9 +61,7 @@ class AuthorizeComponentImpl(
                 AuthorizeComponent.Child.SignIn(
                     component = SignInComponentImpl(
                         componentContext = componentContext,
-                        onSignUp = {
-                            navigation.push(Params.SignUpParams)
-                        },
+                        onSignUp = { navigation.push(Params.SignUpParams) },
                         onSignedIn = onFinished,
                     ),
                 )
@@ -73,9 +71,7 @@ class AuthorizeComponentImpl(
                 AuthorizeComponent.Child.SignUp(
                     component = SignUpComponentImpl(
                         componentContext = componentContext,
-                        goToSignIn = {
-                            navigation.pop()
-                        },
+                        goToSignIn = { navigation.pop() },
                         onSignedUp = onFinished,
                     ),
                 )
