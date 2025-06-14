@@ -25,3 +25,6 @@ include(
     ":common:core-domain",
     ":common:core-component",
 )
+include(
+    ":features:splash:splash-component",
+)

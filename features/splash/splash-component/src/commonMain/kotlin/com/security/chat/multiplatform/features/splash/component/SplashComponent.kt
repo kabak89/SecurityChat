@@ -5,12 +5,12 @@ import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
-interface SplashComponent : BaseComponent, DiScopeHolder {
-    fun onGoAuthorization()
-    fun onUserAuthorized()
+public interface SplashComponent : BaseComponent, DiScopeHolder {
+    public fun onGoAuthorization()
+    public fun onUserAuthorized()
 }
 
-class SplashComponentImpl(
+public class SplashComponentImpl(
     private val goToAuthorize: () -> Unit,
     private val goAuthorizedZone: () -> Unit,
     componentContext: ComponentContext,
@@ -29,4 +29,4 @@ class SplashComponentImpl(
     }
 }
 
-const val SCOPE_ID_SPLASH = "SCOPE_ID_SPLASH"
+public const val SCOPE_ID_SPLASH: String = "SCOPE_ID_SPLASH"
