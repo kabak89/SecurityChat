@@ -3,12 +3,12 @@ package com.security.chat.multiplatform.features.main.component
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 
-interface MainComponent : BackHandlerOwner {
+public interface MainComponent : BackHandlerOwner {
 
 
 }
 
-class MainComponentImpl(
+public class MainComponentImpl(
     componentContext: ComponentContext,
 ) : MainComponent, ComponentContext by componentContext {
 

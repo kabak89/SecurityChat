@@ -90,6 +90,9 @@ kotlin {
             implementation(projects.features.splash.splashData)
 
             implementation(projects.features.user.userDataStorage)
+
+            implementation(projects.features.main.mainComponent)
+            implementation(projects.features.main.mainUi)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

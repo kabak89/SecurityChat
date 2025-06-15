@@ -35,3 +35,7 @@ include(
 include(
     ":features:user:user-data-storage",
 )
+include(
+    ":features:main:main-component",
+    ":features:main:main-ui",
+)
