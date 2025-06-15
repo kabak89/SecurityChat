@@ -30,18 +30,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.decompose)
+            api(libs.decompose)
+            api(libs.lifecycle.viewmodel)
+            api(libs.koin.core)
 
-            implementation(libs.decompose.extensions.compose)
             implementation(libs.kotlinx.serialization)
-
-            implementation(libs.lifecycle.common)
-            implementation(libs.lifecycle.viewmodel)
-
-            implementation(libs.koin.core)
-//            implementation(libs.koin.compose)
-//            implementation(libs.koin.composeVM)
-
             implementation(libs.kotlinx.coroutines.core)
         }
         androidMain.dependencies { }

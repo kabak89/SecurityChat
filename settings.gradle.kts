@@ -39,3 +39,7 @@ include(
     ":features:main:main-component",
     ":features:main:main-ui",
 )
+include(
+    ":features:chats:chats-component",
+    ":features:chats:chats-ui",
+)

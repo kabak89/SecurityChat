@@ -31,12 +31,20 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
+            api(compose.runtime)
+            api(compose.foundation)
+            api(compose.material3)
 
-            implementation(libs.lifecycle.viewmodel.compose)
-            implementation(libs.lifecycle.runtime.compose)
+            api(libs.decompose.extensions.compose)
 
-            implementation(libs.kotlinx.coroutines.core)
+            api(libs.lifecycle.viewmodel.compose)
+            api(libs.lifecycle.runtime.compose)
+
+            api(libs.koin.core)
+            api(libs.koin.compose)
+            api(libs.koin.composeVM)
+
+            api(libs.kotlinx.coroutines.core)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

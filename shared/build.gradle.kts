@@ -93,6 +93,9 @@ kotlin {
 
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.main.mainUi)
+
+            implementation(projects.features.chats.chatsComponent)
+            implementation(projects.features.chats.chatsUi)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

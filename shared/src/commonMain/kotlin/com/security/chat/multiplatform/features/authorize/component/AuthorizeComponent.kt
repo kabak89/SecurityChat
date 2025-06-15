@@ -18,13 +18,13 @@ interface AuthorizeComponent : BackHandlerOwner {
 
     fun onCloseClicked()
 
-    //child scopes
     sealed interface Child {
 
         class SignUp(val component: SignUpComponent) : Child
         class SignIn(val component: SignInComponent) : Child
 
     }
+
 }
 
 class AuthorizeComponentImpl(
@@ -51,7 +51,6 @@ class AuthorizeComponentImpl(
         onFinished()
     }
 
-    //scope and params corresponding
     private fun createChild(
         params: Params,
         componentContext: ComponentContext,

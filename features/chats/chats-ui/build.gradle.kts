@@ -31,9 +31,21 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+
+            implementation(libs.lifecycle.viewmodel.compose)
+            implementation(libs.lifecycle.runtime.compose)
+
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.composeVM)
+
+            implementation(libs.kotlinx.coroutines.core)
+
             implementation(projects.common.coreUi)
 
-            implementation(projects.features.main.mainComponent)
             implementation(projects.features.chats.chatsComponent)
         }
         androidMain.dependencies { }
@@ -44,7 +56,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.features.main.ui"
+    namespace = "com.security.chat.multiplatform.features.chats.ui"
     compileSdk = 35
 
     defaultConfig {

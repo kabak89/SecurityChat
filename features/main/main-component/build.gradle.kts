@@ -30,13 +30,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.decompose)
-            implementation(libs.kotlinx.serialization)
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.koin.core)
-            implementation(libs.lifecycle.viewmodel)
-
             api(projects.common.coreComponent)
+            api(projects.features.chats.chatsComponent)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
