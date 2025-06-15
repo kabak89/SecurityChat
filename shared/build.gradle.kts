@@ -82,16 +82,19 @@ kotlin {
             implementation(projects.common.coreUi)
             implementation(projects.common.coreDomain)
             implementation(projects.common.coreComponent)
+            implementation(projects.common.settings)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashDomain)
             implementation(projects.features.splash.splashUi)
+            implementation(projects.features.splash.splashData)
+
+            implementation(projects.features.user.userDataStorage)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
             implementation(libs.android.sqlcipher)
             implementation(libs.sqlite.android)
-            implementation(libs.androidx.security)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
         }

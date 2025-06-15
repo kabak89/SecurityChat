@@ -24,9 +24,14 @@ include(
     ":common:core-ui",
     ":common:core-domain",
     ":common:core-component",
+    ":common:settings",
 )
 include(
     ":features:splash:splash-component",
     ":features:splash:splash-domain",
     ":features:splash:splash-ui",
+    ":features:splash:splash-data",
+)
+include(
+    ":features:user:user-data-storage",
 )

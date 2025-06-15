@@ -6,7 +6,7 @@ import com.security.chat.multiplatform.features.authorize.data.entity.AuthReques
 import com.security.chat.multiplatform.features.authorize.data.entity.AuthResponse
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpResult
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignUpRepo
-import com.security.chat.multiplatform.features.user.data_storage.UserStorage
+import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import org.kotlincrypto.hash.sha2.SHA256
