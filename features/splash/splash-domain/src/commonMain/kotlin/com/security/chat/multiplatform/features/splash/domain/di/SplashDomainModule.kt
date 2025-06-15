@@ -9,7 +9,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val splashDomainModule: Module =
+public val splashDomainModule: Module =
     module {
         scope(named(SCOPE_ID_SPLASH)) {
             scopedOf(::SplashModelImpl) bind SplashModel::class

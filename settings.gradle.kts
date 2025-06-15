@@ -27,4 +27,5 @@ include(
 )
 include(
     ":features:splash:splash-component",
+    ":features:splash:splash-domain",
 )

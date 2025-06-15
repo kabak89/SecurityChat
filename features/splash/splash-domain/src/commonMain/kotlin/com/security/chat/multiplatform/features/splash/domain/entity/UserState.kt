@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.features.splash.domain.entity
 
-enum class UserState {
+public enum class UserState {
     Unknown,
     Authorized,
     NotAuthorized,

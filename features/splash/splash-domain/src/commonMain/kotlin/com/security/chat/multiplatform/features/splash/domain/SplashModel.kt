@@ -2,10 +2,10 @@ package com.security.chat.multiplatform.features.splash.domain
 
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
-import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.splash.domain.entity.UserState
 import com.security.chat.multiplatform.features.splash.domain.repo.SplashRepo
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -13,19 +13,22 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
 
-interface SplashModel : ScopedModel {
-    val fetchUserState: Task0<Unit>
+public interface SplashModel : ScopedModel {
+    public val fetchUserState: Task0<Unit>
 
-    fun getUserStateFlow(): Flow<UserState>
+    public fun getUserStateFlow(): Flow<UserState>
 }
 
-class SplashModelImpl(
+internal class SplashModelImpl(
     private val splashRepo: SplashRepo,
-    dispatcherProvider: DispatcherProviderInterface,
+    //TODO
+//    dispatcherProvider: DispatcherProviderInterface,
     coroutineScope: CoroutineScope,
 ) : SplashModel,
     BaseModel(
-        dispatcher = dispatcherProvider.Default,
+//        dispatcher = dispatcherProvider.Default,
+        //TODO
+        dispatcher = Dispatchers.Default,
         coroutineScope = coroutineScope,
     ) {
 

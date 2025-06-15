@@ -84,6 +84,7 @@ kotlin {
             implementation(projects.common.coreComponent)
 
             implementation(projects.features.splash.splashComponent)
+            implementation(projects.features.splash.splashDomain)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
