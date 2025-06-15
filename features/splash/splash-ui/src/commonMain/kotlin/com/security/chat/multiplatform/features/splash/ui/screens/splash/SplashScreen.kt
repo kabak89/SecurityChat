@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SplashScreen(
+public fun SplashScreen(
     component: SplashComponent,
 ) {
     println("SplashScreen UI")

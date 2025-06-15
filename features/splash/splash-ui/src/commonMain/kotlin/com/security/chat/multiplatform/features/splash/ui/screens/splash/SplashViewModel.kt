@@ -9,7 +9,7 @@ import com.security.chat.multiplatform.features.splash.domain.entity.UserState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class SplashViewModel(
+internal class SplashViewModel(
     private val splashModel: SplashModel,
 ) : BaseViewModel<SplashState, SplashEvent>() {
 
