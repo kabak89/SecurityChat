@@ -20,8 +20,6 @@ import org.koin.compose.viewmodel.koinViewModel
 public fun SplashScreen(
     component: SplashComponent,
 ) {
-    println("SplashScreen UI")
-
     try {
         if (component.getDiScope().closed) return
     } catch (e: Exception) {

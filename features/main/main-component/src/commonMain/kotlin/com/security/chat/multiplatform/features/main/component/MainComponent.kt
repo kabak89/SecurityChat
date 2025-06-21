@@ -48,8 +48,8 @@ public class MainComponentImpl(
     private fun createChild(
         params: Params,
         componentContext: ComponentContext,
-    ): MainComponent.Child =
-        when (params) {
+    ): MainComponent.Child {
+        return when (params) {
             is Params.ChatsParams -> {
                 MainComponent.Child.Chats(
                     component = ChatsComponentImpl(
@@ -66,8 +66,8 @@ public class MainComponentImpl(
                 )
             }
         }
+    }
 
-    //scope params
     @Serializable
     private sealed class Params {
 

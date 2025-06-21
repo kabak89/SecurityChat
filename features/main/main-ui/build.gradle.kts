@@ -35,6 +35,7 @@ kotlin {
 
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.chats.chatsComponent)
+            implementation(projects.features.chats.chatsUi)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

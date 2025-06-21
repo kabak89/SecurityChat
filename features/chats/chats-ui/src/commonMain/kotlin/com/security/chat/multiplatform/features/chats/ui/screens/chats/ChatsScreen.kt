@@ -1,57 +1,30 @@
 package com.security.chat.multiplatform.features.chats.ui.screens.chats
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.chats.component.ChatsComponent
-import kotlinx.coroutines.flow.Flow
-import org.koin.compose.viewmodel.koinViewModel
+import com.security.chat.multiplatform.features.chats.ui.screens.addchat.AddChatScreen
+import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.ChatListScreen
 
 @Composable
 public fun ChatsScreen(
     component: ChatsComponent,
 ) {
-    println("SplashScreen UI")
-
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
-    }
-
-    val vm: ChatsViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    SplashContent(
-        modifier = Modifier
-            .fillMaxSize(),
-        state = state,
-        events = vm.viewEvent,
-    )
-}
-
-@Composable
-private fun SplashContent(
-    modifier: Modifier = Modifier,
-    state: ChatsState,
-    events: Flow<ChatsEvent>,
-) {
-    SingleEventEffect(
-        sideEffectFlow = events,
-        collector = { event ->
-            //TODO
+    Children(
+        stack = component.childStack,
+        animation = predictiveBackAnimation(
+            backHandler = component.backHandler,
+            fallbackAnimation = stackAnimation(slide()),
+            onBack = component::onBackClicked,
+        ),
+        content = {
+            when (val child = it.instance) {
+                is ChatsComponent.Child.ChatList -> ChatListScreen(component = child.component)
+                is ChatsComponent.Child.AddChat -> AddChatScreen(component = child.component)
+            }
         },
-    )
-
-    Text(
-        text = "Chats",
     )
 }

@@ -17,7 +17,6 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
-import com.security.chat.multiplatform.features.chats.ui.screens.chats.ChatsScreen
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
@@ -163,11 +162,6 @@ fun RootContent(rootComponent: RootComponent) {
                 is RootComponent.Child.Main -> {
                     MainScreen(
                         component = child.component,
-                        chatsScreen = { component ->
-                            ChatsScreen(
-                                component = component,
-                            )
-                        },
                     )
                 }
             }
