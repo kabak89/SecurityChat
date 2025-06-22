@@ -7,7 +7,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val coreThreadingModule: Module =
+public val coreThreadingModule: Module =
     module {
         singleOf(::DispatcherProviderInterfaceImpl) bind DispatcherProviderInterface::class
     }

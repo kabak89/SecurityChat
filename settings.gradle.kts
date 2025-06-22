@@ -26,6 +26,7 @@ include(
     ":common:core-component",
     ":common:settings",
     ":common:core-network",
+    ":common:core-threading",
 )
 include(
     ":features:splash:splash-component",

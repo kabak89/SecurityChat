@@ -33,6 +33,7 @@ public fun MainScreen(
 
                 is MainComponent.Child.Settings -> {
                     //TODO
+                    println("go to settings")
                 }
             }
         },

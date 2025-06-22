@@ -70,8 +70,6 @@ kotlin {
 
             implementation(libs.sqldelight.coroutines.extensions)
 
-//            implementation(libs.multiplatform.settings)
-
             implementation(libs.sha2)
 
             implementation(projects.common.coreUi)
@@ -79,6 +77,7 @@ kotlin {
             implementation(projects.common.coreComponent)
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)
+            implementation(projects.common.coreThreading)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashDomain)

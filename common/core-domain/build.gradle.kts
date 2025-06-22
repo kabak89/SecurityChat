@@ -32,6 +32,9 @@ kotlin {
             api(libs.koin.core)
             api(libs.kode.remo)
             api(libs.kotlinx.coroutines.core)
+
+
+            api(projects.common.coreThreading)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

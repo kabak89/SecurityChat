@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -30,14 +29,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(libs.decompose)
-            api(libs.lifecycle.viewmodel)
-            api(libs.koin.core)
+            api(libs.kotlinx.coroutines.core)
 
-            implementation(libs.kotlinx.serialization)
-            implementation(libs.kotlinx.coroutines.core)
-
-            implementation(projects.common.coreThreading)
+            implementation(libs.koin.core)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -47,7 +41,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.common.core.component"
+    namespace = "com.security.chat.multiplatform.common.core.threading"
     compileSdk = 35
 
     defaultConfig {
