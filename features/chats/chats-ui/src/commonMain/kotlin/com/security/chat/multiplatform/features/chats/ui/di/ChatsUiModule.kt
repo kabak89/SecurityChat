@@ -11,6 +11,7 @@ public val chatsUiModule: Module =
     module {
         viewModel {
             ChatListViewModel(
+                chatsModel = getScope(SCOPE_ID_CHATS).get(),
             )
         }
         viewModel {

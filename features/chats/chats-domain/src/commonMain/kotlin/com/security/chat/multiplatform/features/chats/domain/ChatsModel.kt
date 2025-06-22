@@ -4,6 +4,7 @@ import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chats.domain.entity.AddChatsState
+import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
 import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
@@ -18,9 +19,11 @@ import ru.kode.remo.Task0
 public interface ChatsModel : ScopedModel {
 
     public val createChat: Task0<CreateChatResult>
+    public val fetchChatsList: Task0<Unit>
 
     public fun setUsername(username: String)
     public fun getAddChatStateFlow(): Flow<AddChatsState>
+    public fun getChatListFlow(): Flow<List<ChatDescription>>
 
 }
 
@@ -47,9 +50,18 @@ internal class ChatsModelImpl(
                 }
 
                 is FindUserResult.UserFound -> {
-                    chatsRepo.createChat(secondUserId = result.userId)
+                    val createChatResult = chatsRepo.createChat(secondUserId = result.userId)
+                    stateFlow.update { it.copy(username = "") }
+                    fetchChatsList.start()
+                    createChatResult
                 }
             }
+        }
+
+    override val fetchChatsList: Task0<Unit> =
+        task { ->
+            val chats = chatsRepo.getChatsList()
+            stateFlow.update { it.copy(chatList = chats) }
         }
 
     override fun setUsername(username: String) {
@@ -66,8 +78,15 @@ internal class ChatsModelImpl(
             .distinctUntilChanged()
     }
 
+    override fun getChatListFlow(): Flow<List<ChatDescription>> {
+        return stateFlow
+            .map { it.chatList }
+            .distinctUntilChanged()
+    }
+
     private data class State(
         val username: String = "",
+        val chatList: List<ChatDescription> = emptyList(),
     )
 
 }

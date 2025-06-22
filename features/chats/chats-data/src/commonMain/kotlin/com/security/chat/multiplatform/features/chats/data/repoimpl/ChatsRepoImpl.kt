@@ -5,6 +5,8 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequest
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatResponse
 import com.security.chat.multiplatform.features.chats.data.entity.FindUserResponse
+import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
+import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
 import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
@@ -57,5 +59,23 @@ internal class ChatsRepoImpl(
         return CreateChatResult.ChatCreated(
             id = result.chatId,
         )
+    }
+
+    override suspend fun getChatsList(): List<ChatDescription> {
+        val userId = userStorage.getUserId() ?: error("user id not found")
+
+        val response: UserChatsResponse = networkManager.runGet(
+            relativePath = "/chats",
+            request = mapOf(
+                "user_id" to userId,
+            ),
+        )
+
+        return response.chats
+            .map { chatResponse ->
+                ChatDescription(
+                    id = chatResponse.id,
+                )
+            }
     }
 }
