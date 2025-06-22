@@ -74,6 +74,10 @@ public class ChatsComponentImpl(
                         onBack = {
                             navigation.pop()
                         },
+                        onChatCreate = { chatId ->
+                            navigation.pop()
+                            //TODO got to chat
+                        },
                     ),
                 )
             }

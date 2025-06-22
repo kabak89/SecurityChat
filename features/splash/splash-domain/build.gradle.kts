@@ -29,10 +29,6 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(libs.koin.core)
-            api(libs.kotlinx.coroutines.core)
-            api(libs.kode.remo)
-
             api(projects.common.coreDomain)
 
             implementation(projects.features.splash.splashComponent)

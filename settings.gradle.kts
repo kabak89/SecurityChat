@@ -25,6 +25,7 @@ include(
     ":common:core-domain",
     ":common:core-component",
     ":common:settings",
+    ":common:core-network",
 )
 include(
     ":features:splash:splash-component",
@@ -42,4 +43,6 @@ include(
 include(
     ":features:chats:chats-component",
     ":features:chats:chats-ui",
+    ":features:chats:chats-domain",
+    ":features:chats:chats-data",
 )

@@ -31,23 +31,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(projects.common.coreUi)
             implementation(compose.components.resources)
 
-            implementation(libs.lifecycle.viewmodel.compose)
-            implementation(libs.lifecycle.runtime.compose)
-
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.composeVM)
-
-            implementation(libs.kotlinx.coroutines.core)
-
-            implementation(projects.common.coreUi)
-
             implementation(projects.features.chats.chatsComponent)
+            implementation(projects.features.chats.chatsDomain)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

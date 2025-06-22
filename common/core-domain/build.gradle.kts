@@ -29,8 +29,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kode.remo)
+            api(libs.koin.core)
+            api(libs.kode.remo)
+            api(libs.kotlinx.coroutines.core)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

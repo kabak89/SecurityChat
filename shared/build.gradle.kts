@@ -70,12 +70,7 @@ kotlin {
 
             implementation(libs.sqldelight.coroutines.extensions)
 
-            implementation(libs.multiplatform.settings)
-
-            implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.client.core)
+//            implementation(libs.multiplatform.settings)
 
             implementation(libs.sha2)
 
@@ -83,6 +78,7 @@ kotlin {
             implementation(projects.common.coreDomain)
             implementation(projects.common.coreComponent)
             implementation(projects.common.settings)
+            implementation(projects.common.coreNetwork)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashDomain)
@@ -96,22 +92,21 @@ kotlin {
 
             implementation(projects.features.chats.chatsComponent)
             implementation(projects.features.chats.chatsUi)
+            implementation(projects.features.chats.chatsDomain)
+            implementation(projects.features.chats.chatsData)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
             implementation(libs.android.sqlcipher)
             implementation(libs.sqlite.android)
             implementation(libs.koin.android)
-            implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.driver.native)
             implementation(libs.sqliter.driver)
-            implementation(libs.ktor.client.darwin)
         }
         jvmMain.dependencies {
             implementation(libs.sqldelight.driver.sqlite)
-            implementation(libs.ktor.client.apache)
         }
         commonTest.dependencies { }
     }
@@ -128,5 +123,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    packaging {
+        resources.excludes += "DebugProbesKt.bin"
     }
 }

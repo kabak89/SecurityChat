@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chats.ui.di
 
+import com.security.chat.multiplatform.features.chats.component.SCOPE_ID_CHATS
 import com.security.chat.multiplatform.features.chats.ui.screens.addchat.AddChatViewModel
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.ChatListViewModel
 import org.koin.core.module.Module
@@ -14,6 +15,7 @@ public val chatsUiModule: Module =
         }
         viewModel {
             AddChatViewModel(
+                chatsModel = getScope(SCOPE_ID_CHATS).get(),
             )
         }
     }

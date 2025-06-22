@@ -6,6 +6,7 @@ public interface UserStorage {
 
     public suspend fun isUserAuthorized(): Boolean
     public suspend fun saveUserId(userId: String)
+    public suspend fun getUserId(): String?
     public suspend fun clearUserId()
 
 }
@@ -23,6 +24,10 @@ internal class UserStorageImpl(
             key = KEY_USER_ID,
             value = userId,
         )
+    }
+
+    override suspend fun getUserId(): String? {
+        return encryptedSettings.getString(key = KEY_USER_ID)
     }
 
     override suspend fun clearUserId() {

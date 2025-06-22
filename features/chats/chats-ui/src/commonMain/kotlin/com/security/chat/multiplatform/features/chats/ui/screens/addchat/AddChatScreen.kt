@@ -7,11 +7,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +57,9 @@ public fun AddChatScreen(
         state = state,
         events = vm.viewEvent,
         onBackClicked = component::onBackClicked,
+        onUsernameTextChanged = vm::onUsernameTextChanged,
+        onFindClicked = vm::onFindClicked,
+        onChatCreated = component::onChatCreated,
     )
 }
 
@@ -60,11 +69,16 @@ private fun AddChatContent(
     state: AddChatState,
     events: Flow<AddChatEvent>,
     onBackClicked: () -> Unit,
+    onUsernameTextChanged: (String) -> Unit,
+    onFindClicked: () -> Unit,
+    onChatCreated: (id: String) -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
         collector = { event ->
-            //TODO
+            when (event) {
+                is AddChatEvent.ChatCreated -> onChatCreated(event.id)
+            }
         },
     )
 
@@ -72,13 +86,44 @@ private fun AddChatContent(
         modifier = modifier
             .background(Color.White)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .imePadding(),
     ) {
         ToolbarComponent(
             modifier = Modifier
                 .fillMaxWidth(),
             onBackClicked = onBackClicked,
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            value = state.username,
+            onValueChange = onUsernameTextChanged,
+            placeholder = {
+                Text("Username")
+            },
+            enabled = !state.isLoading,
+        )
+        Spacer(Modifier.weight(1f))
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterHorizontally),
+            )
+        } else {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClick = onFindClicked,
+                content = {
+                    Text("Find")
+                },
+            )
+        }
+        Spacer(Modifier.height(16.dp))
     }
 }
 
