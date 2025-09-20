@@ -42,7 +42,7 @@ kotlin {
 
 android {
     namespace = "com.security.chat.multiplatform.features.splash.domain"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

@@ -51,7 +51,7 @@ kotlin {
 
 android {
     namespace = "com.security.chat.multiplatform.features.chats.data"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

@@ -20,7 +20,7 @@ internal class ChatsRepoImpl(
 ) : ChatsRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://13.60.146.92:80")
+        networkManagerFactory.build(baseUrl = "http://192.168.1.3:80")
     }
 
     override suspend fun findUser(username: String): FindUserResult {
