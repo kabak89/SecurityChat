@@ -93,6 +93,9 @@ kotlin {
             implementation(projects.features.chats.chatsUi)
             implementation(projects.features.chats.chatsDomain)
             implementation(projects.features.chats.chatsData)
+
+            implementation(libs.cryptography.core)
+            implementation(libs.cryptography.provider.optimal)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
