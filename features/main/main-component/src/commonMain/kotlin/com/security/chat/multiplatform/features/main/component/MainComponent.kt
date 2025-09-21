@@ -5,8 +5,11 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.security.chat.multiplatform.features.chat.component.ChatComponent
+import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
 import com.security.chat.multiplatform.features.chats.component.ChatsComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
 import kotlinx.serialization.Serializable
@@ -21,6 +24,7 @@ public interface MainComponent : BackHandlerOwner {
 
         public class Chats(public val component: ChatsComponent) : Child
         public class Settings(public val component: SettingsComponent) : Child
+        public class Chat(public val component: ChatComponent) : Child
 
     }
 
@@ -54,6 +58,12 @@ public class MainComponentImpl(
                 MainComponent.Child.Chats(
                     component = ChatsComponentImpl(
                         componentContext = componentContext,
+                        onChatClicked = { chatId ->
+                            val configuration = Params.ChatParams(
+                                chatId = chatId,
+                            )
+                            navigation.push(configuration = configuration)
+                        },
                     ),
                 )
             }
@@ -65,6 +75,12 @@ public class MainComponentImpl(
                     ),
                 )
             }
+
+            is Params.ChatParams -> MainComponent.Child.Chat(
+                component = ChatComponentImpl(
+                    componentContext = componentContext,
+                ),
+            )
         }
     }
 
@@ -76,6 +92,11 @@ public class MainComponentImpl(
 
         @Serializable
         data object SettingsParams : Params()
+
+        @Serializable
+        data class ChatParams(
+            val chatId: String,
+        ) : Params()
 
     }
 

@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.chats.ui.screens.chatlist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,7 @@ public fun ChatListScreen(
         events = vm.viewEvent,
         onAddClicked = component::onAddClicked,
         onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
+        onChatClicked = component::onChatClicked,
     )
 }
 
@@ -69,6 +71,7 @@ private fun ChatListContent(
     events: Flow<ChatListEvent>,
     onAddClicked: () -> Unit,
     onRefreshChatsTriggered: () -> Unit,
+    onChatClicked: (chatId: String) -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
@@ -104,7 +107,12 @@ private fun ChatListContent(
                             modifier = Modifier
                                 .heightIn(min = 48.dp)
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .clickable(
+                                    onClick = {
+                                        onChatClicked.invoke(chat.id)
+                                    },
+                                ),
                         ) {
                             Text(
                                 modifier = Modifier
@@ -152,7 +160,6 @@ private fun ToolbarComponent(
                     )
                 },
             )
-
         }
     }
 }

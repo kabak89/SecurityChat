@@ -29,6 +29,7 @@ public interface ChatsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner
 }
 
 public class ChatsComponentImpl(
+    private val onChatClicked: (chatId: String) -> Unit,
     componentContext: ComponentContext,
 ) : ChatsComponent,
     BaseComponentImpl(
@@ -60,9 +61,8 @@ public class ChatsComponentImpl(
                 ChatsComponent.Child.ChatList(
                     component = ChatListComponentImpl(
                         componentContext = componentContext,
-                        onAdd = {
-                            navigation.push(Params.AddChatParams)
-                        },
+                        onAdd = { navigation.push(Params.AddChatParams) },
+                        onChatClick = { onChatClicked.invoke(it) },
                     ),
                 )
             }

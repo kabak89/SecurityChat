@@ -7,6 +7,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.security.chat.multiplatform.features.chat.ui.screens.root.ChatRootScreen
 import com.security.chat.multiplatform.features.chats.ui.screens.chats.ChatsScreen
 import com.security.chat.multiplatform.features.main.component.MainComponent
 
@@ -34,6 +35,12 @@ public fun MainScreen(
                 is MainComponent.Child.Settings -> {
                     //TODO
                     println("go to settings")
+                }
+
+                is MainComponent.Child.Chat -> {
+                    ChatRootScreen(
+                        component = child.component,
+                    )
                 }
             }
         },

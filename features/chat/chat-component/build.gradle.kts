@@ -4,8 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -31,12 +30,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.common.coreUi)
-
-            implementation(projects.features.main.mainComponent)
-            implementation(projects.features.chats.chatsComponent)
-            implementation(projects.features.chats.chatsUi)
-            implementation(projects.features.chat.chatUi)
+            api(projects.common.coreComponent)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -46,7 +40,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.features.main.ui"
+    namespace = "com.security.chat.multiplatform.features.chat.component"
     compileSdk = 36
 
     defaultConfig {

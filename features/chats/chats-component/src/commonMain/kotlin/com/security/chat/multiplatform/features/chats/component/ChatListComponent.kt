@@ -7,10 +7,12 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
 public interface ChatListComponent : BaseComponent, DiScopeHolder {
     public fun onAddClicked()
+    public fun onChatClicked(chatId: String)
 }
 
 public class ChatListComponentImpl(
     private val onAdd: () -> Unit,
+    private val onChatClick: (chatId: String) -> Unit,
     componentContext: ComponentContext,
 ) : ChatListComponent,
     BaseComponentImpl(
@@ -20,6 +22,10 @@ public class ChatListComponentImpl(
 
     override fun onAddClicked() {
         onAdd()
+    }
+
+    override fun onChatClicked(chatId: String) {
+        onChatClick(chatId)
     }
 }
 

@@ -94,6 +94,9 @@ kotlin {
             implementation(projects.features.chats.chatsDomain)
             implementation(projects.features.chats.chatsData)
 
+            implementation(projects.features.chat.chatComponent)
+            implementation(projects.features.chat.chatUi)
+
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.provider.optimal)
         }

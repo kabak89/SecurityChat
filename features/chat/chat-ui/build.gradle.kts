@@ -32,11 +32,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.coreUi)
+            implementation(compose.components.resources)
 
-            implementation(projects.features.main.mainComponent)
-            implementation(projects.features.chats.chatsComponent)
-            implementation(projects.features.chats.chatsUi)
-            implementation(projects.features.chat.chatUi)
+            implementation(projects.features.chat.chatComponent)
+//            implementation(projects.features.chats.chatDomain)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -46,7 +45,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.features.main.ui"
+    namespace = "com.security.chat.multiplatform.features.chat.ui"
     compileSdk = 36
 
     defaultConfig {

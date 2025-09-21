@@ -32,6 +32,7 @@ kotlin {
         commonMain.dependencies {
             api(projects.common.coreComponent)
             api(projects.features.chats.chatsComponent)
+            api(projects.features.chat.chatComponent)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

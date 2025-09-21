@@ -47,3 +47,7 @@ include(
     ":features:chats:chats-domain",
     ":features:chats:chats-data",
 )
+include(
+    ":features:chat:chat-component",
+    ":features:chat:chat-ui",
+)
