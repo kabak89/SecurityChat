@@ -6,11 +6,11 @@ import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
 public interface PersonalChatComponent : BaseComponent, DiScopeHolder {
-    public fun onBackClicked()
+    public fun onExitClicked()
 }
 
 public class PersonalChatComponentImpl(
-    private val onBack: () -> Unit,
+    private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : PersonalChatComponent,
     BaseComponentImpl(
@@ -18,10 +18,9 @@ public class PersonalChatComponentImpl(
         scopeId = SCOPE_ID_PERSONAL_CHAT,
     ) {
 
-    override fun onBackClicked() {
-        onBack()
+    override fun onExitClicked() {
+        onExit()
     }
-
 }
 
 public const val SCOPE_ID_PERSONAL_CHAT: String = "SCOPE_ID_PERSONAL_CHAT"

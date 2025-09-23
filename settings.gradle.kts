@@ -27,6 +27,7 @@ include(
     ":common:settings",
     ":common:core-network",
     ":common:core-threading",
+    ":common:icons-kit",
 )
 include(
     ":features:splash:splash-component",

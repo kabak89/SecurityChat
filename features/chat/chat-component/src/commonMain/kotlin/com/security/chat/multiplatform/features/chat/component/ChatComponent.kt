@@ -27,6 +27,7 @@ public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner 
 }
 
 public class ChatComponentImpl(
+    private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatComponent,
     BaseComponentImpl(
@@ -58,7 +59,7 @@ public class ChatComponentImpl(
                 ChatComponent.Child.PersonalChat(
                     component = PersonalChatComponentImpl(
                         componentContext = componentContext,
-                        onBack = { navigation.pop() },
+                        onExit = onExit,
                     ),
                 )
             }

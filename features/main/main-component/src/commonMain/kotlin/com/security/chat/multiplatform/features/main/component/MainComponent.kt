@@ -79,6 +79,7 @@ public class MainComponentImpl(
             is Params.ChatParams -> MainComponent.Child.Chat(
                 component = ChatComponentImpl(
                     componentContext = componentContext,
+                    onExit = { navigation.pop() },
                 ),
             )
         }

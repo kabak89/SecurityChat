@@ -30,8 +30,8 @@ import com.security.chat.multiplatform.features.chats.component.AddChatComponent
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
-import securitychat.features.chats.chats_ui.generated.resources.Res
-import securitychat.features.chats.chats_ui.generated.resources.ic_back
+import securitychat.common.icons_kit.generated.resources.Res
+import securitychat.common.icons_kit.generated.resources.ic_back
 
 @Composable
 public fun AddChatScreen(
@@ -153,7 +153,6 @@ private fun ToolbarComponent(
                     )
                 },
             )
-
         }
         Text(
             modifier = Modifier

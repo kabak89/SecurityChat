@@ -31,22 +31,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(compose.runtime)
-            api(compose.foundation)
-            api(compose.material3)
-
-            api(libs.decompose.extensions.compose)
-
-            api(libs.lifecycle.viewmodel.compose)
-            api(libs.lifecycle.runtime.compose)
-
-            api(libs.koin.core)
-            api(libs.koin.compose)
-            api(libs.koin.composeVM)
-
-            api(libs.kotlinx.coroutines.core)
-
-            api(projects.common.iconsKit)
+            implementation(compose.components.resources)
+            implementation(compose.runtime)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -55,8 +41,12 @@ kotlin {
     }
 }
 
+compose.resources {
+    publicResClass = true
+}
+
 android {
-    namespace = "com.security.chat.multiplatform.common.core.ui"
+    namespace = "com.security.chat.multiplatform.common.icons.kit"
     compileSdk = 36
 
     defaultConfig {

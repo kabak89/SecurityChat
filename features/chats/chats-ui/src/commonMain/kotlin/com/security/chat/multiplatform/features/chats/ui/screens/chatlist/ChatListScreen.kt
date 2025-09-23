@@ -31,8 +31,8 @@ import com.security.chat.multiplatform.features.chats.component.ChatListComponen
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
-import securitychat.features.chats.chats_ui.generated.resources.Res
-import securitychat.features.chats.chats_ui.generated.resources.ic_add
+import securitychat.common.icons_kit.generated.resources.Res
+import securitychat.common.icons_kit.generated.resources.ic_add
 
 @Composable
 public fun ChatListScreen(

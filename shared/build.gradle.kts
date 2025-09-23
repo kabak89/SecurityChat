@@ -72,12 +72,16 @@ kotlin {
 
             implementation(libs.sha2)
 
+            implementation(libs.cryptography.core)
+            implementation(libs.cryptography.provider.optimal)
+
             implementation(projects.common.coreUi)
             implementation(projects.common.coreDomain)
             implementation(projects.common.coreComponent)
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreThreading)
+            implementation(projects.common.iconsKit)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashDomain)
@@ -96,9 +100,6 @@ kotlin {
 
             implementation(projects.features.chat.chatComponent)
             implementation(projects.features.chat.chatUi)
-
-            implementation(libs.cryptography.core)
-            implementation(libs.cryptography.provider.optimal)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
