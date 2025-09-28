@@ -4,5 +4,5 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 internal data class PersonalChatState(
-    val ignore: Unit? = null,
+    val message: String,
 )

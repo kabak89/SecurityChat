@@ -11,8 +11,7 @@
             </option>
             <option name="taskNames">
                 <list>
-                    <option value="jvmRunHot" />
-                    <option value="--mainClass=com.security.chat.desktop.MainKt" />
+                    <option value=":desktopApp:hotRunJvm" />
                     <option value="--auto" />
                 </list>
             </option>

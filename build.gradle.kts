@@ -7,5 +7,5 @@ plugins {
     alias(libs.plugins.compose.compiler).apply(false)
     alias(libs.plugins.kotlinxSerialization).apply(false)
     alias(libs.plugins.jetbrainsCompose).apply(false)
-    id("org.jetbrains.compose.hot-reload") version "1.0.0-beta08" apply false
+    alias(libs.plugins.composeHotReload).apply(false)
 }

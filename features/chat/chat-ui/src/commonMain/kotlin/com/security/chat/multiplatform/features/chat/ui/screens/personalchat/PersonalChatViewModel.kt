@@ -12,7 +12,17 @@ internal class PersonalChatViewModel(
     }
 
     override fun createInitialState(): PersonalChatState {
-        return PersonalChatState()
+        return PersonalChatState(
+            message = "",
+        )
+    }
+
+    fun onMessageEdited(message: String) {
+        //TODO
+    }
+
+    fun onSendMessageClicked() {
+        //TODO
     }
 
 }
