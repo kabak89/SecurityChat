@@ -9,6 +9,7 @@ import com.security.chat.multiplatform.common.settings.di.settingsModule
 import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataModule
 import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
+import com.security.chat.multiplatform.features.chat.domain.di.chatDomainModule
 import com.security.chat.multiplatform.features.chat.ui.di.chatUiModule
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
@@ -43,4 +44,5 @@ val diModules: List<Module> =
         chatsDataModule,
 
         chatUiModule,
+        chatDomainModule,
     )

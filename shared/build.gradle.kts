@@ -101,6 +101,7 @@ kotlin {
 
             implementation(projects.features.chat.chatComponent)
             implementation(projects.features.chat.chatUi)
+            implementation(projects.features.chat.chatDomain)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

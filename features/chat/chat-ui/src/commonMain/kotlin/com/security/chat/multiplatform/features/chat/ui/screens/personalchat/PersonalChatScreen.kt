@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.features.chat.ui.screens.personalchat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -90,6 +92,7 @@ private fun PersonalChatContent(
             modifier = Modifier
                 .fillMaxWidth(),
             message = state.message,
+            sendingInProgress = state.sendingMessageInProgress,
             onMessageEdited = onMessageEdited,
             onSendMessageClicked = onSendMessageClicked,
         )
@@ -100,6 +103,7 @@ private fun PersonalChatContent(
 private fun EditMessageComponent(
     modifier: Modifier = Modifier,
     message: String,
+    sendingInProgress: Boolean,
     onMessageEdited: (String) -> Unit,
     onSendMessageClicked: () -> Unit,
 ) {
@@ -117,19 +121,30 @@ private fun EditMessageComponent(
             },
         )
         Spacer(modifier = Modifier.width(8.dp))
-        IconButton(
+        Box(
             modifier = Modifier
-                .size(48.dp)
                 .align(alignment = Alignment.CenterVertically),
-            onClick = onSendMessageClicked,
-            content = {
-                Icon(
-                    imageVector = vectorResource(Res.drawable.ic_send),
-                    tint = Color.Black,
-                    contentDescription = null,
+        ) {
+            if (sendingInProgress) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(48.dp),
                 )
-            },
-        )
+            } else {
+                IconButton(
+                    modifier = Modifier
+                        .size(48.dp),
+                    onClick = onSendMessageClicked,
+                    content = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.ic_send),
+                            tint = Color.Black,
+                            contentDescription = null,
+                        )
+                    },
+                )
+            }
+        }
         Spacer(modifier = Modifier.width(8.dp))
     }
 }

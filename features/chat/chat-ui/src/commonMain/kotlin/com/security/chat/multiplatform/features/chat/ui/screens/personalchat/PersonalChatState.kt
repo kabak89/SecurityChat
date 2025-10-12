@@ -5,4 +5,5 @@ import androidx.compose.runtime.Immutable
 @Immutable
 internal data class PersonalChatState(
     val message: String,
+    val sendingMessageInProgress: Boolean,
 )

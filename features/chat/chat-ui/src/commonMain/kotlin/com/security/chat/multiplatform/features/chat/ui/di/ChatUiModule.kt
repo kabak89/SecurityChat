@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chat.ui.di
 
+import com.security.chat.multiplatform.features.chat.component.SCOPE_ID_CHAT
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.PersonalChatViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
@@ -9,7 +10,7 @@ public val chatUiModule: Module =
     module {
         viewModel {
             PersonalChatViewModel(
-//                chatsModel = getScope(SCOPE_ID_CHAT).get(),
+                chatModel = getScope(SCOPE_ID_CHAT).get(),
             )
         }
     }
