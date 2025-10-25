@@ -6,19 +6,7 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.sqldelight)
     alias(libs.plugins.composeHotReload)
-}
-
-sqldelight {
-    databases {
-        create("ChatDb") {
-            packageName = "com.security.chat.multiplatform"
-            generateAsync = true
-            dialect(libs.sqlite.dialect)
-        }
-    }
-    linkSqlite = false
 }
 
 kotlin {
@@ -74,7 +62,6 @@ kotlin {
             implementation(libs.sha2)
 
             implementation(libs.cryptography.core)
-            implementation(libs.cryptography.provider.optimal)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.coreDomain)
@@ -82,6 +69,7 @@ kotlin {
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreThreading)
+            implementation(projects.common.coreDb)
             implementation(projects.common.iconsKit)
 
             implementation(projects.features.splash.splashComponent)
@@ -98,23 +86,21 @@ kotlin {
             implementation(projects.features.chats.chatsUi)
             implementation(projects.features.chats.chatsDomain)
             implementation(projects.features.chats.chatsData)
+            implementation(projects.features.chats.chatsDataStorage)
 
             implementation(projects.features.chat.chatComponent)
             implementation(projects.features.chat.chatUi)
             implementation(projects.features.chat.chatDomain)
+            implementation(projects.features.chat.chatData)
+
+            implementation(projects.features.users.usersDataStorage)
         }
         androidMain.dependencies {
-            implementation(libs.sqldelight.driver.android)
-            implementation(libs.android.sqlcipher)
-            implementation(libs.sqlite.android)
             implementation(libs.koin.android)
         }
         iosMain.dependencies {
-            implementation(libs.sqldelight.driver.native)
-            implementation(libs.sqliter.driver)
         }
         jvmMain.dependencies {
-            implementation(libs.sqldelight.driver.sqlite)
         }
         commonTest.dependencies { }
     }

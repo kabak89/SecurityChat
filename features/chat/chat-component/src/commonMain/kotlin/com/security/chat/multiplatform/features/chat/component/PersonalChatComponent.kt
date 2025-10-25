@@ -6,10 +6,13 @@ import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
 public interface PersonalChatComponent : BaseComponent, DiScopeHolder {
+    public val chatId: String
+
     public fun onExitClicked()
 }
 
 public class PersonalChatComponentImpl(
+    override val chatId: String,
     private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : PersonalChatComponent,

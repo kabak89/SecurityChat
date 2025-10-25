@@ -80,6 +80,7 @@ public class MainComponentImpl(
                 component = ChatComponentImpl(
                     componentContext = componentContext,
                     onExit = { navigation.pop() },
+                    chatId = params.chatId,
                 ),
             )
         }

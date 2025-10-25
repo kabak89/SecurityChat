@@ -14,6 +14,8 @@ import kotlinx.serialization.Serializable
 
 public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
 
+    public val chatId: String
+
     public fun onBackClicked()
 
     public val childStack: Value<ChildStack<*, Child>>
@@ -27,6 +29,7 @@ public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner 
 }
 
 public class ChatComponentImpl(
+    override val chatId: String,
     private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatComponent,
@@ -41,7 +44,9 @@ public class ChatComponentImpl(
         childStack(
             source = navigation,
             serializer = Params.serializer(),
-            initialConfiguration = Params.PersonalChatParams,
+            initialConfiguration = Params.PersonalChatParams(
+                chatId = chatId,
+            ),
             handleBackButton = true,
             childFactory = ::createChild,
         )
@@ -60,6 +65,7 @@ public class ChatComponentImpl(
                     component = PersonalChatComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
+                        chatId = params.chatId,
                     ),
                 )
             }
@@ -70,7 +76,9 @@ public class ChatComponentImpl(
     private sealed class Params {
 
         @Serializable
-        data object PersonalChatParams : Params()
+        data class PersonalChatParams(
+            val chatId: String,
+        ) : Params()
 
     }
 

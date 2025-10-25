@@ -6,6 +6,8 @@ import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequ
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatResponse
 import com.security.chat.multiplatform.features.chats.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
+import com.security.chat.multiplatform.features.chats.data.mapper.toSM
+import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
 import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
@@ -17,10 +19,11 @@ import io.ktor.http.HttpStatusCode
 internal class ChatsRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
     private val userStorage: UserStorage,
+    private val chatsStorage: ChatsStorage,
 ) : ChatsRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://192.168.1.3:80")
+        networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
     }
 
     override suspend fun findUser(username: String): FindUserResult {
@@ -71,11 +74,18 @@ internal class ChatsRepoImpl(
             ),
         )
 
-        return response.chats
+        val chats = response.chats
             .map { chatResponse ->
                 ChatDescription(
                     id = chatResponse.id,
+                    firstUserId = chatResponse.firstUserId,
+                    secondUserId = chatResponse.secondUserId,
                 )
             }
+
+        val storageModels = chats.map { it.toSM() }
+        chatsStorage.saveChats(chats = storageModels)
+
+        return chats
     }
 }

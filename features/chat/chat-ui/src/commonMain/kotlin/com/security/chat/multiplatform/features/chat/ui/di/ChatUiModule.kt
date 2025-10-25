@@ -11,6 +11,7 @@ public val chatUiModule: Module =
         viewModel {
             PersonalChatViewModel(
                 chatModel = getScope(SCOPE_ID_CHAT).get(),
+                params = get(),
             )
         }
     }

@@ -28,6 +28,7 @@ include(
     ":common:core-ui",
     ":common:core-domain",
     ":common:core-component",
+    ":common:core-db",
     ":common:settings",
     ":common:core-network",
     ":common:core-threading",
@@ -51,9 +52,14 @@ include(
     ":features:chats:chats-ui",
     ":features:chats:chats-domain",
     ":features:chats:chats-data",
+    ":features:chats:chats-data-storage",
 )
 include(
     ":features:chat:chat-component",
     ":features:chat:chat-ui",
     ":features:chat:chat-domain",
+    ":features:chat:chat-data",
+)
+include(
+    ":features:users:users-data-storage",
 )

@@ -29,6 +29,7 @@ import com.security.chat.multiplatform.features.chat.component.PersonalChatCompo
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.icons_kit.generated.resources.ic_send
@@ -47,6 +48,7 @@ public fun PersonalChatScreen(
     val vm: PersonalChatViewModel = koinViewModel(
         viewModelStoreOwner = component,
         scope = component.getDiScope(),
+        parameters = { parametersOf(component) },
     )
 
     val state = vm.viewState.collectAsStateWithLifecycle().value

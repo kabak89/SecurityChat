@@ -17,7 +17,7 @@ class SignInRepoImpl(
 ) : SignInRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://192.168.1.3:80")
+        networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
     }
 
     override suspend fun signIn(username: String, password: String): SignInResult {

@@ -9,11 +9,13 @@ import com.security.chat.multiplatform.features.authorize.domain.repo.SignUpRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
 import dev.whyoleg.cryptography.CryptographyProvider
-import dev.whyoleg.cryptography.algorithms.EC
-import dev.whyoleg.cryptography.algorithms.ECDSA
+import dev.whyoleg.cryptography.DelicateCryptographyApi
+import dev.whyoleg.cryptography.algorithms.RSA
+import dev.whyoleg.cryptography.materials.key.KeyGenerator
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import org.kotlincrypto.hash.sha2.SHA256
+import kotlin.io.encoding.Base64
 
 internal class SignUpRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -21,7 +23,7 @@ internal class SignUpRepoImpl(
 ) : SignUpRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://192.168.1.3:80")
+        networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
     }
 
     override suspend fun signUp(username: String, password: String): SignUpResult {
@@ -59,35 +61,20 @@ internal class SignUpRepoImpl(
         return SHA256().digest(input.encodeToByteArray()).decodeToString()
     }
 
+    @OptIn(DelicateCryptographyApi::class)
     private suspend fun getKeysPair(): CryptoKeys {
-        // getting default provider
         val provider = CryptographyProvider.Default
-        // getting ECDSA algorithm
-        val ecdsa = provider.get(ECDSA)
-
-        // creating key generator with the specified curve
-        val keyPairGenerator = ecdsa.keyPairGenerator(EC.Curve.P521)
-
-        // generating ECDSA key pair
-        //  types here and below are not required, and just needed to hint reader
-        val keyPair: ECDSA.KeyPair = keyPairGenerator.generateKey()
-
-        // note, the curve should be the same
-//        val decodedPublicKey: ECDSA.PublicKey = ecdsa.publicKeyDecoder(EC.Curve.P521)
-//            .decodeFromByteArray(EC.PublicKey.Format.DER, encodedPublicKey)
-//
-//        val decodedKeyVerificationResult: Boolean =
-//            decodedPublicKey.signatureVerifier(digest = SHA512, format = ECDSA.SignatureFormat.DER)
-//                .tryVerifySignature("text1".encodeToByteArray(), signature)
-//
-//        // will print true
-//        println(decodedKeyVerificationResult)
+        val rsa = provider.get(RSA.RAW)
+        val keyPairGenerator: KeyGenerator<RSA.RAW.KeyPair> = rsa.keyPairGenerator()
+        val keyPair = keyPairGenerator.generateKey()
+        val publicKey = keyPair.publicKey.encodeToByteArray(RSA.PublicKey.Format.DER)
+        val publicString = Base64.encode(publicKey)
+        val privateKeyString = keyPair.privateKey.encodeToByteArray(RSA.PrivateKey.Format.DER)
+        val privateKey = Base64.encode(privateKeyString)
 
         return CryptoKeys(
-            publicKey = keyPair.publicKey.encodeToByteArray(EC.PublicKey.Format.DER)
-                .decodeToString(),
-            privateKey = keyPair.privateKey.encodeToByteArray(EC.PrivateKey.Format.DER)
-                .decodeToString(),
+            publicKey = publicString,
+            privateKey = privateKey,
         )
     }
 

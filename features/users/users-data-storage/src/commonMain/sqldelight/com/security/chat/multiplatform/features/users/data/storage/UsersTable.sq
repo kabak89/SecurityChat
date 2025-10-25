@@ -1,0 +1,20 @@
+CREATE TABLE UsersTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  publicKey TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO UsersTable
+VALUES ?;
+
+getAll:
+SELECT *
+FROM UsersTable;
+
+getById:
+SELECT *
+FROM UsersTable
+WHERE id = ?;
+
+removeAll:
+DELETE FROM UsersTable;

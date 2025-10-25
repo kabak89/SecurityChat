@@ -11,3 +11,5 @@ xcuserdata
 
 # Kotlin 2.0
 .kotlin
+
+*.podspec
