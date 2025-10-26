@@ -6,7 +6,6 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpResult
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpStateInfo
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignUpRepo
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -27,11 +26,9 @@ interface SignUpModel : ScopedModel {
 internal class SignUpModelImpl(
     private val signUpRepo: SignUpRepo,
     dispatcherProvider: DispatcherProviderInterface,
-    coroutineScope: CoroutineScope,
 ) : SignUpModel,
     BaseModel(
         dispatcher = dispatcherProvider.Default,
-        coroutineScope = coroutineScope,
     ) {
 
     private val stateFlow = MutableStateFlow(State())

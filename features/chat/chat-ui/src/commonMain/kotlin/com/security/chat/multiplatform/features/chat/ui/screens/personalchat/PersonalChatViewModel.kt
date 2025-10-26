@@ -19,7 +19,7 @@ internal class PersonalChatViewModel(
 
         chatModel.setChatId(id = params.chatId)
 
-        chatModel.setCurrentMessageFlow()
+        chatModel.getCurrentMessageFlow()
             .onEach { currentMessage ->
                 updateState { it.copy(message = currentMessage) }
             }

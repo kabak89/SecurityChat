@@ -3,12 +3,16 @@ package com.security.chat.multiplatform.features.chat.domain
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
 
@@ -17,17 +21,16 @@ public interface ChatModel : ScopedModel {
 
     public fun setChatId(id: String)
     public fun setCurrentMessageText(text: String)
-    public fun setCurrentMessageFlow(): Flow<String>
+    public fun getCurrentMessageFlow(): Flow<String>
+    public fun getMessagesFlow(): Flow<List<Message>>
 }
 
 internal class ChatModelImpl(
     private val chatRepo: ChatRepo,
-    coroutineScope: CoroutineScope,
     dispatcherProvider: DispatcherProviderInterface,
 ) : ChatModel,
     BaseModel(
         dispatcher = dispatcherProvider.Default,
-        coroutineScope = coroutineScope,
     ) {
 
     private val stateFlow: MutableStateFlow<State> = MutableStateFlow(State())
@@ -47,7 +50,25 @@ internal class ChatModelImpl(
             stateFlow.update { it.copy(currentMessage = "") }
         }
 
+    override fun onPostStart() {
+        super.onPostStart()
+
+        stateFlow
+            .map { it.chatId }
+            .filterNotNull()
+            .take(1)
+            .onEach { chatId ->
+                val messages = chatRepo.fetchMessages(chatId = chatId)
+                println("wqewqeqw messages = $messages")
+            }
+            .launchIn(scope)
+    }
+
     override fun setChatId(id: String) {
+        if (stateFlow.value.chatId != null) {
+            error("Do not change chat id")
+        }
+
         stateFlow.update { it.copy(chatId = id) }
     }
 
@@ -55,15 +76,22 @@ internal class ChatModelImpl(
         stateFlow.update { it.copy(currentMessage = text) }
     }
 
-    override fun setCurrentMessageFlow(): Flow<String> {
+    override fun getCurrentMessageFlow(): Flow<String> {
         return stateFlow
             .map { it.currentMessage }
+            .distinctUntilChanged()
+    }
+
+    override fun getMessagesFlow(): Flow<List<Message>> {
+        return stateFlow
+            .map { it.messages }
             .distinctUntilChanged()
     }
 
     private data class State(
         val currentMessage: String = "",
         val chatId: String? = null,
+        val messages: List<Message> = emptyList(),
     )
 
 }

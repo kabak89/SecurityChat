@@ -6,7 +6,6 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInStateInfo
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignInRepo
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -28,11 +27,9 @@ interface SignInModel : ScopedModel {
 class SignInModelImpl(
     private val signInRepo: SignInRepo,
     dispatcherProvider: DispatcherProviderInterface,
-    coroutineScope: CoroutineScope,
 ) : SignInModel,
     BaseModel(
         dispatcher = dispatcherProvider.Default,
-        coroutineScope = coroutineScope,
     ) {
 
     private val stateFlow = MutableStateFlow(State())

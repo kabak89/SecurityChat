@@ -8,7 +8,6 @@ import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescript
 import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -29,12 +28,10 @@ public interface ChatsModel : ScopedModel {
 
 internal class ChatsModelImpl(
     private val chatsRepo: ChatsRepo,
-    coroutineScope: CoroutineScope,
     dispatcherProvider: DispatcherProviderInterface,
 ) : ChatsModel,
     BaseModel(
         dispatcher = dispatcherProvider.Default,
-        coroutineScope = coroutineScope,
     ) {
 
     private val stateFlow = MutableStateFlow(State())

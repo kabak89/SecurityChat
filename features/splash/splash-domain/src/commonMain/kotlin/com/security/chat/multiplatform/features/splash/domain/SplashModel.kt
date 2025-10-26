@@ -5,7 +5,6 @@ import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.splash.domain.entity.UserState
 import com.security.chat.multiplatform.features.splash.domain.repo.SplashRepo
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -22,11 +21,9 @@ public interface SplashModel : ScopedModel {
 internal class SplashModelImpl(
     private val splashRepo: SplashRepo,
     dispatcherProvider: DispatcherProviderInterface,
-    coroutineScope: CoroutineScope,
 ) : SplashModel,
     BaseModel(
         dispatcher = dispatcherProvider.Default,
-        coroutineScope = coroutineScope,
     ) {
 
     private val stateFlow = MutableStateFlow(State())
