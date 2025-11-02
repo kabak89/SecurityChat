@@ -63,3 +63,7 @@ include(
 include(
     ":features:users:users-data-storage",
 )
+include(
+    ":features:settings:settings-component",
+    ":features:settings:settings-ui",
+)

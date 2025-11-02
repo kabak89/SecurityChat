@@ -30,6 +30,7 @@ public interface ChatsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner
 
 public class ChatsComponentImpl(
     private val onChatClicked: (chatId: String) -> Unit,
+    private val onSettingsClicked: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatsComponent,
     BaseComponentImpl(
@@ -63,6 +64,7 @@ public class ChatsComponentImpl(
                         componentContext = componentContext,
                         onAdd = { navigation.push(Params.AddChatParams) },
                         onChatClick = { onChatClicked.invoke(it) },
+                        onSettingsClick = onSettingsClicked,
                     ),
                 )
             }

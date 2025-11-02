@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -33,6 +31,7 @@ import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_add
+import securitychat.common.icons_kit.generated.resources.ic_settings
 
 @Composable
 public fun ChatListScreen(
@@ -58,18 +57,19 @@ public fun ChatListScreen(
         state = state,
         events = vm.viewEvent,
         onAddClicked = component::onAddClicked,
+        onSettingsClicked = component::onSettingsClicked,
         onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
         onChatClicked = component::onChatClicked,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChatListContent(
     modifier: Modifier = Modifier,
     state: ChatListState,
     events: Flow<ChatListEvent>,
     onAddClicked: () -> Unit,
+    onSettingsClicked: () -> Unit,
     onRefreshChatsTriggered: () -> Unit,
     onChatClicked: (chatId: String) -> Unit,
 ) {
@@ -90,6 +90,7 @@ private fun ChatListContent(
             modifier = Modifier
                 .fillMaxWidth(),
             onAddClicked = onAddClicked,
+            onSettingsClicked = onSettingsClicked,
         )
         PullToRefreshBox(
             modifier = Modifier
@@ -131,12 +132,30 @@ private fun ChatListContent(
 private fun ToolbarComponent(
     modifier: Modifier = Modifier,
     onAddClicked: () -> Unit,
+    onSettingsClicked: () -> Unit,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(modifier = Modifier.weight(0.2f))
+        Row(
+            modifier = Modifier
+                .weight(0.2f),
+            horizontalArrangement = Arrangement.Start,
+        ) {
+            IconButton(
+                modifier = Modifier
+                    .size(48.dp),
+                onClick = onSettingsClicked,
+                content = {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.ic_settings),
+                        tint = Color.Black,
+                        contentDescription = null,
+                    )
+                },
+            )
+        }
         Text(
             modifier = Modifier
                 .weight(0.6f),

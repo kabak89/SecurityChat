@@ -12,6 +12,8 @@ import com.security.chat.multiplatform.features.chat.component.ChatComponent
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
 import com.security.chat.multiplatform.features.chats.component.ChatsComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
+import com.security.chat.multiplatform.features.settings.component.SettingsComponent
+import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import kotlinx.serialization.Serializable
 
 public interface MainComponent : BackHandlerOwner {
@@ -64,6 +66,9 @@ public class MainComponentImpl(
                             )
                             navigation.push(configuration = configuration)
                         },
+                        onSettingsClicked = {
+                            navigation.push(configuration = Params.SettingsParams)
+                        },
                     ),
                 )
             }
@@ -72,17 +77,20 @@ public class MainComponentImpl(
                 MainComponent.Child.Settings(
                     component = SettingsComponentImpl(
                         componentContext = componentContext,
+                        onExit = navigation::pop,
                     ),
                 )
             }
 
-            is Params.ChatParams -> MainComponent.Child.Chat(
-                component = ChatComponentImpl(
-                    componentContext = componentContext,
-                    onExit = { navigation.pop() },
-                    chatId = params.chatId,
-                ),
-            )
+            is Params.ChatParams -> {
+                MainComponent.Child.Chat(
+                    component = ChatComponentImpl(
+                        componentContext = componentContext,
+                        onExit = navigation::pop,
+                        chatId = params.chatId,
+                    ),
+                )
+            }
         }
     }
 

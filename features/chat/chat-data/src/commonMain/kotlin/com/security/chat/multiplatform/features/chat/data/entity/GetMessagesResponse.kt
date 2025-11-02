@@ -10,7 +10,9 @@ internal data class GetMessagesResponse(
 
     @Serializable
     internal data class Message(
+        @SerialName("id") val id: String,
         @SerialName("text") val text: String,
+        @SerialName("authorId") val authorId: String,
     )
 
 }

@@ -34,7 +34,8 @@ kotlin {
             implementation(projects.common.coreUi)
             implementation(compose.components.resources)
 
-            implementation(projects.features.chats.chatsComponent)
+            api(projects.features.chats.chatsComponent)
+
             implementation(projects.features.chats.chatsDomain)
         }
         androidMain.dependencies { }

@@ -67,12 +67,15 @@ internal class ChatRepoImpl(
         chatId: String,
     ): List<Message> {
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
+        val userId = checkNotNull(userStorage.getUserId())
 
         return networkManager.runGet<GetMessagesResponse>(
             relativePath = "/messages",
             request = mapOf("chat-id" to chatId),
         )
-            .messages.map { response ->
+            .messages
+            .filter { it.authorId != userId }
+            .map { response ->
                 response.toDomain(
                     decryptMessage = { encryptedText ->
                         decryptMessage(

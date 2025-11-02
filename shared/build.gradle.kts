@@ -94,14 +94,15 @@ kotlin {
             implementation(projects.features.chat.chatData)
 
             implementation(projects.features.users.usersDataStorage)
+
+            implementation(projects.features.settings.settingsComponent)
+            implementation(projects.features.settings.settingsUi)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
         }
-        iosMain.dependencies {
-        }
-        jvmMain.dependencies {
-        }
+        iosMain.dependencies { }
+        jvmMain.dependencies { }
         commonTest.dependencies { }
     }
 }

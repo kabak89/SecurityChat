@@ -16,6 +16,7 @@ import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
 import com.security.chat.multiplatform.features.chats.data.storage.di.chatsDataStorageModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
 import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
+import com.security.chat.multiplatform.features.settings.ui.di.settingsUiModule
 import com.security.chat.multiplatform.features.splash.data.di.splashDataModule
 import com.security.chat.multiplatform.features.splash.domain.di.splashDomainModule
 import com.security.chat.multiplatform.features.splash.ui.di.splashUiModule
@@ -52,4 +53,6 @@ val diModules: List<Module> =
         chatDataModule,
 
         usersDataStorageModule,
+
+        settingsUiModule,
     )
