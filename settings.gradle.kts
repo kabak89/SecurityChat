@@ -20,8 +20,6 @@ plugins {
 }
 
 rootProject.name = "SecurityChat"
-include(":androidApp")
-include(":desktopApp")
 include(":shared")
 
 include(
@@ -34,6 +32,7 @@ include(
     ":common:core-threading",
     ":common:icons-kit",
     ":common:ui-kit",
+    ":common:app-lifecycle",
 )
 include(
     ":features:splash:splash-component",
@@ -69,4 +68,5 @@ include(
     ":features:settings:settings-ui",
     ":features:settings:settings-domain",
     ":features:settings:settings-data",
+    ":features:settings:settings-data-storage",
 )

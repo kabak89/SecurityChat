@@ -5,6 +5,8 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.ApplicationLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
+import org.koin.core.component.KoinComponent
 import platform.UIKit.UIViewController
 
 @Suppress("unused")
@@ -13,6 +15,9 @@ fun rootViewController(): UIViewController {
     lifecycle.subscribe(
         onCreate = {
             println("ApplicationLifecycle onCreate")
+
+            val appLifecycleChanger: AppLifecycleChanger = DiInjector().getKoin().get()
+            appLifecycleChanger.onAppStarted()
         },
     )
     val rootComponent = RootComponentImpl(
@@ -33,3 +38,5 @@ fun rootViewController(): UIViewController {
         },
     )
 }
+
+private class DiInjector : KoinComponent

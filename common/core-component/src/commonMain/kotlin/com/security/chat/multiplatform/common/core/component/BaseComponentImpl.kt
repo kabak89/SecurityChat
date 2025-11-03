@@ -5,6 +5,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -41,7 +42,12 @@ public abstract class BaseComponentImpl(
                     }
 
                     val dispatcherProvider: DispatcherProviderInterface = get()
-                    CoroutineScope(dispatcherProvider.IO + SupervisorJob() + errorHandler)
+                    CoroutineScope(
+                        dispatcherProvider.IO +
+                                SupervisorJob() +
+                                errorHandler +
+                                CoroutineName(scopeId),
+                    )
                 } bind CoroutineScope::class
             }
         }

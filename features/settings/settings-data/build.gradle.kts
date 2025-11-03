@@ -32,6 +32,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.features.settings.settingsComponent)
             implementation(projects.features.settings.settingsDomain)
+            implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.user.userDataStorage)
         }
         androidMain.dependencies { }

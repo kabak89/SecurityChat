@@ -1,6 +1,8 @@
 package com.security.chat.multiplatform
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
@@ -13,27 +15,43 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
+import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+import com.security.chat.multiplatform.di.diModules
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
+import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
+import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.serialization.Serializable
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
+import org.koin.core.scope.Scope
+import org.koin.dsl.bind
+import org.koin.dsl.module
 
-interface RootComponent : BackHandlerOwner {
+interface RootComponent : BackHandlerOwner, DiScopeHolder {
     val childStack: Value<ChildStack<*, Child>>
 
     fun onBackClicked()
 
-    //child scopes
     sealed interface Child {
 
         class Splash(val component: SplashComponent) : Child
@@ -44,8 +62,11 @@ interface RootComponent : BackHandlerOwner {
 }
 
 class RootComponentImpl(
+    private val onCreate: () -> Unit = {},
     componentContext: ComponentContext,
 ) : RootComponent, ComponentContext by componentContext {
+
+    private var diScope: Scope? = null
 
     init {
         println("RootComponentImpl doOnCreate")
@@ -53,8 +74,46 @@ class RootComponentImpl(
             modules(diModules)
         }
 
+        diScope = getKoin().createScope(
+            scopeId = SCOPE_ID_ROOT,
+            qualifier = named(SCOPE_ID_ROOT),
+        )
+
+        println("scope $SCOPE_ID_ROOT created")
+
+        val coroutineScopeModule = module {
+            scope(named(SCOPE_ID_ROOT)) {
+                scoped {
+                    val errorHandler = CoroutineExceptionHandler { _, e ->
+                        println("error in coroutine scope in $SCOPE_ID_ROOT DI scope: $e")
+                    }
+
+                    val dispatcherProvider: DispatcherProviderInterface = get()
+                    CoroutineScope(
+                        dispatcherProvider.IO +
+                                SupervisorJob() +
+                                errorHandler +
+                                CoroutineName(SCOPE_ID_ROOT),
+                    )
+                } bind CoroutineScope::class
+            }
+        }
+
+        loadKoinModules(coroutineScopeModule)
+
+        lifecycle.doOnCreate {
+            onCreate()
+        }
+
         lifecycle.doOnDestroy {
             println("RootComponentImpl doOnDestroy")
+
+            val scopedCoroutineScope: CoroutineScope = diScope!!.get()
+            scopedCoroutineScope.cancel()
+
+            diScope?.close()
+            println("scope $SCOPE_ID_ROOT closed")
+
             stopKoin()
         }
     }
@@ -77,6 +136,10 @@ class RootComponentImpl(
 
     override fun onBackClicked() {
         navigation.pop()
+    }
+
+    override fun getDiScope(): Scope {
+        return diScope!!
     }
 
     //scope and params corresponding
@@ -150,7 +213,18 @@ class RootComponentImpl(
 
 @Composable
 fun RootContent(rootComponent: RootComponent) {
-    AppTheme {
+    val settingsStorage: SettingsStorage = rootComponent.getKoin().get()
+    val theme = settingsStorage.getCurrentThemeFlow().collectAsState(ThemeSM.Auto).value
+
+    val useDarkTheme = when (theme) {
+        ThemeSM.Auto -> isSystemInDarkTheme()
+        ThemeSM.Dark -> true
+        ThemeSM.Light -> false
+    }
+
+    AppTheme(
+        useDarkTheme = useDarkTheme,
+    ) {
         Children(
             stack = rootComponent.childStack,
             animation = predictiveBackAnimation(

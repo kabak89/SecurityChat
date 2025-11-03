@@ -7,6 +7,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.settings.component.SettingsComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.SettingsMainScreen
+import com.security.chat.multiplatform.features.settings.ui.screens.theme.ThemeScreen
 
 @Composable
 public fun SettingsRootScreen(
@@ -23,6 +24,12 @@ public fun SettingsRootScreen(
             when (val child = it.instance) {
                 is SettingsComponent.Child.SettingsMain -> {
                     SettingsMainScreen(
+                        component = child.component,
+                    )
+                }
+
+                is SettingsComponent.Child.Theme -> {
+                    ThemeScreen(
                         component = child.component,
                     )
                 }

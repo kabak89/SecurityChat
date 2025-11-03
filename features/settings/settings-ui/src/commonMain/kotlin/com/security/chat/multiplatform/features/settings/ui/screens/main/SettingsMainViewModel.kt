@@ -35,6 +35,9 @@ internal class SettingsMainViewModel(
     override fun createInitialState(): SettingsMainState {
         return SettingsMainState(
             items = listOf(
+                SettingItem.Theme(
+                    title = "Theme",
+                ),
                 SettingItem.Logout(
                     title = "Log out",
                 ),
@@ -59,6 +62,10 @@ internal class SettingsMainViewModel(
                         ),
                     )
                 }
+            }
+
+            is SettingItem.Theme -> {
+                sendEvent(SettingsMainEvent.GoToTheme)
             }
         }
     }

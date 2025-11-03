@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,7 +56,7 @@ internal fun SettingsMainScreen(
 
     val state = vm.viewState.collectAsStateWithLifecycle().value
 
-    SettingsMain(
+    SettingsMainScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .imePadding(),
@@ -68,11 +67,12 @@ internal fun SettingsMainScreen(
         onDismissDialog = vm::onDismissDialogClicked,
         onDialogActionClicked = vm::onDialogActionClicked,
         onUserLogOuted = component::onUserLogOuted,
+        onOnGoToThemeClicked = component::onGoToThemeClicked,
     )
 }
 
 @Composable
-private fun SettingsMain(
+private fun SettingsMainScreenContent(
     modifier: Modifier,
     state: SettingsMainState,
     events: Flow<SettingsMainEvent>,
@@ -81,12 +81,14 @@ private fun SettingsMain(
     onDismissDialog: () -> Unit,
     onDialogActionClicked: (action: DialogData.ButtonAction) -> Unit,
     onUserLogOuted: () -> Unit,
+    onOnGoToThemeClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
                 SettingsMainEvent.UserLogOuted -> onUserLogOuted()
+                SettingsMainEvent.GoToTheme -> onOnGoToThemeClicked()
             }
         },
     )
@@ -182,7 +184,7 @@ private fun ToolbarComponent(
                 content = {
                     Icon(
                         imageVector = vectorResource(Res.drawable.ic_back),
-                        tint = Color.Black,
+                        tint = AppTheme.colors.element,
                         contentDescription = null,
                     )
                 },
@@ -205,7 +207,7 @@ private fun ToolbarComponent(
 @Composable
 internal fun SettingsMainScreenPreview() {
     AppTheme {
-        SettingsMain(
+        SettingsMainScreenContent(
             modifier = Modifier.fillMaxSize(),
             state = SettingsMainState(
                 items = listOf(
@@ -222,6 +224,7 @@ internal fun SettingsMainScreenPreview() {
             onDismissDialog = {},
             onDialogActionClicked = {},
             onUserLogOuted = {},
+            onOnGoToThemeClicked = {},
         )
     }
 }
@@ -230,7 +233,7 @@ internal fun SettingsMainScreenPreview() {
 @Composable
 internal fun SettingsMainScreenPreviewWithDialog() {
     AppTheme {
-        SettingsMain(
+        SettingsMainScreenContent(
             modifier = Modifier.fillMaxSize(),
             state = SettingsMainState(
                 items = listOf(
@@ -254,6 +257,7 @@ internal fun SettingsMainScreenPreviewWithDialog() {
             onDismissDialog = {},
             onDialogActionClicked = {},
             onUserLogOuted = {},
+            onOnGoToThemeClicked = {},
         )
     }
 }

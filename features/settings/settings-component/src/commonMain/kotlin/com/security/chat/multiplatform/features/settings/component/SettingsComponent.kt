@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.common.core.component.BaseComponent
@@ -21,6 +22,7 @@ public interface SettingsComponent : BaseComponent, DiScopeHolder, BackHandlerOw
     public sealed interface Child {
 
         public class SettingsMain(public val component: SettingsMainComponent) : Child
+        public class Theme(public val component: ThemeComponent) : Child
 
     }
 
@@ -62,6 +64,16 @@ public class SettingsComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
                         onLogout = onLogout,
+                        onGoToTheme = { navigation.push(Params.Theme) },
+                    ),
+                )
+            }
+
+            Params.Theme -> {
+                SettingsComponent.Child.Theme(
+                    component = ThemeComponentImpl(
+                        componentContext = componentContext,
+                        onBack = navigation::pop,
                     ),
                 )
             }
@@ -73,6 +85,9 @@ public class SettingsComponentImpl(
 
         @Serializable
         data object SettingsMain : Params()
+
+        @Serializable
+        data object Theme : Params()
 
     }
 

@@ -4,8 +4,24 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".SecurityChatApplication"
+        android:name="com.security.chat.multiplatform.SecurityChatApplication"
+        android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+
+        <activity
+            android:name="com.security.chat.multiplatform.common.platform.android.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
 
     </application>
 

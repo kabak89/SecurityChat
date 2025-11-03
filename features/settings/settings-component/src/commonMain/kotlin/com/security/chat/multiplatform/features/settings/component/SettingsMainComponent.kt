@@ -9,12 +9,14 @@ public interface SettingsMainComponent : BaseComponent, DiScopeHolder {
 
     public fun onExitClicked()
     public fun onUserLogOuted()
+    public fun onGoToThemeClicked()
 
 }
 
 public class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
     private val onLogout: () -> Unit,
+    private val onGoToTheme: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsMainComponent,
     BaseComponentImpl(
@@ -28,6 +30,10 @@ public class SettingsMainComponentImpl(
 
     override fun onUserLogOuted() {
         onLogout()
+    }
+
+    override fun onGoToThemeClicked() {
+        onGoToTheme()
     }
 
 }

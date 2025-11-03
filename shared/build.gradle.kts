@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
@@ -72,6 +72,7 @@ kotlin {
             implementation(projects.common.coreDb)
             implementation(projects.common.iconsKit)
             implementation(projects.common.uiKit)
+            implementation(projects.common.appLifecycle)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashDomain)
@@ -100,30 +101,54 @@ kotlin {
             implementation(projects.features.settings.settingsUi)
             implementation(projects.features.settings.settingsDomain)
             implementation(projects.features.settings.settingsData)
+            implementation(projects.features.settings.settingsDataStorage)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
         }
         iosMain.dependencies { }
-        jvmMain.dependencies { }
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+
+            implementation(libs.kotlinx.coroutines.swing)
+        }
         commonTest.dependencies { }
     }
 }
 
 android {
-    namespace = "com.security.chat.multiplatform"
+    namespace = "com.security.chat.multiplatform.android"
     compileSdk = 36
 
     defaultConfig {
+        applicationId = "com.security.chat.multiplatform.android"
         minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
     }
-
+    buildFeatures {
+        compose = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "DebugProbesKt.bin"
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+}
 
-    packaging {
-        resources.excludes += "DebugProbesKt.bin"
+compose.desktop {
+    application {
+        mainClass = "com.security.chat.multiplatform.MainKt"
     }
 }
