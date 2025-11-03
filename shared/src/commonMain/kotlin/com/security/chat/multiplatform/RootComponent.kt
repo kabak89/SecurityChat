@@ -14,6 +14,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
@@ -148,23 +149,25 @@ class RootComponentImpl(
 
 @Composable
 fun RootContent(rootComponent: RootComponent) {
-    Children(
-        stack = rootComponent.childStack,
-        animation = predictiveBackAnimation(
-            backHandler = rootComponent.backHandler,
-            fallbackAnimation = stackAnimation(slide()),
-            onBack = rootComponent::onBackClicked,
-        ),
-        content = {
-            when (val child = it.instance) {
-                is RootComponent.Child.Splash -> SplashScreen(component = child.component)
-                is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
-                is RootComponent.Child.Main -> {
-                    MainScreen(
-                        component = child.component,
-                    )
+    AppTheme {
+        Children(
+            stack = rootComponent.childStack,
+            animation = predictiveBackAnimation(
+                backHandler = rootComponent.backHandler,
+                fallbackAnimation = stackAnimation(slide()),
+                onBack = rootComponent::onBackClicked,
+            ),
+            content = {
+                when (val child = it.instance) {
+                    is RootComponent.Child.Splash -> SplashScreen(component = child.component)
+                    is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
+                    is RootComponent.Child.Main -> {
+                        MainScreen(
+                            component = child.component,
+                        )
+                    }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }

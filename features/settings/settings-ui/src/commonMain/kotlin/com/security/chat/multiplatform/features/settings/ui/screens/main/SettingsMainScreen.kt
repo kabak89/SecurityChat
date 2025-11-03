@@ -1,13 +1,16 @@
 package com.security.chat.multiplatform.features.settings.ui.screens.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,10 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.ui.kit.AlertDialogComponent
+import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.settings.component.SettingsMainComponent
+import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.DialogData
+import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.Res
@@ -53,6 +62,9 @@ internal fun SettingsMainScreen(
         state = state,
         events = vm.viewEvent,
         onBackClicked = component::onExitClicked,
+        onItemClicked = vm::onItemClicked,
+        onDismissDialog = vm::onDismissDialogClicked,
+        onDialogActionClicked = vm::onDialogActionClicked,
     )
 }
 
@@ -62,26 +74,71 @@ private fun SettingsMain(
     state: SettingsMainState,
     events: Flow<SettingsMainEvent>,
     onBackClicked: () -> Unit,
+    onItemClicked: (item: SettingItem) -> Unit,
+    onDismissDialog: () -> Unit,
+    onDialogActionClicked: (action: DialogData.ButtonAction) -> Unit,
 ) {
-    Column(
+    Box(
         modifier = modifier
             .background(Color.White)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
-        ToolbarComponent(
+        Column(
             modifier = Modifier
-                .fillMaxWidth(),
-            onBackClicked = onBackClicked,
-        )
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f),
-            content = {
-                //TODO
-            },
-        )
+                .fillMaxSize(),
+        ) {
+            ToolbarComponent(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                onBackClicked = onBackClicked,
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f),
+                content = {
+                    state.items.forEach { item ->
+                        item(key = item.hashCode()) {
+                            ItemComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                item = item,
+                                onItemClicked = { onItemClicked(item) },
+                            )
+                        }
+                    }
+                },
+            )
+        }
+        if (state.dialogData != null) {
+            AlertDialogComponent(
+                title = state.dialogData.title,
+                message = state.dialogData.message,
+                positiveButtonText = state.dialogData.positiveButtonTitle,
+                negativeButtonText = state.dialogData.negativeButtonTitle,
+                onDismissRequest = onDismissDialog,
+                onPositiveButtonClicked = {
+                    onDialogActionClicked(state.dialogData.positiveButtonAction)
+                },
+                onNegativeButtonClicked = {
+                    onDialogActionClicked(state.dialogData.negativeButtonAction)
+                },
+            )
+        }
     }
+}
+
+@Composable
+private fun ItemComponent(
+    modifier: Modifier = Modifier,
+    item: SettingItem,
+    onItemClicked: () -> Unit,
+) {
+    Text(
+        modifier = modifier
+            .clickable(onClick = onItemClicked)
+            .padding(all = 16.dp),
+        text = item.title,
+    )
 }
 
 @Composable
@@ -120,6 +177,59 @@ private fun ToolbarComponent(
         Spacer(
             modifier = Modifier
                 .weight(0.2f),
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun SettingsMainScreenPreview() {
+    AppTheme {
+        SettingsMain(
+            modifier = Modifier.fillMaxSize(),
+            state = SettingsMainState(
+                items = listOf(
+                    SettingItem.Logout(
+                        title = "logout",
+                    ),
+                ),
+                dialogData = null,
+            ),
+            events = emptyFlow(),
+            onBackClicked = {},
+            onItemClicked = {},
+            onDismissDialog = {},
+            onDialogActionClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun SettingsMainScreenPreviewWithDialog() {
+    AppTheme {
+        SettingsMain(
+            modifier = Modifier.fillMaxSize(),
+            state = SettingsMainState(
+                items = listOf(
+                    SettingItem.Logout(
+                        title = "logout",
+                    ),
+                ),
+                dialogData = DialogData(
+                    title = "Title",
+                    message = "Message",
+                    positiveButtonTitle = "Ok",
+                    negativeButtonTitle = "Cance",
+                    positiveButtonAction = DialogData.ButtonAction.Ok,
+                    negativeButtonAction = DialogData.ButtonAction.Cancel,
+                ),
+            ),
+            events = emptyFlow(),
+            onBackClicked = {},
+            onItemClicked = {},
+            onDismissDialog = {},
+            onDialogActionClicked = {},
         )
     }
 }

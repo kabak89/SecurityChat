@@ -33,6 +33,7 @@ include(
     ":common:core-network",
     ":common:core-threading",
     ":common:icons-kit",
+    ":common:ui-kit",
 )
 include(
     ":features:splash:splash-component",

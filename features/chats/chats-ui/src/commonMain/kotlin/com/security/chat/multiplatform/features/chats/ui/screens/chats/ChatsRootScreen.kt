@@ -10,7 +10,7 @@ import com.security.chat.multiplatform.features.chats.ui.screens.addchat.AddChat
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.ChatListScreen
 
 @Composable
-public fun ChatsScreen(
+public fun ChatsRootScreen(
     component: ChatsComponent,
 ) {
     Children(

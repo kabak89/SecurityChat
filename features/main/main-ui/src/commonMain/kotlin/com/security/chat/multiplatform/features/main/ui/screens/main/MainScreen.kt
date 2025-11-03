@@ -8,7 +8,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.chat.ui.screens.root.ChatRootScreen
-import com.security.chat.multiplatform.features.chats.ui.screens.chats.ChatsScreen
+import com.security.chat.multiplatform.features.chats.ui.screens.chats.ChatsRootScreen
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.root.SettingsRootScreen
 
@@ -28,7 +28,7 @@ public fun MainScreen(
         content = {
             when (val child = it.instance) {
                 is MainComponent.Child.Chats -> {
-                    ChatsScreen(
+                    ChatsRootScreen(
                         component = child.component,
                     )
                 }

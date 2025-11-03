@@ -31,33 +31,29 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(compose.runtime)
-            api(compose.foundation)
-            api(compose.material3)
+//            implementation(compose.components.resources)
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
 
-            api(libs.decompose.extensions.compose)
-
-            api(libs.lifecycle.viewmodel.compose)
-            api(libs.lifecycle.runtime.compose)
-
-            api(libs.koin.core)
-            api(libs.koin.compose)
-            api(libs.koin.composeVM)
-
-            api(libs.kotlinx.coroutines.core)
-
-            api(projects.common.iconsKit)
-            api(projects.common.uiKit)
+            api(libs.ui.tooling.preview)
         }
-        androidMain.dependencies { }
+        androidMain.dependencies {
+            //todo replace with debugApi
+            api(compose.uiTooling)
+        }
         iosMain.dependencies { }
         jvmMain.dependencies { }
         commonTest.dependencies { }
     }
 }
 
+compose.resources {
+    publicResClass = true
+}
+
 android {
-    namespace = "com.security.chat.multiplatform.common.core.ui"
+    namespace = "com.security.chat.multiplatform.common.ui.kit"
     compileSdk = 36
 
     defaultConfig {

@@ -71,6 +71,7 @@ kotlin {
             implementation(projects.common.coreThreading)
             implementation(projects.common.coreDb)
             implementation(projects.common.iconsKit)
+            implementation(projects.common.uiKit)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashDomain)

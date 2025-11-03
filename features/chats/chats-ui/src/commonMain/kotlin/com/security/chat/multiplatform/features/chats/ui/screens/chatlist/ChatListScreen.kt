@@ -20,11 +20,11 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
+import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chats.component.ChatListComponent
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
@@ -82,7 +82,7 @@ private fun ChatListContent(
 
     Column(
         modifier = modifier
-            .background(Color.White)
+            .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -119,6 +119,8 @@ private fun ChatListContent(
                                 modifier = Modifier
                                     .align(Alignment.CenterStart),
                                 text = chat.id,
+                                color = AppTheme.colors.textPrimary,
+                                style = AppTheme.typography.default,
                             )
                         }
                     }
@@ -150,7 +152,7 @@ private fun ToolbarComponent(
                 content = {
                     Icon(
                         imageVector = vectorResource(Res.drawable.ic_settings),
-                        tint = Color.Black,
+                        tint = AppTheme.colors.element,
                         contentDescription = null,
                     )
                 },
@@ -160,6 +162,8 @@ private fun ToolbarComponent(
             modifier = Modifier
                 .weight(0.6f),
             text = "Chats",
+            color = AppTheme.colors.textPrimary,
+            style = AppTheme.typography.default,
             textAlign = TextAlign.Center,
         )
         Row(
@@ -174,7 +178,7 @@ private fun ToolbarComponent(
                 content = {
                     Icon(
                         imageVector = vectorResource(Res.drawable.ic_add),
-                        tint = Color.Black,
+                        tint = AppTheme.colors.element,
                         contentDescription = null,
                     )
                 },
