@@ -1,3 +1,7 @@
 package com.security.chat.multiplatform.features.settings.ui.screens.main
 
-internal sealed interface SettingsMainEvent
+internal sealed interface SettingsMainEvent {
+
+    data object UserLogOuted : SettingsMainEvent
+
+}

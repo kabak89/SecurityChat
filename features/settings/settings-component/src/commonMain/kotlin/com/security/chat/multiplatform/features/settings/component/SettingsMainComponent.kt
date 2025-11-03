@@ -8,11 +8,13 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 public interface SettingsMainComponent : BaseComponent, DiScopeHolder {
 
     public fun onExitClicked()
+    public fun onUserLogOuted()
 
 }
 
 public class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
+    private val onLogout: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsMainComponent,
     BaseComponentImpl(
@@ -23,6 +25,11 @@ public class SettingsMainComponentImpl(
     override fun onExitClicked() {
         onExit()
     }
+
+    override fun onUserLogOuted() {
+        onLogout()
+    }
+
 }
 
 public const val SCOPE_ID_SETTINGS_MAIN: String = "SCOPE_ID_SETTINGS_MAIN"

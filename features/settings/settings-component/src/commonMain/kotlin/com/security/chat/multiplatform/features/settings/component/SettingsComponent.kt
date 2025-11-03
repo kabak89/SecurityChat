@@ -28,6 +28,7 @@ public interface SettingsComponent : BaseComponent, DiScopeHolder, BackHandlerOw
 
 public class SettingsComponentImpl(
     private val onExit: () -> Unit,
+    private val onLogout: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsComponent,
     BaseComponentImpl(
@@ -60,6 +61,7 @@ public class SettingsComponentImpl(
                     component = SettingsMainComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
+                        onLogout = onLogout,
                     ),
                 )
             }

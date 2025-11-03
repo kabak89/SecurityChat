@@ -108,6 +108,7 @@ class RootComponentImpl(
     private fun createMainComponent(componentContext: ComponentContext): MainComponent {
         return MainComponentImpl(
             componentContext = componentContext,
+            onLogout = { navigation.replaceAll(Params.Authorize) },
         )
     }
 

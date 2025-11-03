@@ -8,4 +8,5 @@ import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.
 internal data class SettingsMainState(
     val items: List<SettingItem>,
     val dialogData: DialogData?,
+    val requestInProgress: Boolean,
 )

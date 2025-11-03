@@ -67,4 +67,6 @@ include(
 include(
     ":features:settings:settings-component",
     ":features:settings:settings-ui",
+    ":features:settings:settings-domain",
+    ":features:settings:settings-data",
 )

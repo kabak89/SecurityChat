@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.settings.component.SettingsMainComponent
@@ -65,6 +67,7 @@ internal fun SettingsMainScreen(
         onItemClicked = vm::onItemClicked,
         onDismissDialog = vm::onDismissDialogClicked,
         onDialogActionClicked = vm::onDialogActionClicked,
+        onUserLogOuted = component::onUserLogOuted,
     )
 }
 
@@ -77,10 +80,20 @@ private fun SettingsMain(
     onItemClicked: (item: SettingItem) -> Unit,
     onDismissDialog: () -> Unit,
     onDialogActionClicked: (action: DialogData.ButtonAction) -> Unit,
+    onUserLogOuted: () -> Unit,
 ) {
+    SingleEventEffect(
+        sideEffectFlow = events,
+        collector = { event ->
+            when (event) {
+                SettingsMainEvent.UserLogOuted -> onUserLogOuted()
+            }
+        },
+    )
+
     Box(
         modifier = modifier
-            .background(Color.White)
+            .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -122,6 +135,13 @@ private fun SettingsMain(
                 onNegativeButtonClicked = {
                     onDialogActionClicked(state.dialogData.negativeButtonAction)
                 },
+            )
+        }
+        if (state.requestInProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center),
+                color = AppTheme.colors.element,
             )
         }
     }
@@ -194,12 +214,14 @@ internal fun SettingsMainScreenPreview() {
                     ),
                 ),
                 dialogData = null,
+                requestInProgress = false,
             ),
             events = emptyFlow(),
             onBackClicked = {},
             onItemClicked = {},
             onDismissDialog = {},
             onDialogActionClicked = {},
+            onUserLogOuted = {},
         )
     }
 }
@@ -224,12 +246,14 @@ internal fun SettingsMainScreenPreviewWithDialog() {
                     positiveButtonAction = DialogData.ButtonAction.Ok,
                     negativeButtonAction = DialogData.ButtonAction.Cancel,
                 ),
+                requestInProgress = false,
             ),
             events = emptyFlow(),
             onBackClicked = {},
             onItemClicked = {},
             onDismissDialog = {},
             onDialogActionClicked = {},
+            onUserLogOuted = {},
         )
     }
 }

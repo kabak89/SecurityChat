@@ -33,6 +33,7 @@ public interface MainComponent : BackHandlerOwner {
 }
 
 public class MainComponentImpl(
+    private val onLogout: () -> Unit,
     componentContext: ComponentContext,
 ) : MainComponent, ComponentContext by componentContext {
 
@@ -78,6 +79,7 @@ public class MainComponentImpl(
                     component = SettingsComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
+                        onLogout = onLogout,
                     ),
                 )
             }

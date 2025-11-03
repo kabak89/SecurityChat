@@ -98,6 +98,8 @@ kotlin {
 
             implementation(projects.features.settings.settingsComponent)
             implementation(projects.features.settings.settingsUi)
+            implementation(projects.features.settings.settingsDomain)
+            implementation(projects.features.settings.settingsData)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
