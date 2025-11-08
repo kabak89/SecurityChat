@@ -18,13 +18,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.PersonalChatComponent
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
@@ -76,7 +78,7 @@ private fun PersonalChatContent(
 ) {
     Column(
         modifier = modifier
-            .background(Color.White)
+            .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -114,6 +116,9 @@ private fun EditMessageComponent(
     Row(
         modifier = modifier,
     ) {
+        val textSecondaryColor = AppTheme.colors.textSecondary
+        val placeholderColor = remember { textSecondaryColor.copy(alpha = 0.3f) }
+
         TextField(
             modifier = Modifier
                 .weight(1f),
@@ -123,6 +128,17 @@ private fun EditMessageComponent(
             placeholder = {
                 Text("Message")
             },
+            colors = TextFieldDefaults.colors().copy(
+                focusedContainerColor = AppTheme.colors.backgroundSecondary,
+                unfocusedContainerColor = AppTheme.colors.backgroundSecondary,
+                focusedTextColor = AppTheme.colors.textSecondary,
+                unfocusedTextColor = AppTheme.colors.textSecondary,
+                cursorColor = AppTheme.colors.element,
+                focusedPlaceholderColor = placeholderColor,
+                unfocusedPlaceholderColor = placeholderColor,
+                focusedIndicatorColor = AppTheme.colors.element,
+                unfocusedIndicatorColor = AppTheme.colors.element,
+            ),
         )
         Spacer(modifier = Modifier.width(8.dp))
         Box(
@@ -133,6 +149,7 @@ private fun EditMessageComponent(
                 CircularProgressIndicator(
                     modifier = Modifier
                         .size(48.dp),
+                    color = AppTheme.colors.element,
                 )
             } else {
                 IconButton(
@@ -141,8 +158,10 @@ private fun EditMessageComponent(
                     onClick = onSendMessageClicked,
                     content = {
                         Icon(
+                            modifier = Modifier
+                                .size(32.dp),
                             imageVector = vectorResource(Res.drawable.ic_send),
-                            tint = Color.Black,
+                            tint = AppTheme.colors.element,
                             contentDescription = null,
                         )
                     },
@@ -174,7 +193,7 @@ private fun ToolbarComponent(
                 content = {
                     Icon(
                         imageVector = vectorResource(Res.drawable.ic_back),
-                        tint = Color.Black,
+                        tint = AppTheme.colors.element,
                         contentDescription = null,
                     )
                 },
@@ -185,6 +204,7 @@ private fun ToolbarComponent(
                 .weight(0.6f),
             text = "Chat",
             textAlign = TextAlign.Center,
+            color = AppTheme.colors.textPrimary,
         )
         Spacer(
             modifier = Modifier

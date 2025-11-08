@@ -17,8 +17,9 @@ import androidx.compose.ui.unit.sp
 private val lightColorPalette: AppColors =
     AppColors(
         backgroundPrimary = Color(0xFFFFFFFF),
-        backgroundSecondary = Color(0xFF808080),
+        backgroundSecondary = Color(0xFFA9A9A9),
         textPrimary = Color(0xFF000000),
+        textSecondary = Color(0xFF131313),
         iconPrimary = Color(0xFF000000),
         element = Color(0xFF808080),
     )
@@ -26,8 +27,9 @@ private val lightColorPalette: AppColors =
 private val darkColorPalette: AppColors =
     AppColors(
         backgroundPrimary = Color(0xFF000000),
-        backgroundSecondary = Color(0xFF808080),
+        backgroundSecondary = Color(0xFF343434),
         textPrimary = Color(0xFFFFFFFF),
+        textSecondary = Color(0xFFE1E1E1),
         iconPrimary = Color(0xFFFFFFFF),
         element = Color(0xFF808080),
     )
