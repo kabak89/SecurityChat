@@ -70,6 +70,7 @@ kotlin {
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreThreading)
             implementation(projects.common.coreDb)
+            implementation(projects.common.coreTime)
             implementation(projects.common.iconsKit)
             implementation(projects.common.uiKit)
             implementation(projects.common.appLifecycle)
@@ -94,6 +95,7 @@ kotlin {
             implementation(projects.features.chat.chatUi)
             implementation(projects.features.chat.chatDomain)
             implementation(projects.features.chat.chatData)
+            implementation(projects.features.chat.chatDataStorage)
 
             implementation(projects.features.users.usersDataStorage)
 

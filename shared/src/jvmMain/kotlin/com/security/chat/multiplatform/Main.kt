@@ -37,9 +37,13 @@ fun main() {
             windowState = windowState,
         )
 
-        Window(onCloseRequest = ::exitApplication) {
-            RootContent(root)
-        }
+        Window(
+            onCloseRequest = ::exitApplication,
+            title = "Security Chat",
+            content = {
+                RootContent(root)
+            },
+        )
     }
 }
 

@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -30,21 +29,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.serialization)
+            api(libs.kotlinx.datetime)
+
             implementation(libs.koin.core)
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.cryptography.core)
-            implementation(libs.cryptography.provider.optimal)
-
-            implementation(projects.common.coreNetwork)
-            implementation(projects.common.coreTime)
-
-            implementation(projects.features.chat.chatComponent)
-            implementation(projects.features.chat.chatDomain)
-            implementation(projects.features.user.userDataStorage)
-            implementation(projects.features.users.usersDataStorage)
-            implementation(projects.features.chats.chatsDataStorage)
-            implementation(projects.features.chat.chatDataStorage)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -54,7 +41,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.features.chat.data"
+    namespace = "com.security.chat.multiplatform.common.core.time"
     compileSdk = 36
 
     defaultConfig {

@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.features.chat.component.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.domain.ChatModel
+import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -31,12 +32,20 @@ internal class PersonalChatViewModel(
                 updateState { it.copy(sendingMessageInProgress = state.isLoading) }
             }
             .launchIn(viewModelScope)
+
+        chatModel.getMessagesFlow()
+            .onEach { messages ->
+                val newMessages = messages.map { it.toUi() }
+                updateState { it.copy(messages = newMessages) }
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): PersonalChatState {
         return PersonalChatState(
             message = "",
             sendingMessageInProgress = false,
+            messages = emptyList(),
         )
     }
 

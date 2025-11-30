@@ -45,6 +45,7 @@ import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.bind
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 interface RootComponent : BackHandlerOwner, DiScopeHolder {
@@ -70,8 +71,12 @@ class RootComponentImpl(
 
     init {
         println("RootComponentImpl doOnCreate")
-        startKoin {
-            modules(diModules)
+        val koinApplication = koinApplication(createEagerInstances = false) {
+            startKoin(
+                appDeclaration = {
+                    modules(diModules)
+                },
+            )
         }
 
         diScope = getKoin().createScope(
@@ -100,6 +105,8 @@ class RootComponentImpl(
         }
 
         loadKoinModules(coroutineScopeModule)
+
+        koinApplication.createEagerInstances()
 
         lifecycle.doOnCreate {
             onCreate()

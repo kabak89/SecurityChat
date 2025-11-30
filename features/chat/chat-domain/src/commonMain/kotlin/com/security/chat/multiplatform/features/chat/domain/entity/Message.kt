@@ -4,4 +4,5 @@ public data class Message(
     val id: String,
     val text: String,
     val authorId: String,
+    val timestamp: Long,
 )

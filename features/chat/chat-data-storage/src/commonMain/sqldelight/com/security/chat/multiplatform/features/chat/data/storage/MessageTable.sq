@@ -1,0 +1,32 @@
+CREATE TABLE MessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  chatId TEXT NOT NULL,
+  text TEXT NOT NULL,
+  authorId TEXT NOT NULL,
+  status TEXT NOT NULL,
+  timestamp INTEGER NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO MessageTable
+VALUES ?;
+
+getAll:
+SELECT *
+FROM MessageTable;
+
+getById:
+SELECT *
+FROM MessageTable
+WHERE id = ?;
+
+getPaged:
+SELECT *
+FROM MessageTable
+WHERE chatId = ?
+ORDER BY timestamp DESC
+LIMIT :limit
+OFFSET :offset;
+
+removeAll:
+DELETE FROM MessageTable;

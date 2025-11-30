@@ -33,8 +33,7 @@ public class NetworkManager(
         relativePath: String,
         request: Params,
     ): Response {
-        return httpClient.post(urlString = baseUrl + relativePath)
-        {
+        return httpClient.post(urlString = baseUrl + relativePath) {
             setBody(request)
             contentType(ContentType.Application.Json)
         }

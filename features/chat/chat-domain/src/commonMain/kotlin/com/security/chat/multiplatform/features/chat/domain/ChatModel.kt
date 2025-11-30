@@ -42,12 +42,14 @@ internal class ChatModelImpl(
 
             val chatId = checkNotNull(stateFlow.value.chatId)
 
-            chatRepo.sendMessage(
+            chatRepo.saveMessage(
                 message = currentMessage,
                 chatId = chatId,
             )
 
             stateFlow.update { it.copy(currentMessage = "") }
+
+            chatRepo.uploadMessages(chatId = chatId)
         }
 
     override fun onPostStart() {
@@ -58,8 +60,7 @@ internal class ChatModelImpl(
             .filterNotNull()
             .take(1)
             .onEach { chatId ->
-                val messages = chatRepo.fetchMessages(chatId = chatId)
-                println("wqewqeqw messages = $messages")
+                chatRepo.fetchMessages(chatId = chatId)
             }
             .launchIn(scope)
     }
@@ -83,15 +84,16 @@ internal class ChatModelImpl(
     }
 
     override fun getMessagesFlow(): Flow<List<Message>> {
-        return stateFlow
-            .map { it.messages }
-            .distinctUntilChanged()
+        val chatId = checkNotNull(stateFlow.value.chatId)
+
+        return chatRepo.getMessagesFlow(
+            chatId = chatId,
+        )
     }
 
     private data class State(
         val currentMessage: String = "",
         val chatId: String? = null,
-        val messages: List<Message> = emptyList(),
     )
 
 }

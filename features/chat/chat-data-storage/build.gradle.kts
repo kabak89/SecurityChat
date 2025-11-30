@@ -4,7 +4,21 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.sqldelight)
+    alias(libs.plugins.kotlinCocoapods)
+}
+
+val modulePackage = "com.security.chat.multiplatform.features.chat.data.storage"
+
+sqldelight {
+    databases {
+        create("ChatDb") {
+            packageName = modulePackage
+            generateAsync = true
+            dialect(libs.sqlite.dialect)
+        }
+    }
+    linkSqlite = false
 }
 
 kotlin {
@@ -30,31 +44,32 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.serialization)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.cryptography.core)
-            implementation(libs.cryptography.provider.optimal)
 
-            implementation(projects.common.coreNetwork)
-            implementation(projects.common.coreTime)
-
-            implementation(projects.features.chat.chatComponent)
-            implementation(projects.features.chat.chatDomain)
-            implementation(projects.features.user.userDataStorage)
-            implementation(projects.features.users.usersDataStorage)
-            implementation(projects.features.chats.chatsDataStorage)
-            implementation(projects.features.chat.chatDataStorage)
+            implementation(projects.common.coreDb)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
         jvmMain.dependencies { }
         commonTest.dependencies { }
     }
+
+    cocoapods {
+        name = modulePackage
+        ios.deploymentTarget = "14.0"
+        version = "1.0.0"
+
+        pod(
+            name = "SQLCipher",
+            version = libs.versions.iosSqlCipher.get(),
+            linkOnly = true,
+        )
+    }
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.features.chat.data"
+    namespace = modulePackage
     compileSdk = 36
 
     defaultConfig {

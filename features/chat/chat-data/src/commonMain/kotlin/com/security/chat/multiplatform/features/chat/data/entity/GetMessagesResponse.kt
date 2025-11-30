@@ -13,6 +13,7 @@ internal data class GetMessagesResponse(
         @SerialName("id") val id: String,
         @SerialName("text") val text: String,
         @SerialName("authorId") val authorId: String,
+        @SerialName("timestamp") val timestamp: Long,
     )
 
 }

@@ -2,10 +2,15 @@ package com.security.chat.multiplatform.features.chat.data.repoimpl
 
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
+import com.security.chat.multiplatform.common.core.time.TimeProvider
 import com.security.chat.multiplatform.features.chat.data.entity.GetMessagesResponse
 import com.security.chat.multiplatform.features.chat.data.entity.GetPublicKeyResponse
+import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
+import com.security.chat.multiplatform.features.chat.data.mapper.toSM
+import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
@@ -14,7 +19,11 @@ import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.RSA
 import dev.whyoleg.cryptography.algorithms.SHA512
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlin.io.encoding.Base64
+import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -23,17 +32,31 @@ internal class ChatRepoImpl(
     private val userStorage: UserStorage,
     private val usersStorage: UsersStorage,
     private val chatsStorage: ChatsStorage,
+    private val chatStorage: ChatStorage,
+    private val timeProvider: TimeProvider,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
         networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
     }
 
-    @OptIn(ExperimentalUuidApi::class)
-    override suspend fun sendMessage(
+    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
+    override suspend fun saveMessage(
         message: String,
         chatId: String,
     ) {
+        val messageSM = MessageSM(
+            id = Uuid.random().toString(),
+            chatId = chatId,
+            text = message,
+            authorId = checkNotNull(userStorage.getUserId()),
+            status = MessageSM.Status.Created,
+            timestamp = timeProvider.now().toEpochMilliseconds(),
+        )
+        chatStorage.saveMessage(messageSM)
+    }
+
+    override suspend fun uploadMessages(chatId: String) {
         val authorId = checkNotNull(userStorage.getUserId())
         val chat = checkNotNull(chatsStorage.getChat(chatId))
         val receiverId = if (chat.secondUserId == authorId) {
@@ -43,33 +66,52 @@ internal class ChatRepoImpl(
         }
 
         val publicKey = usersStorage.getPublicKey(receiverId) ?: run {
-            networkManager.runGet<GetPublicKeyResponse>(
+            val newPublicKey = networkManager.runGet<GetPublicKeyResponse>(
                 relativePath = "/users/public-key",
                 request = mapOf("id" to receiverId),
             )
                 .publicKey
+
+            usersStorage.setPublicKey(userId = receiverId, publicKey = newPublicKey)
+            newPublicKey
         }
 
-        val encryptedMessage = encryptMessage(message = message, publicKeyString = publicKey)
-
-        networkManager.runPost<SendMessageRequest, Unit>(
-            relativePath = "/messages",
-            request = SendMessageRequest(
-                id = Uuid.random().toString(),
-                authorId = authorId,
-                chatId = chatId,
-                message = encryptedMessage,
-            ),
+        val messagesToUpload = chatStorage.getMessages(
+            chatId = chatId,
+            limit = Long.MAX_VALUE,
+            offset = 0,
         )
+            .filter { it.status == MessageSM.Status.Created }
+
+        messagesToUpload
+            .forEach { message ->
+                val encryptedText = encryptText(
+                    text = message.text,
+                    publicKeyString = publicKey,
+                )
+
+                networkManager.runPost<SendMessageRequest, Unit>(
+                    relativePath = "/messages",
+                    request = SendMessageRequest(
+                        id = message.id,
+                        authorId = authorId,
+                        chatId = chatId,
+                        message = encryptedText,
+                    ),
+                )
+            }
+
+        val messagesToUpdate = messagesToUpload.map { it.copy(status = MessageSM.Status.Sent) }
+        messagesToUpdate.forEach { message -> chatStorage.updateMessage(message) }
     }
 
     override suspend fun fetchMessages(
         chatId: String,
-    ): List<Message> {
+    ) {
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
         val userId = checkNotNull(userStorage.getUserId())
 
-        return networkManager.runGet<GetMessagesResponse>(
+        val messages = networkManager.runGet<GetMessagesResponse>(
             relativePath = "/messages",
             request = mapOf("chat-id" to chatId),
         )
@@ -78,16 +120,53 @@ internal class ChatRepoImpl(
             .map { response ->
                 response.toDomain(
                     decryptMessage = { encryptedText ->
-                        decryptMessage(
-                            message = encryptedText,
+                        decryptText(
+                            text = encryptedText,
                             privateKeyString = privateKey,
                         )
                     },
                 )
             }
+            .map {
+                it.toSM(
+                    chatId = chatId,
+                )
+            }
+
+        val messageIds = messages.map { it.id }
+
+        if (messageIds.isNotEmpty()) {
+            val companionId = messages.first().authorId
+
+            networkManager.runPost<MessagesReceivedRequest, Unit>(
+                relativePath = "/messages/received",
+                request = MessagesReceivedRequest(
+                    authorId = companionId,
+                    chatId = chatId,
+                    messageIds = messageIds,
+                ),
+            )
+        }
+
+        chatStorage.saveMessages(messages)
     }
 
-    private suspend fun encryptMessage(message: String, publicKeyString: String): String {
+    override fun getMessagesFlow(chatId: String): Flow<List<Message>> {
+        //TODO add paging
+        return chatStorage.getMessagesFlow(
+            chatId = chatId,
+            limit = Long.MAX_VALUE,
+        )
+            .map { messages ->
+                messages
+                    .map { message ->
+                        message.toDomain()
+                    }
+            }
+            .distinctUntilChanged()
+    }
+
+    private suspend fun encryptText(text: String, publicKeyString: String): String {
         val provider = CryptographyProvider.Default
         val rsa = provider.get(RSA.OAEP)
         val publicKeyBytes = Base64.decode(publicKeyString)
@@ -95,12 +174,12 @@ internal class ChatRepoImpl(
             format = RSA.PublicKey.Format.DER,
             bytes = publicKeyBytes,
         )
-        val plaintextBytes = message.encodeToByteArray()
+        val plaintextBytes = text.encodeToByteArray()
         val encryptedMessage = publicKey.encryptor().encrypt(plaintextBytes)
         return Base64.encode(encryptedMessage)
     }
 
-    private suspend fun decryptMessage(message: String, privateKeyString: String): String {
+    private suspend fun decryptText(text: String, privateKeyString: String): String {
         val provider = CryptographyProvider.Default
         val rsa = provider.get(RSA.OAEP)
         val privateKeyBytes = Base64.decode(privateKeyString)
@@ -108,7 +187,7 @@ internal class ChatRepoImpl(
             format = RSA.PrivateKey.Format.DER,
             bytes = privateKeyBytes,
         )
-        val messageBytes = Base64.decode(message)
+        val messageBytes = Base64.decode(text)
         return privateKey.decryptor().decrypt(messageBytes).decodeToString()
     }
 

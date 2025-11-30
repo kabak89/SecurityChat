@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
@@ -24,11 +25,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -90,8 +94,16 @@ private fun PersonalChatContent(
         LazyColumn(
             modifier = Modifier
                 .weight(1f),
+            reverseLayout = true,
             content = {
-                //TODO
+                state.messages.forEach { message ->
+                    item(key = message.id) {
+                        MessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = message,
+                        )
+                    }
+                }
             },
         )
         EditMessageComponent(
@@ -101,6 +113,23 @@ private fun PersonalChatContent(
             sendingInProgress = state.sendingMessageInProgress,
             onMessageEdited = onMessageEdited,
             onSendMessageClicked = onSendMessageClicked,
+        )
+    }
+}
+
+@Composable
+private fun MessageComponent(
+    modifier: Modifier = Modifier,
+    message: MessageUM,
+) {
+    Row(
+        modifier = modifier
+            .padding(all = 16.dp),
+    ) {
+        Text(
+            modifier = Modifier,
+            text = message.text,
+            color = AppTheme.colors.textPrimary,
         )
     }
 }
@@ -209,6 +238,34 @@ private fun ToolbarComponent(
         Spacer(
             modifier = Modifier
                 .weight(0.2f),
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun SettingsMainScreenPreview() {
+    AppTheme {
+        PersonalChatContent(
+            modifier = Modifier.fillMaxSize(),
+            state = PersonalChatState(
+                message = "",
+                sendingMessageInProgress = false,
+                messages = listOf(
+                    MessageUM(
+                        id = "1",
+                        text = "some text",
+                    ),
+                    MessageUM(
+                        id = "2",
+                        text = "some text 2",
+                    ),
+                ),
+            ),
+            events = emptyFlow(),
+            onBackClicked = {},
+            onMessageEdited = {},
+            onSendMessageClicked = {},
         )
     }
 }

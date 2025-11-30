@@ -4,12 +4,14 @@ import com.security.chat.multiplatform.common.core.db.di.coreDbModule
 import com.security.chat.multiplatform.common.core.network.di.coreNetworkModule
 import com.security.chat.multiplatform.common.core.network.di.networkEngineModule
 import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
+import com.security.chat.multiplatform.common.core.time.di.coreTimeModule
 import com.security.chat.multiplatform.common.platform.di.platformModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
 import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataModule
 import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
 import com.security.chat.multiplatform.features.chat.data.di.chatDataModule
+import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataStorageModule
 import com.security.chat.multiplatform.features.chat.domain.di.chatDomainModule
 import com.security.chat.multiplatform.features.chat.ui.di.chatUiModule
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
@@ -33,6 +35,7 @@ val diModules: List<Module> =
 
         coreThreadingModule,
         coreDbModule,
+        coreTimeModule,
         settingsModule,
         platformModule,
         coreNetworkModule,
@@ -56,6 +59,7 @@ val diModules: List<Module> =
         chatUiModule,
         chatDomainModule,
         chatDataModule,
+        chatDataStorageModule,
 
         usersDataStorageModule,
 
