@@ -3,22 +3,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
     explicitApi = ExplicitApiMode.Strict
-
-    androidTarget {
-        compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_1_8)
-                }
-            }
-        }
-    }
 
     listOf(
         iosX64(),
@@ -44,18 +34,11 @@ kotlin {
         jvmMain.dependencies { }
         commonTest.dependencies { }
     }
-}
 
-android {
-    namespace = "com.security.chat.multiplatform.common.core.component"
-    compileSdk = 36
-
-    defaultConfig {
+    android {
+        namespace = "com.security.chat.multiplatform.common.core.component"
+        compileSdk = 36
         minSdk = 26
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }

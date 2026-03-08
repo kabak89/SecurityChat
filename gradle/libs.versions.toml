@@ -1,15 +1,16 @@
 [versions]
-agp = "8.13.2"
+agp = "9.1.0"
 decompose = "3.4.0"
 kotlin = "2.3.10"
 compose = "1.10.4"
-compose-material3 = "1.4.0"
+compose-kmp = "1.10.2"
 androidx-activityCompose = "1.12.4"
 kotlinx-serialization = "1.10.0"
 compose-plugin = "1.10.2"
 androidxlifecycle = "2.9.6"
 koin = "4.1.1"
 coroutines = "1.10.2"
+material3 = "1.9.0-beta03"
 remo = "1.2.0"
 sha2 = "0.8.0"
 sqldelight = "2.2.1"
@@ -27,14 +28,13 @@ kotlinxDatetime = "0.7.1"
 [libraries]
 decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
 decompose-extensions-compose = { module = "com.arkivanov.decompose:extensions-compose", version.ref = "decompose" }
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
-kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-kmp" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-kmp" }
+compose-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-kmp" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxlifecycle" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxlifecycle" }
 lifecycle-common = { module = "org.jetbrains.androidx.lifecycle:lifecycle-common", version.ref = "androidxlifecycle" }
@@ -47,7 +47,6 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 kode-remo = { module = "ru.kode:remo", version.ref = "remo" }
 
@@ -86,7 +85,7 @@ ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", v
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
