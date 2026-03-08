@@ -1,9 +1,12 @@
 package com.security.chat.multiplatform.common.core.network.di
 
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
 import com.security.chat.multiplatform.common.core.network.HttpClientFactory
 import com.security.chat.multiplatform.common.core.network.HttpClientFactoryImpl
+import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactoryImpl
+import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -23,4 +26,21 @@ public val coreNetworkModule: Module =
         singleOf(::HttpClientFactoryImpl) bind HttpClientFactory::class
 
         singleOf(::NetworkManagerFactoryImpl) bind NetworkManagerFactory::class
+
+        single {
+            LiveEventsManager(
+                json = get(),
+                socketConfig = get(),
+                coroutineScope = getScope(SCOPE_ID_ROOT).get(),
+                httpClientFactory = get(),
+            )
+        }
+
+        single {
+            SocketConfig(
+                host = "192.168.1.5",
+                path = "/ws",
+                port = 80,
+            )
+        }
     }

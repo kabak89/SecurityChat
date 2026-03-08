@@ -1,8 +1,11 @@
 package com.security.chat.multiplatform.features.chat.data.repoimpl
 
+import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.time.TimeProvider
+import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
+import com.security.chat.multiplatform.features.chat.data.entity.ChatSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.GetMessagesResponse
 import com.security.chat.multiplatform.features.chat.data.entity.GetPublicKeyResponse
 import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
@@ -34,6 +37,7 @@ internal class ChatRepoImpl(
     private val chatsStorage: ChatsStorage,
     private val chatStorage: ChatStorage,
     private val timeProvider: TimeProvider,
+    private val liveEventsManager: LiveEventsManager,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -164,6 +168,43 @@ internal class ChatRepoImpl(
                     }
             }
             .distinctUntilChanged()
+    }
+
+    override suspend fun subscribeToNewMessages(chatId: String) {
+        val authorId = requireNotNull(userStorage.getUserId())
+        val subscribeMessage = ChatSubscribeMessage(
+            chatId = chatId,
+            authorId = authorId,
+        )
+
+        val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
+
+        liveEventsManager.subscribe<ChatMessage, ChatSubscribeMessage>(
+            subscribeMessage = subscribeMessage,
+            type = "chat_message",
+        )
+            .collect { chatMessage ->
+                val newMessage = chatMessage.toDomain(
+                    decryptMessage = { encryptedText ->
+                        decryptText(
+                            text = encryptedText,
+                            privateKeyString = privateKey,
+                        )
+                    },
+                )
+
+                val storageModel = newMessage.toSM(chatId)
+                chatStorage.saveMessage(storageModel)
+
+                networkManager.runPost<MessagesReceivedRequest, Unit>(
+                    relativePath = "/messages/received",
+                    request = MessagesReceivedRequest(
+                        authorId = newMessage.authorId,
+                        chatId = chatId,
+                        messageIds = listOf(newMessage.id),
+                    ),
+                )
+            }
     }
 
     private suspend fun encryptText(text: String, publicKeyString: String): String {

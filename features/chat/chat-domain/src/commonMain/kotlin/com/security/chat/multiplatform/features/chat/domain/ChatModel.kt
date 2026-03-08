@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 
 public interface ChatModel : ScopedModel {
@@ -63,6 +65,18 @@ internal class ChatModelImpl(
                 chatRepo.fetchMessages(chatId = chatId)
             }
             .launchIn(scope)
+
+        scope.launch {
+            val chatId = stateFlow.map { it.chatId }.filterNotNull().first()
+
+            chatRepo.getMessagesFlow(chatId)
+                .onEach { messages ->
+                    stateFlow.update { it.copy(messages = messages) }
+                }
+                .launchIn(scope)
+
+            chatRepo.subscribeToNewMessages(chatId)
+        }
     }
 
     override fun setChatId(id: String) {
@@ -84,16 +98,15 @@ internal class ChatModelImpl(
     }
 
     override fun getMessagesFlow(): Flow<List<Message>> {
-        val chatId = checkNotNull(stateFlow.value.chatId)
-
-        return chatRepo.getMessagesFlow(
-            chatId = chatId,
-        )
+        return stateFlow
+            .map { it.messages }
+            .distinctUntilChanged()
     }
 
     private data class State(
         val currentMessage: String = "",
         val chatId: String? = null,
+        val messages: List<Message> = emptyList(),
     )
 
 }

@@ -1,10 +1,10 @@
 package com.security.chat.multiplatform.features.chat.data.mapper
 
-import com.security.chat.multiplatform.features.chat.data.entity.GetMessagesResponse
+import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 
-internal suspend fun GetMessagesResponse.Message.toDomain(
+internal suspend fun ChatMessage.toDomain(
     decryptMessage: suspend (encryptedText: String) -> String,
 ): Message {
     return Message(

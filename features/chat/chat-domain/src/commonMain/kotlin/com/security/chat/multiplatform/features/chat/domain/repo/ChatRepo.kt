@@ -18,4 +18,6 @@ public interface ChatRepo {
 
     public fun getMessagesFlow(chatId: String): Flow<List<Message>>
 
+    public suspend fun subscribeToNewMessages(chatId: String)
+
 }

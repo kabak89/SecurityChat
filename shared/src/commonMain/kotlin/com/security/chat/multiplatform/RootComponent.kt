@@ -243,11 +243,7 @@ fun RootContent(rootComponent: RootComponent) {
                 when (val child = it.instance) {
                     is RootComponent.Child.Splash -> SplashScreen(component = child.component)
                     is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
-                    is RootComponent.Child.Main -> {
-                        MainScreen(
-                            component = child.component,
-                        )
-                    }
+                    is RootComponent.Child.Main -> MainScreen(component = child.component)
                 }
             },
         )

@@ -27,23 +27,9 @@ public fun MainScreen(
         ),
         content = {
             when (val child = it.instance) {
-                is MainComponent.Child.Chats -> {
-                    ChatsRootScreen(
-                        component = child.component,
-                    )
-                }
-
-                is MainComponent.Child.Settings -> {
-                    SettingsRootScreen(
-                        component = child.component,
-                    )
-                }
-
-                is MainComponent.Child.Chat -> {
-                    ChatRootScreen(
-                        component = child.component,
-                    )
-                }
+                is MainComponent.Child.Chats -> ChatsRootScreen(component = child.component)
+                is MainComponent.Child.Settings -> SettingsRootScreen(component = child.component)
+                is MainComponent.Child.Chat -> ChatRootScreen(component = child.component)
             }
         },
     )
