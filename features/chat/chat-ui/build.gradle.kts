@@ -28,7 +28,9 @@ kotlin {
 
             implementation(projects.features.chat.chatDomain)
         }
-        androidMain.dependencies { }
+        androidMain.dependencies {
+            implementation(libs.androidx.ui.tooling)
+        }
         iosMain.dependencies { }
         jvmMain.dependencies { }
         commonTest.dependencies { }
