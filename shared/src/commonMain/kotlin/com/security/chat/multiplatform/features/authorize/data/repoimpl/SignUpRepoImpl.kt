@@ -11,7 +11,7 @@ import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoK
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.DelicateCryptographyApi
 import dev.whyoleg.cryptography.algorithms.RSA
-import dev.whyoleg.cryptography.materials.key.KeyGenerator
+import dev.whyoleg.cryptography.operations.KeyGenerator
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import org.kotlincrypto.hash.sha2.SHA256
