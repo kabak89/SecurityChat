@@ -28,7 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
-import com.security.chat.multiplatform.features.settings.component.SettingsMainComponent
+import com.security.chat.multiplatform.features.settings.ui.component.SettingsMainComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.DialogData
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
 import kotlinx.coroutines.flow.Flow

@@ -10,15 +10,13 @@ import org.koin.dsl.module
 
 public val splashDomainModule: Module =
     module {
-        scope(named(SCOPE_ID_SPLASH)) {
-            scoped {
-                SplashModelImpl(
-                    splashRepo = get(),
-                    dispatcherProvider = get(),
-                )
-                    .apply {
-                        start(parentScope = get())
-                    }
-            } bind SplashModel::class
-        }
+        single {
+            SplashModelImpl(
+                splashRepo = get(),
+                dispatcherProvider = get(),
+            )
+                .apply {
+                    start(parentScope = get(named(SCOPE_ID_SPLASH)))
+                }
+        } bind SplashModel::class
     }

@@ -7,26 +7,15 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.backhandler.BackHandlerOwner
-import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
+import com.security.chat.multiplatform.features.settings.data.di.settingsDataModule
+import com.security.chat.multiplatform.features.settings.domain.di.settingsDomainModule
+import com.security.chat.multiplatform.features.settings.ui.component.SettingsMainComponentImpl
+import com.security.chat.multiplatform.features.settings.ui.di.settingsUiModule
 import kotlinx.serialization.Serializable
-
-public interface SettingsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
-
-    public val childStack: Value<ChildStack<*, Child>>
-
-    public fun onBackClicked()
-
-    public sealed interface Child {
-
-        public class SettingsMain(public val component: SettingsMainComponent) : Child
-        public class Theme(public val component: ThemeComponent) : Child
-
-    }
-
-}
 
 public class SettingsComponentImpl(
     private val onExit: () -> Unit,
@@ -39,6 +28,20 @@ public class SettingsComponentImpl(
     ) {
 
     private val navigation = StackNavigation<Params>()
+
+    init {
+        val featureModules = listOf(
+            settingsUiModule,
+            settingsDomainModule,
+            settingsDataModule,
+        )
+        doOnCreate {
+            getKoin().loadModules(featureModules)
+        }
+        doOnDestroy {
+            getKoin().unloadModules(featureModules)
+        }
+    }
 
     override val childStack: Value<ChildStack<*, SettingsComponent.Child>> =
         childStack(
@@ -90,7 +93,6 @@ public class SettingsComponentImpl(
         data object Theme : Params()
 
     }
-
 }
 
 public const val SCOPE_ID_SETTINGS: String = "SCOPE_ID_SETTINGS"

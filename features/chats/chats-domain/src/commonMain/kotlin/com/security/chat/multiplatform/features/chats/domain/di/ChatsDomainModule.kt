@@ -10,15 +10,13 @@ import org.koin.dsl.module
 
 public val chatsDomainModule: Module =
     module {
-        scope(named(SCOPE_ID_CHATS)) {
-            scoped {
-                ChatsModelImpl(
-                    chatsRepo = get(),
-                    dispatcherProvider = get(),
-                )
-                    .apply {
-                        start(parentScope = get())
-                    }
-            } bind ChatsModel::class
-        }
+        single {
+            ChatsModelImpl(
+                chatsRepo = get(),
+                dispatcherProvider = get(),
+            )
+                .apply {
+                    start(parentScope = get(named(SCOPE_ID_CHATS)))
+                }
+        } bind ChatsModel::class
     }

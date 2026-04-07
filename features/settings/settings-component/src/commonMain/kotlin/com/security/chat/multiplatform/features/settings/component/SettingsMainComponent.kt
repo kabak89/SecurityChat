@@ -1,19 +1,12 @@
-package com.security.chat.multiplatform.features.settings.component
+package com.security.chat.multiplatform.features.settings.ui.component
 
 import com.arkivanov.decompose.ComponentContext
-import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.settings.domain.SettingsModel
+import org.koin.core.qualifier.named
 
-public interface SettingsMainComponent : BaseComponent, DiScopeHolder {
-
-    public fun onExitClicked()
-    public fun onUserLogOuted()
-    public fun onGoToThemeClicked()
-
-}
-
-public class SettingsMainComponentImpl(
+internal class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
     private val onLogout: () -> Unit,
     private val onGoToTheme: () -> Unit,
@@ -23,6 +16,13 @@ public class SettingsMainComponentImpl(
         componentContext = componentContext,
         scopeId = SCOPE_ID_SETTINGS_MAIN,
     ) {
+
+    init {
+        doOnCreate {
+            val settingsModel: SettingsModel = getKoin().get()
+            settingsModel.start(parentScope = getKoin().get(named(SCOPE_ID_SETTINGS_MAIN)))
+        }
+    }
 
     override fun onExitClicked() {
         onExit()

@@ -99,10 +99,7 @@ kotlin {
 
             implementation(projects.features.users.usersDataStorage)
 
-            implementation(projects.features.settings.settingsComponent)
-            implementation(projects.features.settings.settingsUi)
-            implementation(projects.features.settings.settingsDomain)
-            implementation(projects.features.settings.settingsData)
+            //TODO move settings model to feature/common with app global lifecycle
             implementation(projects.features.settings.settingsDataStorage)
         }
         androidMain.dependencies {

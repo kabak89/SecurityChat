@@ -24,6 +24,8 @@ kotlin {
 
             implementation(projects.features.chats.chatsComponent)
             implementation(projects.features.chat.chatComponent)
+
+            implementation(projects.features.settings.settingsComponentApi)
             implementation(projects.features.settings.settingsComponent)
         }
         androidMain.dependencies { }
@@ -34,8 +36,8 @@ kotlin {
 
     android {
         namespace = "com.security.chat.multiplatform.features.main.component"
-        compileSdk = 36
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }

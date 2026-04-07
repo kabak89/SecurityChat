@@ -20,7 +20,6 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.features.settings.settingsComponent)
             implementation(projects.features.settings.settingsDomain)
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.user.userDataStorage)
@@ -33,8 +32,8 @@ kotlin {
 
     android {
         namespace = "com.security.chat.multiplatform.features.settings.data"
-        compileSdk = 36
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }

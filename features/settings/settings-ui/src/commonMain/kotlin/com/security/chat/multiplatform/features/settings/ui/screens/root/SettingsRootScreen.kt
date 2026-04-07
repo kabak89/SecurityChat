@@ -5,7 +5,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
-import com.security.chat.multiplatform.features.settings.component.SettingsComponent
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.SettingsMainScreen
 import com.security.chat.multiplatform.features.settings.ui.screens.theme.ThemeScreen
 

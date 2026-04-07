@@ -1,17 +1,10 @@
 package com.security.chat.multiplatform.features.settings.component
 
 import com.arkivanov.decompose.ComponentContext
-import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.settings.component.api.ThemeComponent
 
-public interface ThemeComponent : BaseComponent, DiScopeHolder {
-
-    public fun onBackClicked()
-
-}
-
-public class ThemeComponentImpl(
+internal class ThemeComponentImpl(
     private val onBack: () -> Unit,
     componentContext: ComponentContext,
 ) : ThemeComponent,

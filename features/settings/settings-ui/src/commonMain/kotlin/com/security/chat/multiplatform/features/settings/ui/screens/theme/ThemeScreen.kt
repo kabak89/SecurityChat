@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
-import com.security.chat.multiplatform.features.settings.component.ThemeComponent
+import com.security.chat.multiplatform.features.settings.component.api.ThemeComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.theme.entity.ThemeItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

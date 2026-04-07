@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import org.koin.core.component.get
 import org.koin.core.context.loadKoinModules
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
@@ -35,30 +36,44 @@ public abstract class BaseComponentImpl(
         println("scope $scopeId created")
 
         val coroutineScopeModule = module {
-            scope(named(scopeId)) {
-                scoped {
-                    val errorHandler = CoroutineExceptionHandler { _, e ->
-                        println("error in coroutine scope in $scopeId DI scope: $e")
-                    }
+            single(named(scopeId)) {
+                val errorHandler = CoroutineExceptionHandler { _, e ->
+                    println("error in coroutine scope in $scopeId DI scope: $e")
+                }
 
-                    val dispatcherProvider: DispatcherProviderInterface = get()
-                    CoroutineScope(
-                        dispatcherProvider.IO +
-                                SupervisorJob() +
-                                errorHandler +
-                                CoroutineName(scopeId),
-                    )
-                } bind CoroutineScope::class
-            }
+                val dispatcherProvider: DispatcherProviderInterface = get()
+                CoroutineScope(
+                    dispatcherProvider.IO +
+                            SupervisorJob() +
+                            errorHandler +
+                            CoroutineName(scopeId),
+                )
+            } bind CoroutineScope::class
         }
 
         loadKoinModules(coroutineScopeModule)
+
+        runCatching {
+            val coroutineScope: CoroutineScope = getKoin().get()
+            println(coroutineScope)
+        }
+            .onFailure {
+                println(it)
+            }
+
+        runCatching {
+            val coroutineScope: CoroutineScope = getKoin().getScope(scopeId).get()
+            println(coroutineScope)
+        }
+            .onFailure {
+                println(it)
+            }
 
         lifecycle.doOnDestroy {
             println("component ${this::class.simpleName} destroyed")
             viewModelStore.clear()
 
-            val scopedCoroutineScope: CoroutineScope = diScope!!.get()
+            val scopedCoroutineScope: CoroutineScope = get(named(scopeId))
             scopedCoroutineScope.cancel()
 
             diScope?.close()

@@ -21,10 +21,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.common.coreUi)
             implementation(libs.compose.resources)
 
-            api(projects.features.settings.settingsComponent)
+            implementation(projects.common.coreUi)
+
+            api(projects.features.settings.settingsComponentApi)
 
             implementation(projects.features.settings.settingsDomain)
         }
@@ -36,8 +37,8 @@ kotlin {
 
     android {
         namespace = "com.security.chat.multiplatform.features.settings.ui"
-        compileSdk = 36
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }
