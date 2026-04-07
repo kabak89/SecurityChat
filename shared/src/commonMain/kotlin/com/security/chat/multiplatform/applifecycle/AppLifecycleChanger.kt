@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.applifecycle
 
-internal interface AppLifecycleChanger {
+interface AppLifecycleChanger {
 
     fun onAppStarted()
 

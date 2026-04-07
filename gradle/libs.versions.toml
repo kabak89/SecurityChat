@@ -1,5 +1,12 @@
 [versions]
+#android
 agp = "9.1.0"
+android-compileSdk = "36"
+android-minSdk = "26"
+android-targetSdk = "36"
+activityCompose = "1.13.0"
+#android
+
 decompose = "3.5.0"
 kotlin = "2.3.20"
 compose = "1.10.3"
@@ -25,6 +32,8 @@ kotlinxDatetime = "0.7.1"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+
 decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
 decompose-extensions-compose = { module = "com.arkivanov.decompose:extensions-compose", version.ref = "decompose" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }

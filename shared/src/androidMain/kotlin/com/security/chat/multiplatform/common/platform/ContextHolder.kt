@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.common
+package com.security.chat.multiplatform.common.platform
 
 import android.content.Context
 

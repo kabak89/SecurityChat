@@ -1,7 +1,7 @@
 package com.security.chat.multiplatform
 
 import android.app.Application
-import com.security.chat.multiplatform.common.ContextHolder
+import com.security.chat.multiplatform.common.platform.ContextHolder
 
 class SecurityChatApplication : Application() {
 

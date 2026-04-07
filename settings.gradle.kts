@@ -21,6 +21,7 @@ plugins {
 
 rootProject.name = "SecurityChat"
 include(":shared")
+include(":androidApp")
 
 include(
     ":common:core-ui",
