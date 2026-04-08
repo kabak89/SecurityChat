@@ -1,15 +1,11 @@
 package com.security.chat.multiplatform.features.chat.component
 
 import com.arkivanov.decompose.ComponentContext
-import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
-
-public interface PersonalChatComponent : BaseComponent, DiScopeHolder {
-    public val chatId: String
-
-    public fun onExitClicked()
-}
+import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.domain.ChatModel
+import org.koin.core.qualifier.named
 
 public class PersonalChatComponentImpl(
     override val chatId: String,
@@ -20,6 +16,13 @@ public class PersonalChatComponentImpl(
         componentContext = componentContext,
         scopeId = SCOPE_ID_PERSONAL_CHAT,
     ) {
+
+    init {
+        doOnCreate {
+            val chatModel: ChatModel = getKoin().get()
+            chatModel.start(parentScope = getKoin().get(named(SCOPE_ID_PERSONAL_CHAT)))
+        }
+    }
 
     override fun onExitClicked() {
         onExit()

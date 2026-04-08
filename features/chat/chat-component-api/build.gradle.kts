@@ -19,7 +19,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.common.coreDomain)
+            api(projects.common.coreComponent)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -28,7 +28,7 @@ kotlin {
     }
 
     android {
-        namespace = "com.security.chat.multiplatform.features.chat.domain"
+        namespace = "com.security.chat.multiplatform.features.chat.component.api"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8

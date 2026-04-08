@@ -6,27 +6,14 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.backhandler.BackHandlerOwner
-import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
+import com.security.chat.multiplatform.features.chat.data.di.chatDataModule
+import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataStorageModule
+import com.security.chat.multiplatform.features.chat.domain.di.chatDomainModule
+import com.security.chat.multiplatform.features.chat.ui.di.chatUiModule
 import kotlinx.serialization.Serializable
-
-public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
-
-    public val chatId: String
-
-    public fun onBackClicked()
-
-    public val childStack: Value<ChildStack<*, Child>>
-
-    public sealed interface Child {
-
-        public class PersonalChat(public val component: PersonalChatComponent) : Child
-
-    }
-
-}
 
 public class ChatComponentImpl(
     override val chatId: String,
@@ -50,6 +37,19 @@ public class ChatComponentImpl(
             handleBackButton = true,
             childFactory = ::createChild,
         )
+
+    init {
+        val featureModules = listOf(
+            chatUiModule,
+            chatDomainModule,
+            chatDataModule,
+            chatDataStorageModule,
+        )
+        getKoin().loadModules(featureModules)
+        doOnDestroy {
+            getKoin().unloadModules(featureModules)
+        }
+    }
 
     override fun onBackClicked() {
         navigation.pop()

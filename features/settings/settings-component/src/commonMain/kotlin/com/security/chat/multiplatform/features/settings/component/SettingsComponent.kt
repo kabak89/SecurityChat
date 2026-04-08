@@ -7,7 +7,6 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
@@ -35,9 +34,7 @@ public class SettingsComponentImpl(
             settingsDomainModule,
             settingsDataModule,
         )
-        doOnCreate {
-            getKoin().loadModules(featureModules)
-        }
+        getKoin().loadModules(featureModules)
         doOnDestroy {
             getKoin().unloadModules(featureModules)
         }

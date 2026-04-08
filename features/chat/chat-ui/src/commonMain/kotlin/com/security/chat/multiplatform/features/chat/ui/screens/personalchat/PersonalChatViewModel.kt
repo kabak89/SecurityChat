@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
-import com.security.chat.multiplatform.features.chat.component.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.domain.ChatModel
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
 import kotlinx.coroutines.flow.launchIn

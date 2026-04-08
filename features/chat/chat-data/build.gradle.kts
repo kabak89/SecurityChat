@@ -29,7 +29,6 @@ kotlin {
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreTime)
 
-            implementation(projects.features.chat.chatComponent)
             implementation(projects.features.chat.chatDomain)
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.users.usersDataStorage)
@@ -44,8 +43,8 @@ kotlin {
 
     android {
         namespace = "com.security.chat.multiplatform.features.chat.data"
-        compileSdk = 36
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }

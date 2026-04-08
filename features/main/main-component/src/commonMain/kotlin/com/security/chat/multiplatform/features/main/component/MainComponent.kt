@@ -8,8 +8,8 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
-import com.security.chat.multiplatform.features.chat.component.ChatComponent
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
+import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
 import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl

@@ -10,10 +10,6 @@ import com.security.chat.multiplatform.common.settings.di.settingsModule
 import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataModule
 import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
-import com.security.chat.multiplatform.features.chat.data.di.chatDataModule
-import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataStorageModule
-import com.security.chat.multiplatform.features.chat.domain.di.chatDomainModule
-import com.security.chat.multiplatform.features.chat.ui.di.chatUiModule
 import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
 import com.security.chat.multiplatform.features.splash.data.di.splashDataModule
 import com.security.chat.multiplatform.features.splash.domain.di.splashDomainModule
@@ -43,11 +39,6 @@ val diModules: List<Module> =
         splashDataModule,
 
         userDataStorageModule,
-
-        chatUiModule,
-        chatDomainModule,
-        chatDataModule,
-        chatDataStorageModule,
 
         usersDataStorageModule,
 

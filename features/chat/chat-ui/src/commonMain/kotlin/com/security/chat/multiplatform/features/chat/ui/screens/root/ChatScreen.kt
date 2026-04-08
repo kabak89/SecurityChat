@@ -5,7 +5,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
-import com.security.chat.multiplatform.features.chat.component.ChatComponent
+import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.PersonalChatScreen
 
 @Composable

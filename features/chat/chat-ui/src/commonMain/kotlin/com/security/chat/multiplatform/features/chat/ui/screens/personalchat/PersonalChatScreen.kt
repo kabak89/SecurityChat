@@ -29,7 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
-import com.security.chat.multiplatform.features.chat.component.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

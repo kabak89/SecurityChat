@@ -85,12 +85,6 @@ kotlin {
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.main.mainUi)
 
-            implementation(projects.features.chat.chatComponent)
-            implementation(projects.features.chat.chatUi)
-            implementation(projects.features.chat.chatDomain)
-            implementation(projects.features.chat.chatData)
-            implementation(projects.features.chat.chatDataStorage)
-
             implementation(projects.features.users.usersDataStorage)
 
             //TODO move settings model to feature/common with app global lifecycle

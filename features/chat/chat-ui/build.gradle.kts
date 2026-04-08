@@ -21,10 +21,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.common.coreUi)
             implementation(libs.compose.resources)
 
-            api(projects.features.chat.chatComponent)
+            implementation(projects.common.coreUi)
+
+            api(projects.features.chat.chatComponentApi)
 
             implementation(projects.features.chat.chatDomain)
         }
@@ -38,8 +39,8 @@ kotlin {
 
     android {
         namespace = "com.security.chat.multiplatform.features.chat.ui"
-        compileSdk = 36
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }
