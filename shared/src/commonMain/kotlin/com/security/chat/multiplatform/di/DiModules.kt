@@ -11,9 +11,6 @@ import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataM
 import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
 import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
-import com.security.chat.multiplatform.features.splash.data.di.splashDataModule
-import com.security.chat.multiplatform.features.splash.domain.di.splashDomainModule
-import com.security.chat.multiplatform.features.splash.ui.di.splashUiModule
 import com.security.chat.multiplatform.features.user.data.storage.di.userDataStorageModule
 import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
 import org.koin.core.module.Module
@@ -33,10 +30,6 @@ val diModules: List<Module> =
         authorizeUiModule,
         authorizeDomainModule,
         authorizeDataModule,
-
-        splashDomainModule,
-        splashUiModule,
-        splashDataModule,
 
         userDataStorageModule,
 

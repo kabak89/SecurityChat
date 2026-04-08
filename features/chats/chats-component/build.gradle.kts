@@ -20,7 +20,6 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.common.coreComponent)
             api(projects.features.chats.chatsComponentApi)
 
             implementation(projects.features.chats.chatsUi)

@@ -23,7 +23,7 @@ kotlin {
 
 android {
     namespace = "com.security.chat.multiplatform.android"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.security.chat.multiplatform.android"

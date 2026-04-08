@@ -53,22 +53,6 @@ public abstract class BaseComponentImpl(
 
         loadKoinModules(coroutineScopeModule)
 
-        runCatching {
-            val coroutineScope: CoroutineScope = getKoin().get()
-            println(coroutineScope)
-        }
-            .onFailure {
-                println(it)
-            }
-
-        runCatching {
-            val coroutineScope: CoroutineScope = getKoin().getScope(scopeId).get()
-            println(coroutineScope)
-        }
-            .onFailure {
-                println(it)
-            }
-
         lifecycle.doOnDestroy {
             println("component ${this::class.simpleName} destroyed")
             viewModelStore.clear()

@@ -38,6 +38,7 @@ include(
 )
 include(
     ":features:splash:splash-component",
+    ":features:splash:splash-component-api",
     ":features:splash:splash-domain",
     ":features:splash:splash-ui",
     ":features:splash:splash-data",

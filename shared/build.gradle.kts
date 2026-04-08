@@ -76,9 +76,7 @@ kotlin {
             implementation(projects.common.appLifecycle)
 
             implementation(projects.features.splash.splashComponent)
-            implementation(projects.features.splash.splashDomain)
             implementation(projects.features.splash.splashUi)
-            implementation(projects.features.splash.splashData)
 
             implementation(projects.features.user.userDataStorage)
 
