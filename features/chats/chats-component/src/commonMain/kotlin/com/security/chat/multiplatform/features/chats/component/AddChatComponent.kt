@@ -1,14 +1,8 @@
 package com.security.chat.multiplatform.features.chats.component
 
 import com.arkivanov.decompose.ComponentContext
-import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
-
-public interface AddChatComponent : BaseComponent, DiScopeHolder {
-    public fun onBackClicked()
-    public fun onChatCreated(chatId: String)
-}
+import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
 
 public class AddChatComponentImpl(
     private val onBack: () -> Unit,

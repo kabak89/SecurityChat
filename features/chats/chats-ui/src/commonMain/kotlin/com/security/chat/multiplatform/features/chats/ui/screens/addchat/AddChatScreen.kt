@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
-import com.security.chat.multiplatform.features.chats.component.AddChatComponent
+import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel

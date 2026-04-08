@@ -10,8 +10,8 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.features.chat.component.ChatComponent
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
-import com.security.chat.multiplatform.features.chats.component.ChatsComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
+import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
 import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import kotlinx.serialization.Serializable

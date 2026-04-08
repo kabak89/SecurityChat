@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
-import com.security.chat.multiplatform.features.chats.component.ChatListComponent
+import com.security.chat.multiplatform.features.chats.component.api.ChatListComponent
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel

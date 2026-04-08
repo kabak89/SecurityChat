@@ -85,12 +85,6 @@ kotlin {
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.main.mainUi)
 
-            implementation(projects.features.chats.chatsComponent)
-            implementation(projects.features.chats.chatsUi)
-            implementation(projects.features.chats.chatsDomain)
-            implementation(projects.features.chats.chatsData)
-            implementation(projects.features.chats.chatsDataStorage)
-
             implementation(projects.features.chat.chatComponent)
             implementation(projects.features.chat.chatUi)
             implementation(projects.features.chat.chatDomain)

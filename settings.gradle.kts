@@ -51,6 +51,7 @@ include(
 )
 include(
     ":features:chats:chats-component",
+    ":features:chats:chats-component-api",
     ":features:chats:chats-ui",
     ":features:chats:chats-domain",
     ":features:chats:chats-data",

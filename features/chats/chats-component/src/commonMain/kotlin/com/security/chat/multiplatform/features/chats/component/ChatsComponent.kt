@@ -7,26 +7,15 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.backhandler.BackHandlerOwner
-import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
+import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
+import com.security.chat.multiplatform.features.chats.data.storage.di.chatsDataStorageModule
+import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
+import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
 import kotlinx.serialization.Serializable
-
-public interface ChatsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
-
-    public fun onBackClicked()
-
-    public val childStack: Value<ChildStack<*, Child>>
-
-    public sealed interface Child {
-
-        public class ChatList(public val component: ChatListComponent) : Child
-        public class AddChat(public val component: AddChatComponent) : Child
-
-    }
-
-}
 
 public class ChatsComponentImpl(
     private val onChatClicked: (chatId: String) -> Unit,
@@ -39,6 +28,21 @@ public class ChatsComponentImpl(
     ) {
 
     private val navigation = StackNavigation<Params>()
+
+    init {
+        val featureModules = listOf(
+            chatsUiModule,
+            chatsDomainModule,
+            chatsDataModule,
+            chatsDataStorageModule,
+        )
+        doOnCreate {
+            getKoin().loadModules(featureModules)
+        }
+        doOnDestroy {
+            getKoin().unloadModules(featureModules)
+        }
+    }
 
     override val childStack: Value<ChildStack<*, ChatsComponent.Child>> =
         childStack(

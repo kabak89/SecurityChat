@@ -1,15 +1,11 @@
 package com.security.chat.multiplatform.features.chats.component
 
 import com.arkivanov.decompose.ComponentContext
-import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
-
-public interface ChatListComponent : BaseComponent, DiScopeHolder {
-    public fun onAddClicked()
-    public fun onChatClicked(chatId: String)
-    public fun onSettingsClicked()
-}
+import com.security.chat.multiplatform.features.chats.component.api.ChatListComponent
+import com.security.chat.multiplatform.features.chats.domain.ChatsModel
+import org.koin.core.qualifier.named
 
 public class ChatListComponentImpl(
     private val onAdd: () -> Unit,
@@ -21,6 +17,13 @@ public class ChatListComponentImpl(
         componentContext = componentContext,
         scopeId = SCOPE_ID_CHAT_LIST,
     ) {
+
+    init {
+        doOnCreate {
+            val chatsModel: ChatsModel = getKoin().get()
+            chatsModel.start(parentScope = getKoin().get(named(SCOPE_ID_CHAT_LIST)))
+        }
+    }
 
     override fun onAddClicked() {
         onAdd()
