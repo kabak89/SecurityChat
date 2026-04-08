@@ -245,7 +245,7 @@ internal fun SettingsMainScreenPreviewWithDialog() {
                     title = "Title",
                     message = "Message",
                     positiveButtonTitle = "Ok",
-                    negativeButtonTitle = "Cance",
+                    negativeButtonTitle = "Cancel",
                     positiveButtonAction = DialogData.ButtonAction.Ok,
                     negativeButtonAction = DialogData.ButtonAction.Cancel,
                 ),

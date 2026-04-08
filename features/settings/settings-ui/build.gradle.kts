@@ -29,7 +29,9 @@ kotlin {
 
             implementation(projects.features.settings.settingsDomain)
         }
-        androidMain.dependencies { }
+        androidMain.dependencies {
+            implementation(libs.androidx.ui.tooling)
+        }
         iosMain.dependencies { }
         jvmMain.dependencies { }
         commonTest.dependencies { }

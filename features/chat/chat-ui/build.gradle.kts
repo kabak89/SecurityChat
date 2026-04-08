@@ -22,7 +22,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.coreUi)
-            implementation(compose.components.resources)
+            implementation(libs.compose.resources)
 
             api(projects.features.chat.chatComponent)
 
