@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 public interface ChatsStorage {
     public suspend fun saveChats(chats: List<ChatSM>)
     public suspend fun getChat(id: String): ChatSM?
+    public suspend fun clearAll()
 }
 
 internal class ChatsStorageImpl(
@@ -53,4 +54,9 @@ internal class ChatsStorageImpl(
         }
     }
 
+    override suspend fun clearAll() {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().chatTableQueries.removeAll()
+        }
+    }
 }

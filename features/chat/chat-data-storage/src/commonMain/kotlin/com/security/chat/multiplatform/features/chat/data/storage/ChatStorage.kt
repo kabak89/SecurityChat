@@ -14,13 +14,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 public interface ChatStorage {
-
     public suspend fun saveMessage(message: MessageSM)
     public suspend fun saveMessages(messages: List<MessageSM>)
     public suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM>
     public fun getMessagesFlow(chatId: String, limit: Long): Flow<List<MessageSM>>
     public suspend fun updateMessage(message: MessageSM)
-
+    public suspend fun clearAll()
 }
 
 internal class ChatStorageImpl(
@@ -92,6 +91,12 @@ internal class ChatStorageImpl(
         withContext(dispatcherProvider.IO) {
             //TODO check
             dbCreator.getDb().messageTableQueries.insert(message.toTable())
+        }
+    }
+
+    override suspend fun clearAll() {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageTableQueries.removeAll()
         }
     }
 }

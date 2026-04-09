@@ -23,6 +23,8 @@ kotlin {
             implementation(projects.features.settings.settingsDomain)
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.user.userDataStorage)
+            implementation(projects.features.chats.chatsDataStorage)
+            implementation(projects.features.chat.chatDataStorage)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
