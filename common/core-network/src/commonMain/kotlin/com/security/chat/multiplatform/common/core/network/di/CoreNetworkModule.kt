@@ -10,6 +10,7 @@ import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -31,7 +32,7 @@ public val coreNetworkModule: Module =
             LiveEventsManager(
                 json = get(),
                 socketConfig = get(),
-                coroutineScope = getScope(SCOPE_ID_ROOT).get(),
+                coroutineScope = get(named(SCOPE_ID_ROOT)),
                 httpClientFactory = get(),
             )
         }

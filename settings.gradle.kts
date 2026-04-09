@@ -44,6 +44,13 @@ include(
     ":features:splash:splash-data",
 )
 include(
+    ":features:authorize:authorize-component",
+    ":features:authorize:authorize-component-api",
+    ":features:authorize:authorize-domain",
+    ":features:authorize:authorize-ui",
+    ":features:authorize:authorize-data",
+)
+include(
     ":features:user:user-data-storage",
 )
 include(

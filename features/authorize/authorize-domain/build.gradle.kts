@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
-    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -20,11 +19,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.common.coreComponent)
-
-            implementation(projects.features.chats.chatsComponent)
-            implementation(projects.features.chat.chatComponent)
-            implementation(projects.features.settings.settingsComponent)
+            api(projects.common.coreDomain)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -33,7 +28,7 @@ kotlin {
     }
 
     android {
-        namespace = "com.security.chat.multiplatform.features.main.component"
+        namespace = "com.security.chat.multiplatform.features.authorize.domain"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8

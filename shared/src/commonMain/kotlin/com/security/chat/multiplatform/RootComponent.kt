@@ -22,17 +22,20 @@ import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.di.diModules
-import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
-import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
+import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
 import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
+import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
 import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
+import com.security.chat.multiplatform.features.settings.ui.screens.authorize.AuthorizeScreen
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
+import com.security.chat.multiplatform.features.user.data.storage.di.userDataStorageModule
+import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -53,11 +56,9 @@ interface RootComponent : BackHandlerOwner, DiScopeHolder {
     fun onBackClicked()
 
     sealed interface Child {
-
         class Splash(val component: SplashComponent) : Child
         class Authorize(val component: AuthorizeComponent) : Child
         class Main(val component: MainComponent) : Child
-
     }
 }
 
@@ -84,24 +85,29 @@ class RootComponentImpl(
         println("scope $SCOPE_ID_ROOT created")
 
         val coroutineScopeModule = module {
-            scope(named(SCOPE_ID_ROOT)) {
-                scoped {
-                    val errorHandler = CoroutineExceptionHandler { _, e ->
-                        println("error in coroutine scope in $SCOPE_ID_ROOT DI scope: $e")
-                    }
+            single(named(SCOPE_ID_ROOT)) {
+                val errorHandler = CoroutineExceptionHandler { _, e ->
+                    println("error in coroutine scope in $SCOPE_ID_ROOT DI scope: $e")
+                }
 
-                    val dispatcherProvider: DispatcherProviderInterface = get()
-                    CoroutineScope(
-                        dispatcherProvider.IO +
-                                SupervisorJob() +
-                                errorHandler +
-                                CoroutineName(SCOPE_ID_ROOT),
-                    )
-                } bind CoroutineScope::class
-            }
+                val dispatcherProvider: DispatcherProviderInterface = get()
+                CoroutineScope(
+                    dispatcherProvider.IO +
+                            SupervisorJob() +
+                            errorHandler +
+                            CoroutineName(SCOPE_ID_ROOT),
+                )
+            } bind CoroutineScope::class
         }
 
-        loadKoinModules(coroutineScopeModule)
+        loadKoinModules(
+            listOf(
+                coroutineScopeModule,
+                userDataStorageModule,
+                usersDataStorageModule,
+                settingsDataStorageModule,
+            ),
+        )
 
         lifecycle.doOnCreate {
             onCreate()
@@ -110,7 +116,7 @@ class RootComponentImpl(
         lifecycle.doOnDestroy {
             println("RootComponentImpl doOnDestroy")
 
-            val scopedCoroutineScope: CoroutineScope = diScope!!.get()
+            val scopedCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_ROOT))
             scopedCoroutineScope.cancel()
 
             diScope?.close()

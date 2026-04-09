@@ -20,11 +20,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.common.coreComponent)
+            api(projects.features.authorize.authorizeComponentApi)
 
-            implementation(projects.features.chats.chatsComponent)
-            implementation(projects.features.chat.chatComponent)
-            implementation(projects.features.settings.settingsComponent)
+            implementation(projects.features.authorize.authorizeUi)
+            implementation(projects.features.authorize.authorizeDomain)
+            implementation(projects.features.authorize.authorizeData)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }
@@ -33,7 +33,7 @@ kotlin {
     }
 
     android {
-        namespace = "com.security.chat.multiplatform.features.main.component"
+        namespace = "com.security.chat.multiplatform.features.authorize.component"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions.jvmTarget = JvmTarget.JVM_1_8

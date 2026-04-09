@@ -5,12 +5,9 @@ import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.settings.domain.entity.Theme
 import com.security.chat.multiplatform.features.settings.domain.repo.SettingsRepo
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 import ru.kode.remo.Task1
-import kotlin.time.Duration.Companion.seconds
 
 public interface SettingsModel : ScopedModel {
 
@@ -29,17 +26,6 @@ internal class SettingsModelImpl(
         dispatcher = dispatcherProvider.Default,
     ) {
 
-    override fun onPostStart() {
-        super.onPostStart()
-
-        scope.launch {
-            while (true) {
-                delay(1.seconds)
-                println("SettingsModel alive: ${this@SettingsModelImpl}")
-            }
-        }
-    }
-
     override val logout: Task0<Unit> =
         task { ->
             settingsRepo.logout()
@@ -53,5 +39,4 @@ internal class SettingsModelImpl(
     override fun getTheme(): Flow<Theme> {
         return settingsRepo.getTheme()
     }
-
 }

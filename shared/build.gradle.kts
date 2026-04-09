@@ -40,7 +40,6 @@ kotlin {
             api(libs.decompose)
 
             implementation(libs.decompose.extensions.compose)
-            implementation(libs.kotlinx.serialization)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -55,16 +54,7 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
 
-            implementation(libs.kode.remo)
-
-            implementation(libs.sqldelight.coroutines.extensions)
-
-            implementation(libs.sha2)
-
-            implementation(libs.cryptography.core)
-
             implementation(projects.common.coreUi)
-            implementation(projects.common.coreDomain)
             implementation(projects.common.coreComponent)
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)
@@ -75,18 +65,18 @@ kotlin {
             implementation(projects.common.uiKit)
             implementation(projects.common.appLifecycle)
 
+            implementation(projects.features.user.userDataStorage)
+            implementation(projects.features.users.usersDataStorage)
+            implementation(projects.features.settings.settingsDataStorage)
+
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashUi)
 
-            implementation(projects.features.user.userDataStorage)
+            implementation(projects.features.authorize.authorizeComponent)
+            implementation(projects.features.authorize.authorizeUi)
 
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.main.mainUi)
-
-            implementation(projects.features.users.usersDataStorage)
-
-            //TODO move settings model to feature/common with app global lifecycle
-            implementation(projects.features.settings.settingsDataStorage)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
