@@ -1,8 +1,8 @@
 package com.security.chat.multiplatform.common.core.ui
 
-import androidx.annotation.CallSuper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,12 +42,10 @@ public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
     private val _viewEvent = Channel<E>(capacity = Channel.UNLIMITED)
     override val viewEvent: Flow<E> = _viewEvent.receiveAsFlow()
 
-//    protected val viewActivable: Activable = Activable()
-
     protected val currentViewState: S get() = _viewState.value
 
     init {
-        println("${this::class.simpleName} init")
+        Log.d { "${this::class.qualifiedName} init" }
     }
 
     protected abstract fun createInitialState(): S
@@ -60,26 +58,13 @@ public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
         _viewEvent.trySend(event)
     }
 
-//    protected fun <T> Flow<T>.collectWhenViewActive(): Flow<T> =
-//        activableFlow(originalFlow = this, activable = viewActivable, scope = viewModelScope)
-
     /**
      * Method calls after subscription on [_viewState] is happened. Suitable for start loading data
      */
     protected open fun onPostStart(): Unit = Unit
 
-    @CallSuper
-    override fun onViewActive() {
-//        viewActivable.onActive()
-    }
-
-    @CallSuper
-    override fun onViewInactive() {
-//        viewActivable.onInactive()
-    }
-
     override fun onCleared() {
         super.onCleared()
-        println("${this::class.simpleName} onCleared")
+        Log.d { "${this::class.qualifiedName} onCleared" }
     }
 }

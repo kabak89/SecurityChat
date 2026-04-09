@@ -23,8 +23,8 @@ kotlin {
             api(libs.kode.remo)
             api(libs.kotlinx.coroutines.core)
 
-
             api(projects.common.coreThreading)
+            api(projects.common.log)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

@@ -38,6 +38,8 @@ kotlin {
 
             api(projects.common.iconsKit)
             api(projects.common.uiKit)
+
+            api(projects.common.log)
         }
         androidMain.dependencies { }
         iosMain.dependencies { }

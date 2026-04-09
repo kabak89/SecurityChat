@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelStore
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -26,19 +27,19 @@ public abstract class BaseComponentImpl(
     private var diScope: Scope? = null
 
     init {
-        println("component ${this::class.simpleName} created")
+        Log.d { "component ${this::class.qualifiedName} created" }
 
         diScope = getKoin().createScope(
             scopeId = scopeId,
             qualifier = named(scopeId),
         )
 
-        println("scope $scopeId created")
+        Log.d { "scope $scopeId created" }
 
         val coroutineScopeModule = module {
             single(named(scopeId)) {
                 val errorHandler = CoroutineExceptionHandler { _, e ->
-                    println("error in coroutine scope in $scopeId DI scope: $e")
+                    Log.e(e, "error in coroutine scope in $scopeId DI scope")
                 }
 
                 val dispatcherProvider: DispatcherProviderInterface = get()
@@ -54,7 +55,7 @@ public abstract class BaseComponentImpl(
         loadKoinModules(coroutineScopeModule)
 
         lifecycle.doOnDestroy {
-            println("component ${this::class.simpleName} destroyed")
+            Log.d { "component ${this::class.qualifiedName} destroyed" }
             viewModelStore.clear()
 
             val scopedCoroutineScope: CoroutineScope = get(named(scopeId))
@@ -62,7 +63,7 @@ public abstract class BaseComponentImpl(
 
             diScope?.close()
 
-            println("scope $scopeId closed")
+            Log.d { "scope $scopeId closed" }
         }
     }
 

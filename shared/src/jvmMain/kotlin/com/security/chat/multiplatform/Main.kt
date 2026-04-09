@@ -15,8 +15,6 @@ fun main() {
     val lifecycle = LifecycleRegistry()
 
     lifecycle.doOnCreate {
-        println("ApplicationLifecycle onCreate")
-
         val appLifecycleChanger: AppLifecycleChanger = DiInjector().getKoin().get()
         appLifecycleChanger.onAppStarted()
     }

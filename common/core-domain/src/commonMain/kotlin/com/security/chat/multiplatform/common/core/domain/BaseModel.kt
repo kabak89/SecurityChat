@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.common.core.domain
 
+import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -11,20 +12,19 @@ public open class BaseModel(
 ) : ScopedModel, ReMo(
     dispatcher = dispatcher,
     errorMapper = errorMapper ?: { error ->
-        println(error)
+        Log.e(error)
         error
     },
 ) {
 
     init {
-        println("${this@BaseModel::class.simpleName} init")
+        Log.d { "${this@BaseModel::class.qualifiedName} init" }
     }
 
     override fun onPostStart() {
         uncaughtExceptions
             .onEach {
-                println(it)
-                println("Uncaught exception in ${this@BaseModel::class.simpleName}")
+                Log.e(it, "Uncaught exception in ${this@BaseModel::class.simpleName}")
             }
             .launchIn(scope)
     }

@@ -8,6 +8,7 @@ activityCompose = "1.13.0"
 #android
 
 decompose = "3.5.0"
+essenty-lifecycle = "2.5.0"
 kotlin = "2.3.20"
 compose = "1.10.3"
 androidx-activityCompose = "1.13.0"
@@ -29,6 +30,8 @@ ktor = "3.4.2"
 cryptographyCore = "0.6.0"
 composeHotReload = "1.0.0"
 kotlinxDatetime = "0.7.1"
+buildkonfig = "0.17.1"
+timber = "5.0.1"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -36,6 +39,8 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 
 decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
 decompose-extensions-compose = { module = "com.arkivanov.decompose:extensions-compose", version.ref = "decompose" }
+essenty-lifecycle = { module = "com.arkivanov.essenty:lifecycle", version.ref = "essenty-lifecycle" }
+
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
 compose-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose" }
@@ -89,6 +94,8 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 
 ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose" }
 
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
@@ -100,3 +107,4 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }

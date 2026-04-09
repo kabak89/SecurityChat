@@ -28,8 +28,8 @@ kotlin {
         it.binaries.framework {
             baseName = "shared"
             isStatic = true
-            export("com.arkivanov.decompose:decompose:3.4.0")
-            export("com.arkivanov.essenty:lifecycle:2.5.0")
+            export(libs.decompose)
+            export(libs.essenty.lifecycle)
         }
     }
 

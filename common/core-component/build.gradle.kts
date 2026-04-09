@@ -27,6 +27,8 @@ kotlin {
             implementation(libs.kotlinx.serialization)
             implementation(libs.kotlinx.coroutines.core)
 
+            api(projects.common.log)
+
             implementation(projects.common.coreThreading)
         }
         androidMain.dependencies { }
