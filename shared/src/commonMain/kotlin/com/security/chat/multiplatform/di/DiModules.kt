@@ -9,7 +9,7 @@ import com.security.chat.multiplatform.common.platform.di.platformModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
 import org.koin.core.module.Module
 
-val diModules: List<Module> =
+internal val diModules: List<Module> =
     listOf(
         sharedModule,
 

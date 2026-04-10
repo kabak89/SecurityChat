@@ -50,19 +50,19 @@ import org.koin.core.scope.Scope
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-interface RootComponent : BackHandlerOwner, DiScopeHolder {
-    val childStack: Value<ChildStack<*, Child>>
+public interface RootComponent : BackHandlerOwner, DiScopeHolder {
+    public val childStack: Value<ChildStack<*, Child>>
 
-    fun onBackClicked()
+    public fun onBackClicked()
 
-    sealed interface Child {
-        class Splash(val component: SplashComponent) : Child
-        class Authorize(val component: AuthorizeComponent) : Child
-        class Main(val component: MainComponent) : Child
+    public sealed interface Child {
+        public class Splash(public val component: SplashComponent) : Child
+        public class Authorize(public val component: AuthorizeComponent) : Child
+        public class Main(public val component: MainComponent) : Child
     }
 }
 
-class RootComponentImpl(
+public class RootComponentImpl(
     private val onCreate: () -> Unit = {},
     componentContext: ComponentContext,
 ) : RootComponent, ComponentContext by componentContext {
@@ -220,7 +220,7 @@ class RootComponentImpl(
 }
 
 @Composable
-fun RootContent(rootComponent: RootComponent) {
+public fun RootContent(rootComponent: RootComponent) {
     val settingsStorage: SettingsStorage = rootComponent.getKoin().get()
     val theme = settingsStorage.getCurrentThemeFlow().collectAsState(ThemeSM.Auto).value
 

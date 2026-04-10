@@ -2,15 +2,15 @@ package com.security.chat.multiplatform.common.platform
 
 import android.content.Context
 
-object ContextHolder {
+public object ContextHolder {
 
     private var context: Context? = null
 
-    fun setContext(context: Context) {
+    public fun setContext(context: Context) {
         this.context = context.applicationContext
     }
 
-    fun getContext(): Context {
+    public fun getContext(): Context {
         return context!!
     }
 

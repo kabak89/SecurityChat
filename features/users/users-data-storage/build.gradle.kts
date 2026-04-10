@@ -1,9 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("securitychat.convention.base")
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlinCocoapods)
 }
@@ -21,17 +17,11 @@ sqldelight {
     linkSqlite = false
 }
 
+conventionBasePlugin {
+    namespace = modulePackage
+}
+
 kotlin {
-    explicitApi = ExplicitApiMode.Strict
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64(),
-    )
-
-    jvm()
-
     sourceSets {
         commonMain.dependencies {
             implementation(libs.koin.core)
@@ -39,10 +29,6 @@ kotlin {
 
             implementation(projects.common.coreDb)
         }
-        androidMain.dependencies { }
-        iosMain.dependencies { }
-        jvmMain.dependencies { }
-        commonTest.dependencies { }
     }
 
     cocoapods {
@@ -56,12 +42,4 @@ kotlin {
             linkOnly = true,
         )
     }
-
-    android {
-        namespace = modulePackage
-        compileSdk = 36
-        minSdk = 26
-        compilerOptions.jvmTarget = JvmTarget.JVM_1_8
-    }
 }
-

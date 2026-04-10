@@ -1,37 +1,16 @@
-import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("securitychat.convention.base")
     alias(libs.plugins.kotlinxSerialization)
 }
 
+conventionBasePlugin {
+    namespace = "com.security.chat.multiplatform.common.app.lifecycle"
+}
+
 kotlin {
-    explicitApi = ExplicitApiMode.Strict
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64(),
-    )
-
-    jvm()
-
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
         }
-        androidMain.dependencies { }
-        iosMain.dependencies { }
-        jvmMain.dependencies { }
-        commonTest.dependencies { }
-    }
-
-    android {
-        namespace = "com.security.chat.multiplatform.common.app.lifecycle"
-        compileSdk = 36
-        minSdk = 26
-        compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }

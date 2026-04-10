@@ -1,39 +1,26 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("securitychat.convention.base")
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeHotReload)
 }
 
+conventionBasePlugin {
+    namespace = "com.security.chat.multiplatform.kmp"
+}
+
 kotlin {
-    android {
-        namespace = "com.security.chat.multiplatform.kmp"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_1_8)
-        }
-    }
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach {
-        it.binaries.framework {
+    targets.withType<KotlinNativeTarget>().configureEach {
+        binaries.framework {
             baseName = "shared"
             isStatic = true
             export(libs.decompose)
             export(libs.essenty.lifecycle)
         }
     }
-
-    jvm()
 
     sourceSets {
         commonMain.dependencies {
@@ -81,13 +68,11 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.koin.android)
         }
-        iosMain.dependencies { }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
 
             implementation(libs.kotlinx.coroutines.swing)
         }
-        commonTest.dependencies { }
     }
 }
 
