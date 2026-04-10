@@ -35,12 +35,9 @@ internal class SettingsMainViewModel(
     override fun createInitialState(): SettingsMainState {
         return SettingsMainState(
             items = listOf(
-                SettingItem.Theme(
-                    title = "Theme",
-                ),
-                SettingItem.Logout(
-                    title = "Log out",
-                ),
+                SettingItem.Profile,
+                SettingItem.Theme,
+                SettingItem.Logout,
             ),
             dialogData = null,
             requestInProgress = false,
@@ -64,9 +61,8 @@ internal class SettingsMainViewModel(
                 }
             }
 
-            is SettingItem.Theme -> {
-                sendEvent(SettingsMainEvent.GoToTheme)
-            }
+            is SettingItem.Theme -> sendEvent(SettingsMainEvent.GoToTheme)
+            is SettingItem.Profile -> sendEvent(SettingsMainEvent.GoToProfile)
         }
     }
 

@@ -23,7 +23,7 @@ internal class ProfileMainComponentImpl(
         }
     }
 
-    override fun onExitClicked() {
+    override fun onBackClicked() {
         onExit()
     }
 }

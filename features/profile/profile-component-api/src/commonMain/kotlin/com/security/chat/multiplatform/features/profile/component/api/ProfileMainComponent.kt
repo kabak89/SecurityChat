@@ -5,5 +5,5 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
 public interface ProfileMainComponent : BaseComponent, DiScopeHolder {
 
-    public fun onExitClicked()
+    public fun onBackClicked()
 }

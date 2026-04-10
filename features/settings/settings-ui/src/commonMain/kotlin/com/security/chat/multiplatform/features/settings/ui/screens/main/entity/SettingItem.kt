@@ -6,12 +6,19 @@ import androidx.compose.runtime.Immutable
 internal sealed interface SettingItem {
     val title: String
 
-    data class Theme(
-        override val title: String,
-    ) : SettingItem
+    data object Profile : SettingItem {
+        override val title: String
+            get() = "Profile"
+    }
 
-    data class Logout(
-        override val title: String,
-    ) : SettingItem
+    data object Theme : SettingItem {
+        override val title: String
+            get() = "Theme"
+    }
+
+    data object Logout : SettingItem {
+        override val title: String
+            get() = "Log out"
+    }
 
 }

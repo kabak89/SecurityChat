@@ -10,6 +10,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.coreComponent)
+
+            implementation(projects.features.profile.profileComponentApi)
         }
     }
 }

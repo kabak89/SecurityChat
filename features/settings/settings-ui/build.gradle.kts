@@ -18,6 +18,7 @@ kotlin {
             api(projects.features.settings.settingsComponentApi)
 
             implementation(projects.features.settings.settingsDomain)
+            implementation(projects.features.profile.profileUi)
         }
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)

@@ -51,7 +51,7 @@ internal fun ProfileMainScreen(
             .fillMaxSize()
             .imePadding(),
         state = state,
-        onBackClicked = component::onExitClicked,
+        onBackClicked = component::onBackClicked,
     )
 }
 

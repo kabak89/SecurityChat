@@ -17,6 +17,7 @@ kotlin {
             implementation(projects.features.settings.settingsData)
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.chat.chatDataStorage)
+            implementation(projects.features.profile.profileComponent)
         }
     }
 }

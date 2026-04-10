@@ -68,6 +68,7 @@ internal fun SettingsMainScreen(
         onDialogActionClicked = vm::onDialogActionClicked,
         onUserLogOuted = component::onUserLogOuted,
         onOnGoToThemeClicked = component::onGoToThemeClicked,
+        onOnGoToProfileClicked = component::onGoToProfileClicked,
     )
 }
 
@@ -82,6 +83,7 @@ private fun SettingsMainScreenContent(
     onDialogActionClicked: (action: DialogData.ButtonAction) -> Unit,
     onUserLogOuted: () -> Unit,
     onOnGoToThemeClicked: () -> Unit,
+    onOnGoToProfileClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
@@ -89,6 +91,7 @@ private fun SettingsMainScreenContent(
             when (event) {
                 SettingsMainEvent.UserLogOuted -> onUserLogOuted()
                 SettingsMainEvent.GoToTheme -> onOnGoToThemeClicked()
+                SettingsMainEvent.GoToProfile -> onOnGoToProfileClicked()
             }
         },
     )
@@ -211,9 +214,7 @@ internal fun SettingsMainScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             state = SettingsMainState(
                 items = listOf(
-                    SettingItem.Logout(
-                        title = "logout",
-                    ),
+                    SettingItem.Logout,
                 ),
                 dialogData = null,
                 requestInProgress = false,
@@ -225,6 +226,7 @@ internal fun SettingsMainScreenPreview() {
             onDialogActionClicked = {},
             onUserLogOuted = {},
             onOnGoToThemeClicked = {},
+            onOnGoToProfileClicked = {},
         )
     }
 }
@@ -237,9 +239,7 @@ internal fun SettingsMainScreenPreviewWithDialog() {
             modifier = Modifier.fillMaxSize(),
             state = SettingsMainState(
                 items = listOf(
-                    SettingItem.Logout(
-                        title = "logout",
-                    ),
+                    SettingItem.Logout,
                 ),
                 dialogData = DialogData(
                     title = "Title",
@@ -258,6 +258,7 @@ internal fun SettingsMainScreenPreviewWithDialog() {
             onDialogActionClicked = {},
             onUserLogOuted = {},
             onOnGoToThemeClicked = {},
+            onOnGoToProfileClicked = {},
         )
     }
 }

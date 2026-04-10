@@ -10,7 +10,11 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataStorageModule
+import com.security.chat.multiplatform.features.profile.component.ProfileComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Profile
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.SettingsMain
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Theme
 import com.security.chat.multiplatform.features.settings.data.di.settingsDataModule
 import com.security.chat.multiplatform.features.settings.domain.di.settingsDomainModule
 import com.security.chat.multiplatform.features.settings.ui.di.settingsUiModule
@@ -60,21 +64,31 @@ public class SettingsComponentImpl(
     ): SettingsComponent.Child {
         return when (params) {
             Params.SettingsMain -> {
-                SettingsComponent.Child.SettingsMain(
+                SettingsMain(
                     component = SettingsMainComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
                         onLogout = onLogout,
                         onGoToTheme = { navigation.push(Params.Theme) },
+                        onGoToProfile = { navigation.push(Params.Profile) },
                     ),
                 )
             }
 
             Params.Theme -> {
-                SettingsComponent.Child.Theme(
+                Theme(
                     component = ThemeComponentImpl(
                         componentContext = componentContext,
                         onBack = navigation::pop,
+                    ),
+                )
+            }
+
+            Params.Profile -> {
+                Profile(
+                    ProfileComponentImpl(
+                        componentContext = componentContext,
+                        onExit = navigation::pop,
                     ),
                 )
             }
@@ -83,13 +97,14 @@ public class SettingsComponentImpl(
 
     @Serializable
     private sealed class Params {
-
         @Serializable
         data object SettingsMain : Params()
 
         @Serializable
         data object Theme : Params()
 
+        @Serializable
+        data object Profile : Params()
     }
 }
 

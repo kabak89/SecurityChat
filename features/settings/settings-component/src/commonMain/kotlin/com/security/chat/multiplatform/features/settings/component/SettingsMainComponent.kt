@@ -11,6 +11,7 @@ internal class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
     private val onLogout: () -> Unit,
     private val onGoToTheme: () -> Unit,
+    private val onGoToProfile: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsMainComponent,
     BaseComponentImpl(
@@ -35,6 +36,10 @@ internal class SettingsMainComponentImpl(
 
     override fun onGoToThemeClicked() {
         onGoToTheme()
+    }
+
+    override fun onGoToProfileClicked() {
+        onGoToProfile()
     }
 
 }
