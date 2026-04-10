@@ -22,13 +22,15 @@ internal class SignInRepoImpl(
 
     override suspend fun signIn(username: String, password: String): SignInResult {
         return try {
+            val cryptoKeys = getKeysPair()
+            userStorage.saveKeys(cryptoKeys)
+
             val response: AuthResponse = networkManager.runPost(
                 relativePath = "/sign-in",
                 request = AuthRequest(
                     login = username,
                     passwordHash = sha256Hash(password),
-                    //TODO
-                    publicKey = "",
+                    publicKey = cryptoKeys.publicKey,
                 ),
             )
 
