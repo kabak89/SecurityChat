@@ -13,7 +13,6 @@ import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataSto
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import com.security.chat.multiplatform.features.settings.data.di.settingsDataModule
 import com.security.chat.multiplatform.features.settings.domain.di.settingsDomainModule
-import com.security.chat.multiplatform.features.settings.ui.component.SettingsMainComponentImpl
 import com.security.chat.multiplatform.features.settings.ui.di.settingsUiModule
 import kotlinx.serialization.Serializable
 

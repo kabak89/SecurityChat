@@ -1,8 +1,9 @@
-package com.security.chat.multiplatform.features.settings.ui.component
+package com.security.chat.multiplatform.features.settings.component
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
+import com.security.chat.multiplatform.features.settings.component.api.SettingsMainComponent
 import com.security.chat.multiplatform.features.settings.domain.SettingsModel
 import org.koin.core.qualifier.named
 
