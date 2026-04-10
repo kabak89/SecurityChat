@@ -86,3 +86,11 @@ include(
     ":features:settings:settings-data",
     ":features:settings:settings-data-storage",
 )
+include(
+    ":features:profile:profile-component",
+    ":features:profile:profile-component-api",
+    ":features:profile:profile-ui",
+    ":features:profile:profile-domain",
+    ":features:profile:profile-data",
+    ":features:profile:profile-data-storage",
+)
