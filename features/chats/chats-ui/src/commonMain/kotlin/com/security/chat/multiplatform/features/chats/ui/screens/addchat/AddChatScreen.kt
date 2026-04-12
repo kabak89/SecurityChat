@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
+import com.security.chat.multiplatform.common.ui.kit.AlertDialogComponent
 import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.vectorResource
@@ -60,6 +61,7 @@ public fun AddChatScreen(
         onUsernameTextChanged = vm::onUsernameTextChanged,
         onFindClicked = vm::onFindClicked,
         onChatCreated = component::onChatCreated,
+        onCloseDialogClicked = vm::onCloseDialogClicked,
     )
 }
 
@@ -72,6 +74,7 @@ private fun AddChatContent(
     onUsernameTextChanged: (String) -> Unit,
     onFindClicked: () -> Unit,
     onChatCreated: (id: String) -> Unit,
+    onCloseDialogClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
@@ -124,6 +127,17 @@ private fun AddChatContent(
             )
         }
         Spacer(Modifier.height(16.dp))
+    }
+    if (state.showNotFoundDialog) {
+        AlertDialogComponent(
+            title = "User not found",
+            message = null,
+            positiveButtonText = "OK",
+            negativeButtonText = null,
+            onDismissRequest = onCloseDialogClicked,
+            onPositiveButtonClicked = onCloseDialogClicked,
+            onNegativeButtonClicked = null,
+        )
     }
 }
 

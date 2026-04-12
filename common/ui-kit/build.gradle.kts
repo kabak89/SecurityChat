@@ -17,6 +17,9 @@ kotlin {
 
             api(libs.ui.tooling.preview)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.ui.tooling)
+        }
     }
 }
 

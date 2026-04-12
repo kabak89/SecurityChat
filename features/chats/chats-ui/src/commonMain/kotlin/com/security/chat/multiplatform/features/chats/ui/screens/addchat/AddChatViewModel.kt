@@ -37,8 +37,7 @@ internal class AddChatViewModel(
                     }
 
                     is CreateChatResult.UserNotFound -> {
-                        //TODO
-                        println("UserNotFound")
+                        updateState { it.copy(showNotFoundDialog = true) }
                     }
                 }
             }
@@ -49,6 +48,7 @@ internal class AddChatViewModel(
         return AddChatState(
             username = "",
             isLoading = false,
+            showNotFoundDialog = false,
         )
     }
 
@@ -58,6 +58,10 @@ internal class AddChatViewModel(
 
     fun onFindClicked() {
         chatsModel.createChat.startOnSubscribe()
+    }
+
+    fun onCloseDialogClicked() {
+        updateState { it.copy(showNotFoundDialog = false) }
     }
 
 }

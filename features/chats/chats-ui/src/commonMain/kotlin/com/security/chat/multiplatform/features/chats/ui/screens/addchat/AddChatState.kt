@@ -6,4 +6,5 @@ import androidx.compose.runtime.Immutable
 internal data class AddChatState(
     val username: String,
     val isLoading: Boolean,
+    val showNotFoundDialog: Boolean,
 )

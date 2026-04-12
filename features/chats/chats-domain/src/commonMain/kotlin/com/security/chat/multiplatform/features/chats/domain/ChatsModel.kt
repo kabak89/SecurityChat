@@ -16,14 +16,12 @@ import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
 
 public interface ChatsModel : ScopedModel {
-
     public val createChat: Task0<CreateChatResult>
     public val fetchChatsList: Task0<Unit>
 
     public fun setUsername(username: String)
     public fun getAddChatStateFlow(): Flow<AddChatsState>
     public fun getChatListFlow(): Flow<List<ChatDescription>>
-
 }
 
 internal class ChatsModelImpl(
@@ -85,5 +83,4 @@ internal class ChatsModelImpl(
         val username: String = "",
         val chatList: List<ChatDescription> = emptyList(),
     )
-
 }
