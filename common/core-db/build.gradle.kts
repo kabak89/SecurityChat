@@ -10,6 +10,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.coreThreading)
+            api(projects.common.log)
 
             implementation(projects.common.settings)
 

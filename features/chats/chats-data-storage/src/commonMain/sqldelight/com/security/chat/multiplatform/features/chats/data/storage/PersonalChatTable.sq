@@ -1,0 +1,20 @@
+CREATE TABLE PersonalChatTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  companionId TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO PersonalChatTable
+VALUES ?;
+
+getAll:
+SELECT *
+FROM PersonalChatTable;
+
+getById:
+SELECT *
+FROM PersonalChatTable
+WHERE id = ?;
+
+removeAll:
+DELETE FROM PersonalChatTable;

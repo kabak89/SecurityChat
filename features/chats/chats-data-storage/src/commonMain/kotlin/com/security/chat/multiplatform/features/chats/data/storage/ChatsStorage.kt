@@ -25,7 +25,7 @@ internal class ChatsStorageImpl(
             create = {
                 ChatsDb(
                     driver = driverFactory.createDriver(
-                        databaseName = "chats.db",
+                        databaseName = "personal_chats.db",
                         sqlSchema = ChatsDb.Schema,
                         version = 1,
                     ),
@@ -36,13 +36,13 @@ internal class ChatsStorageImpl(
     override suspend fun saveChats(chats: List<ChatSM>) {
         withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            db.chatTableQueries.transaction {
-                db.chatTableQueries.removeAll()
+            db.personalChatTableQueries.transaction {
+                db.personalChatTableQueries.removeAll()
 
                 chats
                     .map { it.toTable() }
                     .forEach { table ->
-                        db.chatTableQueries.insert(table)
+                        db.personalChatTableQueries.insert(table)
                     }
             }
         }
@@ -50,13 +50,13 @@ internal class ChatsStorageImpl(
 
     override suspend fun getChat(id: String): ChatSM? {
         return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().chatTableQueries.getById(id).executeAsOneOrNull()?.toSM()
+            dbCreator.getDb().personalChatTableQueries.getById(id).executeAsOneOrNull()?.toSM()
         }
     }
 
     override suspend fun clearAll() {
         withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().chatTableQueries.removeAll()
+            dbCreator.getDb().personalChatTableQueries.removeAll()
         }
     }
 }

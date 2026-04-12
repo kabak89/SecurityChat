@@ -8,7 +8,6 @@ import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import app.cash.sqldelight.driver.native.wrapConnection
 import co.touchlab.sqliter.DatabaseConfiguration
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
-import io.wifimap.wifimap.multiplatform.common.core.db.DestructiveMigrationSchema
 import platform.Foundation.NSUUID
 
 internal class SecuredDatabaseDriverFactoryIos(

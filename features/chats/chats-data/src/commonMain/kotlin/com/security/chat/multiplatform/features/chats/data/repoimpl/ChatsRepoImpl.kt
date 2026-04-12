@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequ
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatResponse
 import com.security.chat.multiplatform.features.chats.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
+import com.security.chat.multiplatform.features.chats.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chats.data.mapper.toSM
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
@@ -13,6 +14,8 @@ import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatRe
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
+import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
+import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 
@@ -20,6 +23,8 @@ internal class ChatsRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
     private val userStorage: UserStorage,
     private val chatsStorage: ChatsStorage,
+    private val usersStorage: UsersStorage,
+    private val usersNetworkManager: UsersNetworkManager,
 ) : ChatsRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -76,10 +81,19 @@ internal class ChatsRepoImpl(
 
         val chats = response.chats
             .map { chatResponse ->
-                ChatDescription(
-                    id = chatResponse.id,
-                    firstUserId = chatResponse.firstUserId,
-                    secondUserId = chatResponse.secondUserId,
+                val companionId = if (chatResponse.firstUserId == userId) {
+                    chatResponse.secondUserId
+                } else {
+                    chatResponse.firstUserId
+                }
+
+                val companionName = usersStorage.getUser(companionId)?.name ?: run {
+                    usersNetworkManager.fetchUser(companionId).name
+                }
+
+                chatResponse.toDomain(
+                    companionName = companionName,
+                    companionId = companionId,
                 )
             }
 

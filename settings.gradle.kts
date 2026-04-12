@@ -77,6 +77,7 @@ include(
 )
 include(
     ":features:users:users-data-storage",
+    ":features:users:users-data-network",
 )
 include(
     ":features:settings:settings-component",

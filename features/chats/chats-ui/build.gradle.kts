@@ -19,5 +19,8 @@ kotlin {
 
             implementation(projects.features.chats.chatsDomain)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.ui.tooling)
+        }
     }
 }

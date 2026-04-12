@@ -1,9 +1,10 @@
-package io.wifimap.wifimap.multiplatform.common.core.db
+package com.security.chat.multiplatform.common.core.db
 
 import app.cash.sqldelight.db.AfterVersion
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
+import com.security.chat.multiplatform.common.log.Log
 
 /**
  * Schema for destructive migrations. When new version of schema differs from old version, all data
@@ -22,7 +23,7 @@ public class DestructiveMigrationSchema(
     ): QueryResult.AsyncValue<Unit> {
         println("Migration started, oldVersion = $oldVersion, newVersion = $newVersion")
 
-        println("Try to use migrations")
+        Log.d { "Try to use migrations" }
 
         try {
             return schema.migrate(
@@ -31,11 +32,10 @@ public class DestructiveMigrationSchema(
                 newVersion = newVersion,
             )
         } catch (e: Exception) {
-            println(e)
-            println("Migration failed")
+            Log.e(e, "Migration failed")
         }
 
-        println("Process destructive migration")
+        Log.d { "Process destructive migration" }
 
         /**
          * Tables in BD bounded by relations. So library trying to delete tables with several
@@ -76,7 +76,7 @@ public class DestructiveMigrationSchema(
             }
         }
 
-        println("Migration finished")
+        Log.d { "Migration finished" }
 
         return create(driver)
     }

@@ -4,6 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class GetPublicKeyResponse(
+internal data class FindUserResponse(
+    @SerialName("userId") val userId: String,
+    @SerialName("login") val login: String,
     @SerialName("publicKey") val publicKey: String,
 )

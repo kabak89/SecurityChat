@@ -3,11 +3,14 @@ package com.security.chat.multiplatform.features.users.data.storage
 import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
+import com.security.chat.multiplatform.features.users.data.storage.mapper.toSM
+import com.security.chat.multiplatform.features.users.data.storage.mapper.toTable
 import kotlinx.coroutines.withContext
 
 public interface UsersStorage {
-    public suspend fun getPublicKey(userId: String): String?
-    public suspend fun setPublicKey(userId: String, publicKey: String)
+    public suspend fun saveUser(user: UserSM)
+    public suspend fun getUser(id: String): UserSM?
 }
 
 internal class UsersStorageImpl(
@@ -29,21 +32,15 @@ internal class UsersStorageImpl(
             },
         )
 
-    override suspend fun getPublicKey(userId: String): String? {
-        return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().usersTableQueries.getById(userId).executeAsOneOrNull()?.publicKey
-        }
-    }
-
-    override suspend fun setPublicKey(userId: String, publicKey: String) {
+    override suspend fun saveUser(user: UserSM) {
         withContext(dispatcherProvider.IO) {
-            val usersTable = UsersTable(
-                id = userId,
-                publicKey = publicKey,
-            )
-
-            dbCreator.getDb().usersTableQueries.insert(usersTable)
+            dbCreator.getDb().usersTableQueries.insert(user.toTable())
         }
     }
 
+    override suspend fun getUser(id: String): UserSM? {
+        return withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().usersTableQueries.getById(id).executeAsOneOrNull()?.toSM()
+        }
+    }
 }

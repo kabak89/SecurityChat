@@ -1,6 +1,7 @@
 CREATE TABLE UsersTable (
   id TEXT PRIMARY KEY NOT NULL,
-  publicKey TEXT NOT NULL
+  publicKey TEXT NOT NULL,
+  name TEXT NOT NULL
 );
 
 insert:

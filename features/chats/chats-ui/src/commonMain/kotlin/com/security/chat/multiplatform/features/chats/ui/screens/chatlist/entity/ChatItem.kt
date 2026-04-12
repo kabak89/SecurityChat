@@ -5,4 +5,5 @@ import androidx.compose.runtime.Immutable
 @Immutable
 internal data class ChatItem(
     val id: String,
+    val companionName: String,
 )

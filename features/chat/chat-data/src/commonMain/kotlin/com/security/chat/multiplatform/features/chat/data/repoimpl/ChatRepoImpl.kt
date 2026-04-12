@@ -6,8 +6,8 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.time.TimeProvider
 import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.entity.ChatSubscribeMessage
+import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.GetMessagesResponse
-import com.security.chat.multiplatform.features.chat.data.entity.GetPublicKeyResponse
 import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
@@ -19,6 +19,7 @@ import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
+import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.RSA
 import dev.whyoleg.cryptography.algorithms.SHA512
@@ -63,21 +64,22 @@ internal class ChatRepoImpl(
     override suspend fun uploadMessages(chatId: String) {
         val authorId = checkNotNull(userStorage.getUserId())
         val chat = checkNotNull(chatsStorage.getChat(chatId))
-        val receiverId = if (chat.secondUserId == authorId) {
-            chat.firstUserId
-        } else {
-            chat.secondUserId
-        }
+        val companionId = chat.companionId
 
-        val publicKey = usersStorage.getPublicKey(receiverId) ?: run {
-            val newPublicKey = networkManager.runGet<GetPublicKeyResponse>(
-                relativePath = "/users/public-key",
-                request = mapOf("id" to receiverId),
+        val publicKey = usersStorage.getUser(companionId)?.publicKey ?: run {
+            val userInfo = networkManager.runGet<FindUserResponse>(
+                relativePath = "/users/info",
+                request = mapOf("id" to companionId),
             )
-                .publicKey
 
-            usersStorage.setPublicKey(userId = receiverId, publicKey = newPublicKey)
-            newPublicKey
+            usersStorage.saveUser(
+                user = UserSM(
+                    id = userInfo.userId,
+                    publicKey = userInfo.publicKey,
+                    name = userInfo.login,
+                ),
+            )
+            userInfo.publicKey
         }
 
         val messagesToUpload = chatStorage.getMessages(

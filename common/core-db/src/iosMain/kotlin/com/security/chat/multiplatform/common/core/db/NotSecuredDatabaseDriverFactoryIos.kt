@@ -6,7 +6,6 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import co.touchlab.sqliter.DatabaseConfiguration
-import io.wifimap.wifimap.multiplatform.common.core.db.DestructiveMigrationSchema
 
 internal class NotSecuredDatabaseDriverFactoryIos : NotSecuredDatabaseDriverFactory {
 

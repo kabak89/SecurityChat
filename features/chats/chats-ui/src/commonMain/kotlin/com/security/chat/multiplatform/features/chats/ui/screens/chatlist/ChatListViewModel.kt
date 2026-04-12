@@ -5,8 +5,8 @@ import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.features.chats.domain.ChatsModel
-import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.ChatItem
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.Chats
+import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.mapper.toUi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -27,9 +27,7 @@ internal class ChatListViewModel(
             .onEach { chats ->
                 val newChatItems = chats
                     .map { chat ->
-                        ChatItem(
-                            id = chat.id,
-                        )
+                        chat.toUi()
                     }
 
                 val oldChats = currentViewState.chats

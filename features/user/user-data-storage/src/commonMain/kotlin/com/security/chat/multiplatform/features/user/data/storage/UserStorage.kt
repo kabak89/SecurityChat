@@ -4,7 +4,6 @@ import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
 
 public interface UserStorage {
-
     public suspend fun isUserAuthorized(): Boolean
     public suspend fun saveUserId(userId: String)
     public suspend fun getUserId(): String?
@@ -12,7 +11,6 @@ public interface UserStorage {
     public suspend fun saveKeys(cryptoKeys: CryptoKeys)
     public suspend fun getKeys(): CryptoKeys?
     public suspend fun clearKeys()
-
 }
 
 internal class UserStorageImpl(

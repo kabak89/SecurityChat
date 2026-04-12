@@ -3,7 +3,6 @@ package com.security.chat.multiplatform.features.chats.ui.screens.chatlist
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,12 +20,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chats.component.api.ChatListComponent
+import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.ChatItem
+import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.Chats
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.Res
@@ -104,29 +107,41 @@ private fun ChatListContent(
             ) {
                 state.chats.items.forEach { chat ->
                     item(key = chat.id) {
-                        Box(
-                            modifier = Modifier
-                                .heightIn(min = 48.dp)
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .clickable(
-                                    onClick = {
-                                        onChatClicked.invoke(chat.id)
-                                    },
-                                ),
-                        ) {
-                            Text(
-                                modifier = Modifier
-                                    .align(Alignment.CenterStart),
-                                text = chat.id,
-                                color = AppTheme.colors.textPrimary,
-                                style = AppTheme.typography.default,
-                            )
-                        }
+                        ChatComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            chat = chat,
+                            onChatClicked = onChatClicked,
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ChatComponent(
+    modifier: Modifier = Modifier,
+    chat: ChatItem,
+    onChatClicked: (String) -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .heightIn(min = 48.dp)
+            .clickable(
+                onClick = {
+                    onChatClicked.invoke(chat.id)
+                },
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier,
+            text = chat.companionName,
+            color = AppTheme.colors.textPrimary,
+            style = AppTheme.typography.title2,
+        )
     }
 }
 
@@ -163,7 +178,7 @@ private fun ToolbarComponent(
                 .weight(0.6f),
             text = "Chats",
             color = AppTheme.colors.textPrimary,
-            style = AppTheme.typography.default,
+            style = AppTheme.typography.title,
             textAlign = TextAlign.Center,
         )
         Row(
@@ -184,5 +199,54 @@ private fun ToolbarComponent(
                 },
             )
         }
+    }
+}
+
+@Preview
+@Composable
+internal fun ChatListContentPreview() {
+    AppTheme {
+        ChatListContent(
+            modifier = Modifier.fillMaxSize(),
+            state = ChatListState(
+                chatListIsLoading = false,
+                chats = Chats(
+                    items = listOf(
+                        ChatItem(
+                            id = "id-1",
+                            companionName = "user_1",
+                        ),
+                        ChatItem(
+                            id = "id-2",
+                            companionName = "user_2",
+                        ),
+                    ),
+                ),
+            ),
+            events = emptyFlow(),
+            onAddClicked = {},
+            onSettingsClicked = {},
+            onRefreshChatsTriggered = {},
+            onChatClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun ChatListContentLoadingPreview() {
+    AppTheme {
+        ChatListContent(
+            modifier = Modifier.fillMaxSize(),
+            state = ChatListState(
+                chatListIsLoading = true,
+                chats = Chats.EMPTY,
+            ),
+            events = emptyFlow(),
+            onAddClicked = {},
+            onSettingsClicked = {},
+            onRefreshChatsTriggered = {},
+            onChatClicked = {},
+        )
     }
 }

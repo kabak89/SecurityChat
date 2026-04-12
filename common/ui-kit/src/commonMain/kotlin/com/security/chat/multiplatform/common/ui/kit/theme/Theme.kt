@@ -12,6 +12,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight.Companion.W500
+import androidx.compose.ui.text.font.FontWeight.Companion.W600
 import androidx.compose.ui.unit.sp
 
 private val lightColorPalette: AppColors =
@@ -86,6 +88,14 @@ internal val LocalAppTypography: ProvidableCompositionLocal<AppTypography> =
 public class AppTypography internal constructor(
     public val default: TextStyle = TextStyle(
         fontSize = 16.sp,
+    ),
+    public val title: TextStyle = TextStyle(
+        fontSize = 18.sp,
+        fontWeight = W600,
+    ),
+    public val title2: TextStyle = TextStyle(
+        fontSize = 16.sp,
+        fontWeight = W500,
     ),
 )
 

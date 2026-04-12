@@ -7,7 +7,6 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
-import io.wifimap.wifimap.multiplatform.common.core.db.DestructiveMigrationSchema
 
 internal class NotSecuredDatabaseDriverFactoryAndroid(
     private val context: Context,

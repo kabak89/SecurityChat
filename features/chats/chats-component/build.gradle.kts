@@ -16,6 +16,7 @@ kotlin {
             implementation(projects.features.chats.chatsDomain)
             implementation(projects.features.chats.chatsData)
             implementation(projects.features.chats.chatsDataStorage)
+            implementation(projects.features.users.usersDataNetwork)
         }
     }
 }
