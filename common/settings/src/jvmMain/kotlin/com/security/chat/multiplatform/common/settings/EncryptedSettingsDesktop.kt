@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.common.settings
 
+import java.security.GeneralSecurityException
 import java.util.prefs.Preferences
 
 /**
@@ -25,7 +26,7 @@ internal class EncryptedSettingsDesktop : EncryptedSettings {
 
     override fun getString(key: String): String? {
         val stored = secure.get(key, null) ?: return null
-        return encryptor.decrypt(stored)
+        return decryptOrRemoveCorrupt(key, stored)
     }
 
     override fun putLong(key: String, value: Long?) {
@@ -38,7 +39,7 @@ internal class EncryptedSettingsDesktop : EncryptedSettings {
 
     override fun getLong(key: String): Long? {
         val stored = secure.get(key, null) ?: return null
-        return encryptor.decrypt(stored).toLongOrNull()
+        return decryptOrRemoveCorrupt(key, stored)?.toLongOrNull()
     }
 
     override fun putDouble(key: String, value: Double?) {
@@ -51,7 +52,7 @@ internal class EncryptedSettingsDesktop : EncryptedSettings {
 
     override fun getDouble(key: String): Double? {
         val stored = secure.get(key, null) ?: return null
-        return encryptor.decrypt(stored).toDoubleOrNull()
+        return decryptOrRemoveCorrupt(key, stored)?.toDoubleOrNull()
     }
 
     override fun putBoolean(key: String, value: Boolean?) {
@@ -64,6 +65,22 @@ internal class EncryptedSettingsDesktop : EncryptedSettings {
 
     override fun getBoolean(key: String): Boolean? {
         val stored = secure.get(key, null) ?: return null
-        return encryptor.decrypt(stored).toBooleanStrictOrNull()
+        return decryptOrRemoveCorrupt(key, stored)?.toBooleanStrictOrNull()
+    }
+
+    /**
+     * Wrong or rotated [DesktopMasterKeyProvider] key vs existing ENC1 blobs, truncated prefs,
+     * or corrupt Base64 all yield crypto failures; drop the entry so callers can recreate secrets.
+     */
+    private fun decryptOrRemoveCorrupt(key: String, stored: String): String? {
+        return try {
+            encryptor.decrypt(stored)
+        } catch (_: GeneralSecurityException) {
+            secure.remove(key)
+            null
+        } catch (_: IllegalArgumentException) {
+            secure.remove(key)
+            null
+        }
     }
 }

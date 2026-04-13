@@ -27,7 +27,10 @@ kotlin {
             implementation(libs.sqliter.driver)
         }
         jvmMain.dependencies {
-            implementation(libs.sqldelight.driver.sqlite)
+            implementation("app.cash.sqldelight:sqlite-driver:${libs.versions.sqldelight.get()}") {
+                exclude(group = "org.xerial", module = "sqlite-jdbc")
+            }
+            implementation(libs.willena.sqlite.jdbc)
         }
     }
 }

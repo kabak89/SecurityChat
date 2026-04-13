@@ -4,10 +4,12 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import java.util.Properties
+import com.security.chat.multiplatform.common.settings.EncryptedSettings
+import java.util.UUID
 
-//TODO not actually secured
-internal class SecuredDatabaseDriverFactoryDesktop : SecuredDatabaseDriverFactory {
+internal class SecuredDatabaseDriverFactoryDesktop(
+    private val encryptedSettings: EncryptedSettings,
+) : SecuredDatabaseDriverFactory {
 
     override fun createDriver(
         databaseName: String,
@@ -19,9 +21,16 @@ internal class SecuredDatabaseDriverFactoryDesktop : SecuredDatabaseDriverFactor
             version = version.toLong(),
         ).synchronous()
 
+        val passwordKey = getDbPasswordKey(databaseName = databaseName)
+        val dbPassword = encryptedSettings.getString(passwordKey) ?: run {
+            val newPassword = UUID.randomUUID().toString()
+            encryptedSettings.putString(key = passwordKey, value = newPassword)
+            newPassword
+        }
+
         return JdbcSqliteDriver(
             url = desktopJdbcSqliteUrl(databaseName),
-            properties = Properties().apply { put("foreign_keys", "true") },
+            properties = securedDesktopJdbcProperties(dbPassword),
             schema = migrationSchema,
         )
     }
