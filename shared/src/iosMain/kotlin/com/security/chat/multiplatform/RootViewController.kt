@@ -10,7 +10,7 @@ import org.koin.core.component.KoinComponent
 import platform.UIKit.UIViewController
 
 @Suppress("unused")
-fun rootViewController(): UIViewController {
+public fun rootViewController(): UIViewController {
     val lifecycle = ApplicationLifecycle()
     lifecycle.subscribe(
         onCreate = {
