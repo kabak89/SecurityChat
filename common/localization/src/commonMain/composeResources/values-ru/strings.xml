@@ -3,4 +3,6 @@
     <string name="settings_main_profile">Профиль</string>
     <string name="settings_main_theme">Тема</string>
     <string name="settings_main_log_out">Выйти</string>
+
+    <string name="chat_list_title">Чаты</string>
 </resources>
