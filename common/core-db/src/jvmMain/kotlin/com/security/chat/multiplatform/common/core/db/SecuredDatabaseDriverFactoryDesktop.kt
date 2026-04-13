@@ -4,11 +4,9 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
 //TODO not actually secured
-//TODO in memory DB
 internal class SecuredDatabaseDriverFactoryDesktop : SecuredDatabaseDriverFactory {
 
     override fun createDriver(
@@ -16,17 +14,15 @@ internal class SecuredDatabaseDriverFactoryDesktop : SecuredDatabaseDriverFactor
         sqlSchema: SqlSchema<QueryResult.AsyncValue<Unit>>,
         version: Int,
     ): SqlDriver {
+        val migrationSchema = DestructiveMigrationSchema(
+            schema = sqlSchema,
+            version = version.toLong(),
+        ).synchronous()
+
         return JdbcSqliteDriver(
-            url = JdbcSqliteDriver.IN_MEMORY,
+            url = desktopJdbcSqliteUrl(databaseName),
             properties = Properties().apply { put("foreign_keys", "true") },
+            schema = migrationSchema,
         )
-            .apply {
-                runBlocking {
-                    DestructiveMigrationSchema(
-                        schema = sqlSchema,
-                        version = version.toLong(),
-                    ).create(this@apply).await()
-                }
-            }
     }
 }

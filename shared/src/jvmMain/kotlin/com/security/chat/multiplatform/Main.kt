@@ -11,7 +11,7 @@ import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
 import org.koin.core.component.KoinComponent
 import javax.swing.SwingUtilities
 
-fun main() {
+public fun main() {
     val lifecycle = LifecycleRegistry()
 
     lifecycle.doOnCreate {

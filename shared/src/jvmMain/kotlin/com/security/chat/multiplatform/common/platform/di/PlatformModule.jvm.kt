@@ -3,5 +3,4 @@ package com.security.chat.multiplatform.common.platform.di
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual val platformModule: Module =
-    module {}
+public actual val platformModule: Module = module {}
