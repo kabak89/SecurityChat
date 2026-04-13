@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.common.core.network
 import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
 import com.security.chat.multiplatform.common.core.network.entity.SocketMessage
 import com.security.chat.multiplatform.common.core.network.entity.SocketSubscribeMessage
+import com.security.chat.multiplatform.common.log.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.Frame
@@ -127,7 +128,7 @@ public class LiveEventsManager(
                 block = {
                     val subscribeJob = launch {
                         for (message in messagesToSendFlow) {
-                            println("qweqw message = $message")
+                            Log.d { "message = $message" }
                             send(Frame.Text(message))
                         }
                     }
@@ -136,13 +137,13 @@ public class LiveEventsManager(
 
                     subscribersJob = subscribersCounter
                         .onEach { subscribersCount ->
-                            println("qweqw subscribersCount = $subscribersCount")
+                            Log.d { "subscribersCount = $subscribersCount" }
                             if (subscribersCount == 0) {
-                                println("qweqw close started")
+                                Log.d { "close started" }
                                 subscribeJob.cancelAndJoin()
                                 close()
                                 isSocketOpened = false
-                                println("qweqw close ended")
+                                Log.d { "close ended" }
                             }
                         }
                         .launchIn(this)
@@ -157,8 +158,7 @@ public class LiveEventsManager(
                 },
             )
         } catch (e: Exception) {
-            println("Exception in socket")
-            println(e)
+            Log.e(e, "Exception in socket")
             isSocketOpened = false
             socketReady = CompletableDeferred()
             subscribersJob?.cancel()
