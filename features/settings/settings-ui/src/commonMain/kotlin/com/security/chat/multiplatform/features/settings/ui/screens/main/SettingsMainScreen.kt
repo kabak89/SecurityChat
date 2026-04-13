@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
+import com.security.chat.multiplatform.common.core.ui.resolve
 import com.security.chat.multiplatform.common.ui.kit.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.settings.component.api.SettingsMainComponent
@@ -162,7 +163,7 @@ private fun ItemComponent(
         modifier = modifier
             .clickable(onClick = onItemClicked)
             .padding(all = 16.dp),
-        text = item.title,
+        text = item.title.resolve(),
     )
 }
 

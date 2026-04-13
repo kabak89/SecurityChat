@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_main_profile">Profile</string>
+    <string name="settings_main_theme">Theme</string>
+    <string name="settings_main_log_out">Log out</string>
+</resources>
