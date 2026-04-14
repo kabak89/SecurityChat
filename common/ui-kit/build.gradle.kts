@@ -16,6 +16,8 @@ kotlin {
             implementation(libs.compose.material3)
 
             api(libs.ui.tooling.preview)
+
+            api(projects.common.coreUi)
         }
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)

@@ -25,7 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
+import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
+import com.security.chat.multiplatform.common.core.ui.entity.isLoading
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chats.component.api.ChatListComponent
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.ChatItem
@@ -66,6 +69,8 @@ public fun ChatListScreen(
         onSettingsClicked = component::onSettingsClicked,
         onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
         onChatClicked = component::onChatClicked,
+        onCloseErrorDialogClicked = vm::onCloseErrorDialogClicked,
+        onReloadChatsClicked = vm::onReloadChatsClicked,
     )
 }
 
@@ -78,6 +83,8 @@ private fun ChatListContent(
     onSettingsClicked: () -> Unit,
     onRefreshChatsTriggered: () -> Unit,
     onChatClicked: (chatId: String) -> Unit,
+    onCloseErrorDialogClicked: () -> Unit,
+    onReloadChatsClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
@@ -102,7 +109,7 @@ private fun ChatListContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            isRefreshing = state.chatListIsLoading,
+            isRefreshing = state.loadingState.isLoading,
             onRefresh = onRefreshChatsTriggered,
         ) {
             LazyColumn(
@@ -119,6 +126,15 @@ private fun ChatListContent(
                 }
             }
         }
+    }
+    val errorDialogContent = state.errorDialogContent
+    if (errorDialogContent != null) {
+        AlertDialogComponent(
+            content = errorDialogContent,
+            onDismissRequest = onCloseErrorDialogClicked,
+            onPositiveButtonClicked = onReloadChatsClicked,
+            onNegativeButtonClicked = onCloseErrorDialogClicked,
+        )
     }
 }
 
@@ -212,7 +228,7 @@ internal fun ChatListContentPreview() {
         ChatListContent(
             modifier = Modifier.fillMaxSize(),
             state = ChatListState(
-                chatListIsLoading = false,
+                loadingState = UiLceState.Ready,
                 chats = Chats(
                     items = listOf(
                         ChatItem(
@@ -225,12 +241,15 @@ internal fun ChatListContentPreview() {
                         ),
                     ),
                 ),
+                errorDialogContent = null,
             ),
             events = emptyFlow(),
             onAddClicked = {},
             onSettingsClicked = {},
             onRefreshChatsTriggered = {},
             onChatClicked = {},
+            onCloseErrorDialogClicked = {},
+            onReloadChatsClicked = {},
         )
     }
 }
@@ -242,14 +261,17 @@ internal fun ChatListContentLoadingPreview() {
         ChatListContent(
             modifier = Modifier.fillMaxSize(),
             state = ChatListState(
-                chatListIsLoading = true,
+                loadingState = UiLceState.Loading,
                 chats = Chats.EMPTY,
+                errorDialogContent = null,
             ),
             events = emptyFlow(),
             onAddClicked = {},
             onSettingsClicked = {},
             onRefreshChatsTriggered = {},
             onChatClicked = {},
+            onCloseErrorDialogClicked = {},
+            onReloadChatsClicked = {},
         )
     }
 }

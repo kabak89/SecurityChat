@@ -20,6 +20,7 @@ kotlin {
             implementation(libs.ktor.client.websockets)
 
             implementation(projects.common.coreComponent)
+            implementation(projects.common.error)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

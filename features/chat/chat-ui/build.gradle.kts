@@ -14,6 +14,7 @@ kotlin {
             implementation(libs.compose.resources)
 
             implementation(projects.common.coreUi)
+            implementation(projects.common.uiKit)
 
             api(projects.features.chat.chatComponentApi)
 

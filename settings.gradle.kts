@@ -38,6 +38,7 @@ include(
     ":common:ui-kit",
     ":common:app-lifecycle",
     ":common:log",
+    ":common:error",
 )
 include(
     ":features:splash:splash-component",

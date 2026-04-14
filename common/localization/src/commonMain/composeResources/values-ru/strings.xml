@@ -1,8 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="common_ok">OK</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="common_retry">Повторить</string>
+    <string name="common_close">Закрыть</string>
+
     <string name="settings_main_profile">Профиль</string>
     <string name="settings_main_theme">Тема</string>
     <string name="settings_main_log_out">Выйти</string>
 
     <string name="chat_list_title">Чаты</string>
+
+    <string name="error_server_internal_error_title">Внутренняя ошибка сервера</string>
+    <string name="error_server_internal_error_description">Сервер столкнулся с непредвиденной ситуацией, препятствующей выполнению запроса</string>
+
+    <string name="error_server_unknown_error_title">Неизвестная ошибка сервера</string>
+    <string name="error_server_unknown_error_description">Что то пошло не так</string>
+
+    <string name="error_connection_title">Проблемы с доступом в сеть</string>
+    <string name="error_connection_description">Проверьте подключение к интернету</string>
+
+    <string name="error_unknown_title">Неизвестная ошибка</string>
+    <string name="error_unknown_description">Что то пошло не так</string>
 </resources>

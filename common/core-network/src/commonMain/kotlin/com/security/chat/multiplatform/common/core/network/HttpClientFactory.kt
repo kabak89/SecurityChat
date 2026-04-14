@@ -1,7 +1,10 @@
 package com.security.chat.multiplatform.common.core.network
 
+import com.security.chat.multiplatform.common.core.error.NetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -36,6 +39,19 @@ internal class HttpClientFactoryImpl(
                 level = LogLevel.ALL
             }
             expectSuccess = true
+            HttpResponseValidator {
+                handleResponseExceptionWithRequest { exception, _ ->
+                    when (exception) {
+                        is ClientRequestException -> {
+                            val exceptionResponse = exception.response
+                            val status = exceptionResponse.status
+                            throw NetworkError(statusCode = status.value)
+                        }
+
+                        else -> throw resolveError(exception)
+                    }
+                }
+            }
         }
     }
 }

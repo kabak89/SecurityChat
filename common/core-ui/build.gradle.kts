@@ -24,10 +24,12 @@ kotlin {
             api(libs.koin.composeVM)
             api(libs.kotlinx.coroutines.core)
 
+            implementation(projects.common.coreDomain)
+
             api(projects.common.iconsKit)
-            api(projects.common.uiKit)
             api(projects.common.log)
             api(projects.common.localization)
+            api(projects.common.error)
         }
     }
 }

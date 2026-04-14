@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.common.core.ui
+package com.security.chat.multiplatform.common.core.ui.entity
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable

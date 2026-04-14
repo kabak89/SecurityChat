@@ -1,8 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="common_ok">OK</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_close">Close</string>
+
     <string name="settings_main_profile">Profile</string>
     <string name="settings_main_theme">Theme</string>
     <string name="settings_main_log_out">Log out</string>
 
     <string name="chat_list_title">Chats</string>
+
+    <string name="error_server_internal_error_title">Internal server error</string>
+    <string name="error_server_internal_error_description">Server encountered an unexpected condition preventing it from fulfilling a request</string>
+
+    <string name="error_server_unknown_error_title">Unknown server error</string>
+    <string name="error_server_unknown_error_description">Something went wrong</string>
+
+    <string name="error_connection_title">Problems accessing the network</string>
+    <string name="error_connection_description">Check your internet connection</string>
+
+    <string name="error_unknown_title">Unknown error</string>
+    <string name="error_unknown_description">Something went wrong</string>
 </resources>

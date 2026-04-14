@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.common.ui.kit
+package com.security.chat.multiplatform.common.ui.kit.alertdialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,7 +21,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.security.chat.multiplatform.common.core.ui.entity.resolve
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+
+@Composable
+public fun AlertDialogComponent(
+    content: AlertDialogContent,
+    onDismissRequest: () -> Unit,
+    onPositiveButtonClicked: (() -> Unit)? = null,
+    onNegativeButtonClicked: (() -> Unit)? = null,
+) {
+    AlertDialogComponent(
+        title = content.title.resolve(),
+        message = content.message?.resolve(),
+        positiveButtonText = content.positiveButtonText?.resolve(),
+        negativeButtonText = content.negativeButtonText?.resolve(),
+        onDismissRequest = onDismissRequest,
+        onPositiveButtonClicked = onPositiveButtonClicked,
+        onNegativeButtonClicked = onNegativeButtonClicked,
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,13 +131,61 @@ public fun AlertDialogComponent(
 
 @Preview
 @Composable
-private fun Preview() {
+internal fun AlertDialogComponentPreview() {
     AppTheme {
         AlertDialogComponent(
             title = "title",
             message = "message",
             positiveButtonText = "positive",
             negativeButtonText = "negative",
+            onDismissRequest = { },
+            onPositiveButtonClicked = { },
+            onNegativeButtonClicked = { },
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun AlertDialogComponentPreviewNoMessage() {
+    AppTheme {
+        AlertDialogComponent(
+            title = "title",
+            message = null,
+            positiveButtonText = "positive",
+            negativeButtonText = "negative",
+            onDismissRequest = { },
+            onPositiveButtonClicked = { },
+            onNegativeButtonClicked = { },
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun AlertDialogComponentPreviewOneButton() {
+    AppTheme {
+        AlertDialogComponent(
+            title = "title",
+            message = "message",
+            positiveButtonText = "positive",
+            negativeButtonText = null,
+            onDismissRequest = { },
+            onPositiveButtonClicked = { },
+            onNegativeButtonClicked = { },
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun AlertDialogComponentPreviewNoButtons() {
+    AppTheme {
+        AlertDialogComponent(
+            title = "title",
+            message = "message",
+            positiveButtonText = null,
+            negativeButtonText = null,
             onDismissRequest = { },
             onPositiveButtonClicked = { },
             onNegativeButtonClicked = { },

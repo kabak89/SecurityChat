@@ -20,7 +20,5 @@ internal data class DialogData(
 
         @Immutable
         data object Ok : ButtonAction
-
     }
-
 }
