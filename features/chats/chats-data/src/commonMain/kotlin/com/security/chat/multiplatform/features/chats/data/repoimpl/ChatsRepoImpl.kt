@@ -15,9 +15,14 @@ import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResu
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
+import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
+import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 internal class ChatsRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -69,7 +74,22 @@ internal class ChatsRepoImpl(
         )
     }
 
-    override suspend fun getChatsList(): List<ChatDescription> {
+    override fun getChatsListFlow(): Flow<List<ChatDescription>> {
+        return chatsStorage.getChatsFlow()
+            .map { chatList ->
+                chatList.map { chatSM ->
+                    val companionId = chatSM.companionId
+                    val companionName = usersStorage.getUser(companionId)?.name ?: run {
+                        val user = getAndSaveUser(companionId)
+                        user.name
+                    }
+                    chatSM.toDomain(companionName = companionName)
+                }
+            }
+            .distinctUntilChanged()
+    }
+
+    override suspend fun fetchChatsList() {
         val userId = userStorage.getUserId() ?: error("user id not found")
 
         val response: UserChatsResponse = networkManager.runGet(
@@ -88,7 +108,8 @@ internal class ChatsRepoImpl(
                 }
 
                 val companionName = usersStorage.getUser(companionId)?.name ?: run {
-                    usersNetworkManager.fetchUser(companionId).name
+                    val user = getAndSaveUser(companionId)
+                    user.name
                 }
 
                 chatResponse.toDomain(
@@ -99,7 +120,17 @@ internal class ChatsRepoImpl(
 
         val storageModels = chats.map { it.toSM() }
         chatsStorage.saveChats(chats = storageModels)
+    }
 
-        return chats
+    private suspend fun getAndSaveUser(id: String): UserNM {
+        val user = usersNetworkManager.getUser(id)
+        usersStorage.saveUser(
+            user = UserSM(
+                id = user.userId,
+                publicKey = user.publicKey,
+                name = user.name,
+            ),
+        )
+        return user
     }
 }

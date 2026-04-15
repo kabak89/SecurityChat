@@ -1,17 +1,23 @@
 package com.security.chat.multiplatform.features.chats.data.storage
 
+import app.cash.sqldelight.coroutines.asFlow
 import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.chats.data.storage.mapper.toSM
 import com.security.chat.multiplatform.features.chats.data.storage.mapper.toTable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 public interface ChatsStorage {
     public suspend fun saveChats(chats: List<ChatSM>)
     public suspend fun getChat(id: String): ChatSM?
     public suspend fun clearAll()
+    public fun getChatsFlow(): Flow<List<ChatSM>>
 }
 
 internal class ChatsStorageImpl(
@@ -58,5 +64,18 @@ internal class ChatsStorageImpl(
         withContext(dispatcherProvider.IO) {
             dbCreator.getDb().personalChatTableQueries.removeAll()
         }
+    }
+
+    override fun getChatsFlow(): Flow<List<ChatSM>> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.personalChatTableQueries.getAll()
+                    .asFlow()
+                    .map { query ->
+                        query.executeAsList()
+                            .map { table -> table.toSM() }
+                    }
+                    .flowOn(dispatcherProvider.IO)
+            }
     }
 }

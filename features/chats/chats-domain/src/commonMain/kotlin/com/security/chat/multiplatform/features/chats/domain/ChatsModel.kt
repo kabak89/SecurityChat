@@ -55,8 +55,7 @@ internal class ChatsModelImpl(
 
     override val fetchChatsList: Task0<Unit> =
         task { ->
-            val chats = chatsRepo.getChatsList()
-            stateFlow.update { it.copy(chatList = chats) }
+            chatsRepo.fetchChatsList()
         }
 
     override fun setUsername(username: String) {
@@ -74,13 +73,10 @@ internal class ChatsModelImpl(
     }
 
     override fun getChatListFlow(): Flow<List<ChatDescription>> {
-        return stateFlow
-            .map { it.chatList }
-            .distinctUntilChanged()
+        return chatsRepo.getChatsListFlow()
     }
 
     private data class State(
         val username: String = "",
-        val chatList: List<ChatDescription> = emptyList(),
     )
 }

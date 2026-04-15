@@ -11,6 +11,16 @@ internal fun ChatDescription.toSM(): ChatSM {
     )
 }
 
+internal fun ChatSM.toDomain(
+    companionName: String,
+): ChatDescription {
+    return ChatDescription(
+        id = id,
+        companionId = companionId,
+        companionName = companionName,
+    )
+}
+
 internal fun ChatResponse.toDomain(
     companionName: String,
     companionId: String,
