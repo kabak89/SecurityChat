@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.koin.core.component.get
 import org.koin.core.context.loadKoinModules
+import org.koin.core.context.unloadKoinModules
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.bind
@@ -62,6 +63,8 @@ public abstract class BaseComponentImpl(
             scopedCoroutineScope.cancel()
 
             diScope?.close()
+
+            unloadKoinModules(coroutineScopeModule)
 
             Log.d { "scope $scopeId closed" }
         }
