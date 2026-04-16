@@ -1,6 +1,8 @@
 package com.security.chat.multiplatform.common.ui.kit.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -11,9 +13,12 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight.Companion.W400
 import androidx.compose.ui.text.font.FontWeight.Companion.W500
 import androidx.compose.ui.text.font.FontWeight.Companion.W600
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val lightColorPalette: AppColors =
@@ -24,6 +29,8 @@ private val lightColorPalette: AppColors =
         textSecondary = Color(0xFF131313),
         iconPrimary = Color(0xFF000000),
         element = Color(0xFF808080),
+        accent = Color(0xFFACACAC),
+        contrast = Color(0xFF000000),
     )
 
 private val darkColorPalette: AppColors =
@@ -34,6 +41,8 @@ private val darkColorPalette: AppColors =
         textSecondary = Color(0xFFE1E1E1),
         iconPrimary = Color(0xFFFFFFFF),
         element = Color(0xFF808080),
+        accent = Color(0xFF747474),
+        contrast = Color(0xFFFFFFFF),
     )
 
 @Composable
@@ -55,6 +64,7 @@ public fun AppTheme(
             LocalAppTypography provides AppTheme.typography,
             LocalContentColor provides colors.textPrimary,
             LocalUseDarkTheme provides useDarkTheme,
+            LocalAppShapes provides AppTheme.shapes,
             content = content,
         )
     }
@@ -75,6 +85,11 @@ public object AppTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalUseDarkTheme.current
+
+    public val shapes: Shapes
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppShapes.current
 }
 
 private val LocalAppColors = staticCompositionLocalOf<AppColors> {
@@ -83,6 +98,9 @@ private val LocalAppColors = staticCompositionLocalOf<AppColors> {
 
 internal val LocalAppTypography: ProvidableCompositionLocal<AppTypography> =
     staticCompositionLocalOf { AppTypography() }
+
+internal val LocalAppShapes: ProvidableCompositionLocal<Shapes> =
+    staticCompositionLocalOf { Shapes() }
 
 @Immutable
 public class AppTypography internal constructor(
@@ -97,6 +115,16 @@ public class AppTypography internal constructor(
         fontSize = 16.sp,
         fontWeight = W500,
     ),
+    public val body: TextStyle = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = W400,
+    ),
+)
+
+@Immutable
+public class Shapes internal constructor(
+    public val circle: Shape = CircleShape,
+    public val roundedRectangle16: Shape = RoundedCornerShape(16.dp),
 )
 
 private val LocalUseDarkTheme: ProvidableCompositionLocal<Boolean> =

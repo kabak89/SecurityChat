@@ -1,7 +1,6 @@
 package com.security.chat.multiplatform.common.ui.kit.components.alertdialog
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,11 +16,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.security.chat.multiplatform.common.core.ui.entity.resolve
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 
 @Composable
@@ -58,6 +60,13 @@ public fun AlertDialogComponent(
     ) {
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 4.dp,
+                    shape = AppTheme.shapes.roundedRectangle16,
+                    ambientColor = AppTheme.colors.contrast,
+                    spotColor = AppTheme.colors.contrast,
+                )
+                .background(AppTheme.colors.accent)
                 .wrapContentHeight()
                 .fillMaxWidth()
                 .background(AppTheme.colors.backgroundPrimary),
@@ -90,37 +99,23 @@ public fun AlertDialogComponent(
                         horizontalArrangement = Arrangement.End,
                     ) {
                         if (negativeButtonText != null && onNegativeButtonClicked != null) {
-                            Box(
-                                modifier = Modifier
-                                    .background(AppTheme.colors.backgroundSecondary)
-                                    .clickable(onClick = onNegativeButtonClicked),
-                            ) {
-                                Text(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                                    style = AppTheme.typography.default,
+                            ButtonPrimary(
+                                content = ButtonContent.Text(
                                     text = negativeButtonText,
-                                    color = AppTheme.colors.textPrimary,
-                                )
-                            }
+                                ),
+                                onClicked = onNegativeButtonClicked,
+                            )
                         }
                         if (positiveButtonText != null && onPositiveButtonClicked != null) {
                             if (negativeButtonText != null && onNegativeButtonClicked != null) {
                                 Spacer(modifier = Modifier.width(16.dp))
                             }
-                            Box(
-                                modifier = Modifier
-                                    .background(AppTheme.colors.backgroundSecondary)
-                                    .clickable(onClick = onPositiveButtonClicked),
-                            ) {
-                                Text(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                                    style = AppTheme.typography.default,
+                            ButtonPrimary(
+                                content = ButtonContent.Text(
                                     text = positiveButtonText,
-                                    color = AppTheme.colors.textPrimary,
-                                )
-                            }
+                                ),
+                                onClicked = onPositiveButtonClicked,
+                            )
                         }
                     }
                 }

@@ -11,4 +11,6 @@ public data class AppColors(
     val textSecondary: Color,
     val iconPrimary: Color,
     val element: Color,
+    val accent: Color,
+    val contrast: Color,
 )
