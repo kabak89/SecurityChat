@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.common.ui.kit.alertdialog
+package com.security.chat.multiplatform.common.ui.kit.components.alertdialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

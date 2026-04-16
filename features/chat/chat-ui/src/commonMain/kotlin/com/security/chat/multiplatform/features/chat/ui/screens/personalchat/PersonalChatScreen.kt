@@ -1,7 +1,6 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.personalchat
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,10 +23,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
+import com.security.chat.multiplatform.common.ui.kit.components.SideContent
+import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
@@ -89,7 +91,14 @@ private fun PersonalChatContent(
         ToolbarComponent(
             modifier = Modifier
                 .fillMaxWidth(),
-            onBackClicked = onBackClicked,
+            startContent = SideContent.Button(
+                icon = DrawableRes.ic_back,
+                onClicked = onBackClicked,
+            ),
+            centerContent = CenterContent.Title(
+                text = "Chat",
+            ),
+            endContent = null,
         )
         LazyColumn(
             modifier = Modifier
@@ -201,50 +210,9 @@ private fun EditMessageComponent(
     }
 }
 
-@Composable
-private fun ToolbarComponent(
-    modifier: Modifier = Modifier,
-    onBackClicked: () -> Unit,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            modifier = Modifier
-                .weight(0.2f),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            IconButton(
-                modifier = Modifier
-                    .size(48.dp),
-                onClick = onBackClicked,
-                content = {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.ic_back),
-                        tint = AppTheme.colors.element,
-                        contentDescription = null,
-                    )
-                },
-            )
-        }
-        Text(
-            modifier = Modifier
-                .weight(0.6f),
-            text = "Chat",
-            textAlign = TextAlign.Center,
-            color = AppTheme.colors.textPrimary,
-        )
-        Spacer(
-            modifier = Modifier
-                .weight(0.2f),
-        )
-    }
-}
-
 @Preview
 @Composable
-internal fun SettingsMainScreenPreview() {
+internal fun PersonalChatScreenPreview() {
     AppTheme {
         PersonalChatContent(
             modifier = Modifier.fillMaxSize(),

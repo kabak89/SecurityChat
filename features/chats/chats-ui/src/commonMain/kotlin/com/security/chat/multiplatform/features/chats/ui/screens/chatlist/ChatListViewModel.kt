@@ -8,7 +8,7 @@ import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
-import com.security.chat.multiplatform.common.ui.kit.alertdialog.AlertDialogContent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.features.chats.domain.ChatsModel
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.Chats
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.mapper.toUi
