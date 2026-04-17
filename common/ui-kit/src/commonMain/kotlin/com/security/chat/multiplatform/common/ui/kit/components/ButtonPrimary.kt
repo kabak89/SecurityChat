@@ -29,18 +29,35 @@ import securitychat.common.icons_kit.generated.resources.ic_send
 public fun ButtonPrimary(
     modifier: Modifier = Modifier,
     content: ButtonContent,
+    enabled: Boolean = true,
     onClicked: () -> Unit,
 ) {
+    val color = if (enabled) {
+        AppTheme.colors.accent
+    } else {
+        AppTheme.colors.accent.copy(alpha = 0.3f)
+    }
+    val shape = AppTheme.shapes.roundedRectangle16
     Box(
         modifier = modifier
-            .shadow(
-                elevation = 4.dp,
-                shape = AppTheme.shapes.roundedRectangle16,
-                ambientColor = AppTheme.colors.contrast,
-                spotColor = AppTheme.colors.contrast,
+            .then(
+                if (enabled) {
+                    Modifier
+                        .shadow(
+                            elevation = 4.dp,
+                            shape = shape,
+                            ambientColor = AppTheme.colors.contrast,
+                            spotColor = AppTheme.colors.contrast,
+                        )
+                        .clickable(onClick = onClicked)
+                } else {
+                    Modifier
+                },
             )
-            .background(AppTheme.colors.accent)
-            .clickable(onClick = onClicked)
+            .background(
+                color = color,
+                shape = shape,
+            )
             .heightIn(min = 48.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
@@ -105,16 +122,25 @@ private fun Previews() {
         ButtonPrimary(
             modifier = Modifier,
             content = ButtonContent.Text("Press Me"),
+            enabled = true,
+            onClicked = {},
+        )
+        ButtonPrimary(
+            modifier = Modifier,
+            content = ButtonContent.Text("Press Me"),
+            enabled = false,
             onClicked = {},
         )
         ButtonPrimary(
             modifier = Modifier.fillMaxWidth(),
             content = ButtonContent.Text("Press Me"),
+            enabled = true,
             onClicked = {},
         )
         ButtonPrimary(
             modifier = Modifier.fillMaxWidth(),
             content = ButtonContent.Text("Long long long long long long long long long long long long long text"),
+            enabled = true,
             onClicked = {},
         )
         ButtonPrimary(
@@ -136,6 +162,7 @@ private fun Previews() {
                     }
                 },
             ),
+            enabled = true,
             onClicked = {},
         )
     }

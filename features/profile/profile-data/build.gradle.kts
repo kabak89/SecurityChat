@@ -11,6 +11,8 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.features.profile.profileDomain)
             implementation(projects.features.profile.profileDataStorage)
+            implementation(projects.features.user.userDataStorage)
+            implementation(projects.features.user.userDataNetwork)
         }
     }
 }

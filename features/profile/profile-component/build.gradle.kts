@@ -16,6 +16,7 @@ kotlin {
             implementation(projects.features.profile.profileDomain)
             implementation(projects.features.profile.profileData)
             implementation(projects.features.profile.profileDataStorage)
+            implementation(projects.features.user.userDataNetwork)
         }
     }
 }

@@ -56,6 +56,7 @@ include(
 )
 include(
     ":features:user:user-data-storage",
+    ":features:user:user-data-network",
 )
 include(
     ":features:main:main-component",

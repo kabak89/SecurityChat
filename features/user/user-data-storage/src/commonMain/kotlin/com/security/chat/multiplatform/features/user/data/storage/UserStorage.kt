@@ -11,6 +11,8 @@ public interface UserStorage {
     public suspend fun saveKeys(cryptoKeys: CryptoKeys)
     public suspend fun getKeys(): CryptoKeys?
     public suspend fun clearKeys()
+    public suspend fun saveUserName(name: String)
+    public suspend fun getUserName(): String?
 }
 
 internal class UserStorageImpl(
@@ -75,8 +77,20 @@ internal class UserStorageImpl(
             value = null,
         )
     }
+
+    override suspend fun saveUserName(name: String) {
+        encryptedSettings.putString(
+            key = KEY_USER_NAME,
+            value = name,
+        )
+    }
+
+    override suspend fun getUserName(): String? {
+        return encryptedSettings.getString(key = KEY_USER_NAME)
+    }
 }
 
 private const val KEY_USER_ID = "KEY_USER_ID"
 private const val KEY_PUBLIC_KEY = "KEY_PUBLIC_KEY"
 private const val KEY_PRIVATE_KEY = "KEY_PRIVATE_KEY"
+private const val KEY_USER_NAME = "KEY_USER_NAME"

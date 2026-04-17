@@ -12,7 +12,6 @@ import com.security.chat.multiplatform.features.profile.component.api.ProfileCom
 import com.security.chat.multiplatform.features.profile.data.di.profileDataModule
 import com.security.chat.multiplatform.features.profile.data.storage.di.profileDataStorageModule
 import com.security.chat.multiplatform.features.profile.domain.di.profileDomainModule
-import com.security.chat.multiplatform.features.profile.ui.component.ProfileMainComponentImpl
 import com.security.chat.multiplatform.features.profile.ui.di.profileUiModule
 import kotlinx.serialization.Serializable
 

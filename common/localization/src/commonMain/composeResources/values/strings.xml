@@ -22,4 +22,11 @@
 
     <string name="error_unknown_title">Unknown error</string>
     <string name="error_unknown_description">Something went wrong</string>
+
+    <string name="profile_title">Profile</string>
+    <string name="profile_login_label">Login:</string>
+    <string name="profile_login_placeholder">Username</string>
+    <string name="profile_update">Update</string>
+    <string name="profile_update_conflict_error_title">Error of profile update</string>
+    <string name="profile_update_conflict_error_description">User with such login already exists</string>
 </resources>

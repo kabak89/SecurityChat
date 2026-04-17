@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.network.HttpClientFactoryImpl
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactoryImpl
+import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
@@ -41,6 +42,13 @@ public val coreNetworkModule: Module =
             SocketConfig(
                 host = "192.168.1.5",
                 path = "/ws",
+                port = 80,
+            )
+        }
+
+        single {
+            NetworkConfig(
+                host = "http://192.168.1.5",
                 port = 80,
             )
         }

@@ -22,4 +22,11 @@
 
     <string name="error_unknown_title">Неизвестная ошибка</string>
     <string name="error_unknown_description">Что то пошло не так</string>
+
+    <string name="profile_title">Профиль</string>
+    <string name="profile_login_label">Имя пользователя:</string>
+    <string name="profile_login_placeholder">Имя</string>
+    <string name="profile_update">Обновить</string>
+    <string name="profile_update_conflict_error_title">Ошибка обновления профиля</string>
+    <string name="profile_update_conflict_error_description">Пользователь с таким логином уже существует</string>
 </resources>
