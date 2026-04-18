@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,6 +36,11 @@ import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.vectorResource
@@ -86,35 +94,57 @@ private fun PersonalChatContent(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .navigationBarsPadding(),
     ) {
-        ToolbarComponent(
-            modifier = Modifier
-                .fillMaxWidth(),
-            startContent = SideContent.Button(
-                icon = DrawableRes.ic_back,
-                onClicked = onBackClicked,
-            ),
-            centerContent = CenterContent.Title(
-                text = "Chat",
-            ),
-            endContent = null,
-        )
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .weight(1f),
-            reverseLayout = true,
-            content = {
-                state.messages.forEach { message ->
-                    item(key = message.id) {
-                        MessageComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            message = message,
-                        )
+        ) {
+            val hazeState = rememberHazeState()
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(1f)
+                    // Pass it the HazeState we stored above
+                    .hazeSource(state = hazeState),
+                reverseLayout = true,
+                content = {
+                    state.messages.forEach { message ->
+                        item(key = message.id) {
+                            MessageComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                message = message,
+                            )
+                        }
                     }
-                }
-            },
-        )
+                },
+            )
+            ToolbarComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .hazeEffect(
+                        state = hazeState,
+                        style = HazeStyle(
+                            backgroundColor = AppTheme.colors.backgroundPrimary,
+                            tint = HazeTint(
+                                color = AppTheme.colors.backgroundPrimary.copy(alpha = 0.5f),
+                            ),
+                            blurRadius = 16.dp,
+                            fallbackTint = HazeTint(
+                                color = AppTheme.colors.backgroundPrimary.copy(alpha = 0.5f),
+                            ),
+                        ),
+                    )
+                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
+                startContent = SideContent.Button(
+                    icon = DrawableRes.ic_back,
+                    onClicked = onBackClicked,
+                ),
+                centerContent = CenterContent.Title(
+                    text = "Chat",
+                ),
+                endContent = null,
+            )
+        }
         EditMessageComponent(
             modifier = Modifier
                 .fillMaxWidth(),

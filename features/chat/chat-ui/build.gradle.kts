@@ -12,6 +12,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.resources)
+            implementation(libs.haze)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)
