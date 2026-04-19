@@ -7,5 +7,6 @@ internal fun ChatDescription.toUi(): ChatItem {
     return ChatItem(
         id = id,
         companionName = companionName,
+        nameAbbreviation = companionName.take(2).uppercase(),
     )
 }
