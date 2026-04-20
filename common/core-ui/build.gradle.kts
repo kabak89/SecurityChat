@@ -25,6 +25,7 @@ kotlin {
             api(libs.kotlinx.coroutines.core)
 
             implementation(projects.common.coreDomain)
+            implementation(projects.common.coreComponent)
 
             api(projects.common.iconsKit)
             api(projects.common.log)

@@ -2,19 +2,21 @@ package com.security.chat.multiplatform.common.core.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.security.chat.multiplatform.common.core.ui.entity.Activable
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
-public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
-    ViewModelInterface<S, E> {
+public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(), ViewModelInterface<S, E> {
 
     private var loadingTriggered = false
 
@@ -44,11 +46,19 @@ public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
 
     protected val currentViewState: S get() = _viewState.value
 
+    protected val viewActivable: Activable = Activable()
+
     init {
         Log.d { "${this::class.qualifiedName} init" }
     }
 
     protected abstract fun createInitialState(): S
+
+    protected fun <T> Flow<T>.collectWhenViewActive(): Flow<T> =
+        viewActivable.activeFlow
+            .flatMapLatest { isActive ->
+                if (isActive) this else emptyFlow()
+            }
 
     protected fun updateState(update: (S) -> S) {
         _viewState.update(update)
@@ -66,5 +76,15 @@ public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(),
     override fun onCleared() {
         super.onCleared()
         Log.d { "${this::class.qualifiedName} onCleared" }
+    }
+
+    override fun onViewActive() {
+        viewActivable.onActive()
+        Log.d { "onActive" }
+    }
+
+    override fun onViewInactive() {
+        viewActivable.onInactive()
+        Log.d { "onViewInactive" }
     }
 }

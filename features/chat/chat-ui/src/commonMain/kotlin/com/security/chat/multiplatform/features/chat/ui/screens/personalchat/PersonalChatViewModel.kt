@@ -4,10 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
+import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
+import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.domain.ChatModel
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 internal class PersonalChatViewModel(
@@ -39,6 +42,20 @@ internal class PersonalChatViewModel(
                 updateState { it.copy(messages = newMessages) }
             }
             .launchIn(viewModelScope)
+
+        chatModel.syncMessages.jobFlow.asLceState().map { it.toUiLceState() }
+            .onEach { syncState ->
+                updateState { it.copy(syncState = syncState) }
+            }
+            .launchIn(viewModelScope)
+
+        viewActivable.activeFlow
+            .onEach { active ->
+                if (active) {
+                    chatModel.syncMessages.startOnSubscribe()
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): PersonalChatState {
@@ -46,6 +63,7 @@ internal class PersonalChatViewModel(
             message = "",
             sendingMessageInProgress = false,
             messages = emptyList(),
+            syncState = UiLceState.NotStarted,
         )
     }
 
@@ -55,6 +73,10 @@ internal class PersonalChatViewModel(
 
     fun onSendMessageClicked() {
         chatModel.sendMessage.startOnSubscribe()
+    }
+
+    fun onSyncClicked() {
+        chatModel.syncMessages.startOnSubscribe()
     }
 
 }

@@ -1,5 +1,10 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.personalchat
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,10 +31,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.Screen
+import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
+import com.security.chat.multiplatform.common.core.ui.entity.isLoading
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
@@ -44,40 +53,30 @@ import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.vectorResource
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.icons_kit.generated.resources.ic_send
+import securitychat.common.icons_kit.generated.resources.ic_sync
 
 @Composable
 internal fun PersonalChatScreen(
     component: PersonalChatComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
-    }
-
-    val vm: PersonalChatViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-        parameters = { parametersOf(component) },
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    PersonalChatContent(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        state = state,
-        events = vm.viewEvent,
-        onBackClicked = component::onExitClicked,
-        onMessageEdited = vm::onMessageEdited,
-        onSendMessageClicked = vm::onSendMessageClicked,
+    Screen(
+        component = component,
+        content = { state: PersonalChatState, vm: PersonalChatViewModel ->
+            PersonalChatContent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding(),
+                state = state,
+                events = vm.viewEvent,
+                onBackClicked = component::onExitClicked,
+                onMessageEdited = vm::onMessageEdited,
+                onSendMessageClicked = vm::onSendMessageClicked,
+                onSyncClicked = vm::onSyncClicked,
+            )
+        },
     )
 }
 
@@ -89,6 +88,7 @@ private fun PersonalChatContent(
     onBackClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
     onSendMessageClicked: () -> Unit,
+    onSyncClicked: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -130,7 +130,7 @@ private fun PersonalChatContent(
                             ),
                             blurRadius = 16.dp,
                             fallbackTint = HazeTint(
-                                color = AppTheme.colors.backgroundPrimary.copy(alpha = 0.5f),
+                                color = AppTheme.colors.backgroundPrimary,
                             ),
                         ),
                     )
@@ -142,7 +142,14 @@ private fun PersonalChatContent(
                 centerContent = CenterContent.Title(
                     text = "Chat",
                 ),
-                endContent = null,
+                endContent = SideContent.Custom(
+                    content = {
+                        SyncComponent(
+                            syncState = state.syncState,
+                            onSyncClicked = onSyncClicked,
+                        )
+                    },
+                ),
             )
         }
         EditMessageComponent(
@@ -169,6 +176,41 @@ private fun MessageComponent(
             modifier = Modifier,
             text = message.text,
             color = AppTheme.colors.textPrimary,
+        )
+    }
+}
+
+@Composable
+private fun SyncComponent(
+    modifier: Modifier = Modifier,
+    syncState: UiLceState,
+    onSyncClicked: () -> Unit,
+) {
+    val inProgress = remember(syncState) {
+        syncState.isLoading
+    }
+
+    val rotation = if (inProgress) {
+        val transition = rememberInfiniteTransition(label = "sync-rotation")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = -360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 800),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "sync-rotation-angle",
+        ).value
+    } else {
+        0f
+    }
+
+    Box(
+        modifier = modifier.rotate(rotation),
+    ) {
+        ButtonContent(
+            icon = DrawableRes.ic_sync,
+            onClicked = onSyncClicked,
         )
     }
 }
@@ -259,11 +301,13 @@ internal fun PersonalChatScreenPreview() {
                         text = "some text 2",
                     ),
                 ),
+                syncState = UiLceState.Ready,
             ),
             events = emptyFlow(),
             onBackClicked = {},
             onMessageEdited = {},
             onSendMessageClicked = {},
+            onSyncClicked = {},
         )
     }
 }

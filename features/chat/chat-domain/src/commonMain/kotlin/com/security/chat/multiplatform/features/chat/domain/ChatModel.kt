@@ -13,13 +13,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 
 public interface ChatModel : ScopedModel {
     public val sendMessage: Task0<Unit>
+    public val syncMessages: Task0<Unit>
 
     public fun setChatId(id: String)
     public fun setCurrentMessageText(text: String)
@@ -54,17 +54,14 @@ internal class ChatModelImpl(
             chatRepo.uploadMessages(chatId = chatId)
         }
 
+    override val syncMessages: Task0<Unit> =
+        task { ->
+            val chatId = checkNotNull(stateFlow.value.chatId)
+            chatRepo.fetchMessages(chatId = chatId)
+        }
+
     override fun onPostStart() {
         super.onPostStart()
-
-        stateFlow
-            .map { it.chatId }
-            .filterNotNull()
-            .take(1)
-            .onEach { chatId ->
-                chatRepo.fetchMessages(chatId = chatId)
-            }
-            .launchIn(scope)
 
         scope.launch {
             val chatId = stateFlow.map { it.chatId }.filterNotNull().first()
