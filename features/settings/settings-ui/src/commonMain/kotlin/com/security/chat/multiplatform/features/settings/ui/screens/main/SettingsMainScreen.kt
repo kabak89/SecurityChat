@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.core.ui.entity.resolve
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
@@ -31,41 +31,28 @@ import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.ic_back
 
 @Composable
 internal fun SettingsMainScreen(
     component: SettingsMainComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: SettingsMainState, vm: SettingsMainViewModel ->
+        SettingsMainScreenContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
+            state = state,
+            events = vm.viewEvent,
+            onBackClicked = component::onExitClicked,
+            onItemClicked = vm::onItemClicked,
+            onDismissDialog = vm::onDismissDialogClicked,
+            onDialogActionClicked = vm::onDialogActionClicked,
+            onUserLogOuted = component::onUserLogOuted,
+            onOnGoToThemeClicked = component::onGoToThemeClicked,
+            onOnGoToProfileClicked = component::onGoToProfileClicked,
+        )
     }
-
-    val vm: SettingsMainViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    SettingsMainScreenContent(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        state = state,
-        events = vm.viewEvent,
-        onBackClicked = component::onExitClicked,
-        onItemClicked = vm::onItemClicked,
-        onDismissDialog = vm::onDismissDialogClicked,
-        onDialogActionClicked = vm::onDialogActionClicked,
-        onUserLogOuted = component::onUserLogOuted,
-        onOnGoToThemeClicked = component::onGoToThemeClicked,
-        onOnGoToProfileClicked = component::onGoToProfileClicked,
-    )
 }
 
 @Composable

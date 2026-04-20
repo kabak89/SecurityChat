@@ -8,39 +8,26 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import kotlinx.coroutines.flow.Flow
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 public fun SplashScreen(
     component: SplashComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: SplashState, vm: SplashViewModel ->
+        SplashContent(
+            modifier = Modifier
+                .fillMaxSize(),
+            state = state,
+            events = vm.viewEvent,
+            onUserNotAuthorized = component::onGoAuthorization,
+            onUserAuthorized = component::onUserAuthorized,
+        )
     }
-
-    val vm: SplashViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    SplashContent(
-        modifier = Modifier
-            .fillMaxSize(),
-        state = state,
-        events = vm.viewEvent,
-        onUserNotAuthorized = component::onGoAuthorization,
-        onUserAuthorized = component::onUserAuthorized,
-    )
 }
 
 @Composable

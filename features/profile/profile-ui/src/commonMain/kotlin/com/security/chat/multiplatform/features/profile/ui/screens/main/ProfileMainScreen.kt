@@ -25,8 +25,8 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.localization.StringRes
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.MAX_CONTENT_WIDTH_DP
@@ -39,7 +39,6 @@ import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.Aler
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.profile.component.api.ProfileMainComponent
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.localization.generated.resources.profile_login_label
 import securitychat.common.localization.generated.resources.profile_login_placeholder
@@ -50,29 +49,17 @@ import securitychat.common.localization.generated.resources.profile_update
 internal fun ProfileMainScreen(
     component: ProfileMainComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: ProfileMainState, vm: ProfileMainViewModel ->
+        ProfileMainScreenContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
+            state = state,
+            onBackClicked = component::onBackClicked,
+            onUsernameTextChanged = vm::onUsernameTextChanged,
+            onUpdateUsernameClicked = vm::onUpdateUsernameClicked,
+        )
     }
-
-    val vm: ProfileMainViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    ProfileMainScreenContent(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        state = state,
-        onBackClicked = component::onBackClicked,
-        onUsernameTextChanged = vm::onUsernameTextChanged,
-        onUpdateUsernameClicked = vm::onUpdateUsernameClicked,
-    )
 }
 
 @Composable

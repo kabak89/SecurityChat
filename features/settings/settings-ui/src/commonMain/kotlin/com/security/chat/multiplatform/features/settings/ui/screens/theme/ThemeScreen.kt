@@ -18,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
@@ -28,36 +28,23 @@ import com.security.chat.multiplatform.features.settings.component.api.ThemeComp
 import com.security.chat.multiplatform.features.settings.ui.screens.theme.entity.ThemeItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.ic_back
 
 @Composable
 internal fun ThemeScreen(
     component: ThemeComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: ThemeState, vm: ThemeViewModel ->
+        ThemeScreenContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
+            state = state,
+            events = vm.viewEvent,
+            onBackClicked = component::onBackClicked,
+            onItemClicked = vm::onItemClicked,
+        )
     }
-
-    val vm: ThemeViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    ThemeScreenContent(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        state = state,
-        events = vm.viewEvent,
-        onBackClicked = component::onBackClicked,
-        onItemClicked = vm::onItemClicked,
-    )
 }
 
 @Composable

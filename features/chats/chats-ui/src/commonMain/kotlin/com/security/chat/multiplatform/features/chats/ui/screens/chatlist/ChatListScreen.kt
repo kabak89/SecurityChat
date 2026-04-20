@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.security.chat.multiplatform.common.core.localization.StringRes
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.isLoading
@@ -40,7 +40,6 @@ import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.ic_add
 import securitychat.common.icons_kit.generated.resources.ic_settings
 import securitychat.common.localization.generated.resources.chat_list_title
@@ -49,32 +48,20 @@ import securitychat.common.localization.generated.resources.chat_list_title
 public fun ChatListScreen(
     component: ChatListComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: ChatListState, vm: ChatListViewModel ->
+        ChatListContent(
+            modifier = Modifier
+                .fillMaxSize(),
+            state = state,
+            events = vm.viewEvent,
+            onAddClicked = component::onAddClicked,
+            onSettingsClicked = component::onSettingsClicked,
+            onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
+            onChatClicked = component::onChatClicked,
+            onCloseErrorDialogClicked = vm::onCloseErrorDialogClicked,
+            onReloadChatsClicked = vm::onReloadChatsClicked,
+        )
     }
-
-    val vm: ChatListViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    ChatListContent(
-        modifier = Modifier
-            .fillMaxSize(),
-        state = state,
-        events = vm.viewEvent,
-        onAddClicked = component::onAddClicked,
-        onSettingsClicked = component::onSettingsClicked,
-        onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
-        onChatClicked = component::onChatClicked,
-        onCloseErrorDialogClicked = vm::onCloseErrorDialogClicked,
-        onReloadChatsClicked = vm::onReloadChatsClicked,
-    )
 }
 
 @Composable

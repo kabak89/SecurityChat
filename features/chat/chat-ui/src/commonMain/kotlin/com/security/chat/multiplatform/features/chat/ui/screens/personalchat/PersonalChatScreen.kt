@@ -62,22 +62,19 @@ import securitychat.common.icons_kit.generated.resources.ic_sync
 internal fun PersonalChatScreen(
     component: PersonalChatComponent,
 ) {
-    Screen(
-        component = component,
-        content = { state: PersonalChatState, vm: PersonalChatViewModel ->
-            PersonalChatContent(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding(),
-                state = state,
-                events = vm.viewEvent,
-                onBackClicked = component::onExitClicked,
-                onMessageEdited = vm::onMessageEdited,
-                onSendMessageClicked = vm::onSendMessageClicked,
-                onSyncClicked = vm::onSyncClicked,
-            )
-        },
-    )
+    Screen(component) { state: PersonalChatState, vm: PersonalChatViewModel ->
+        PersonalChatContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
+            state = state,
+            events = vm.viewEvent,
+            onBackClicked = component::onExitClicked,
+            onMessageEdited = vm::onMessageEdited,
+            onSendMessageClicked = vm::onSendMessageClicked,
+            onSyncClicked = vm::onSyncClicked,
+        )
+    }
 }
 
 @Composable

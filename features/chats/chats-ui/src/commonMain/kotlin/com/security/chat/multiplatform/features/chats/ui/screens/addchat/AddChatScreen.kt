@@ -18,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
@@ -27,38 +27,25 @@ import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
 import kotlinx.coroutines.flow.Flow
-import org.koin.compose.viewmodel.koinViewModel
 import securitychat.common.icons_kit.generated.resources.ic_back
 
 @Composable
 public fun AddChatScreen(
     component: AddChatComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: AddChatState, vm: AddChatViewModel ->
+        AddChatContent(
+            modifier = Modifier
+                .fillMaxSize(),
+            state = state,
+            events = vm.viewEvent,
+            onBackClicked = component::onBackClicked,
+            onUsernameTextChanged = vm::onUsernameTextChanged,
+            onFindClicked = vm::onFindClicked,
+            onChatCreated = component::onChatCreated,
+            onCloseDialogClicked = vm::onCloseDialogClicked,
+        )
     }
-
-    val vm: AddChatViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    AddChatContent(
-        modifier = Modifier
-            .fillMaxSize(),
-        state = state,
-        events = vm.viewEvent,
-        onBackClicked = component::onBackClicked,
-        onUsernameTextChanged = vm::onUsernameTextChanged,
-        onFindClicked = vm::onFindClicked,
-        onChatCreated = component::onChatCreated,
-        onCloseDialogClicked = vm::onCloseDialogClicked,
-    )
 }
 
 @Composable

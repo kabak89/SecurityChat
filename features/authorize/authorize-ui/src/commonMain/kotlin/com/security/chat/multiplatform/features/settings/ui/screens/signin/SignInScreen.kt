@@ -21,7 +21,7 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
@@ -29,37 +29,24 @@ import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignInComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun SignInScreen(
     component: SignInComponent,
 ) {
-    try {
-        if (component.getDiScope().closed) return
-    } catch (e: Exception) {
-        println(e)
-        return
+    Screen(component) { state: SignInState, vm: SignInViewModel ->
+        SignInContent(
+            modifier = Modifier
+                .fillMaxSize(),
+            state = state,
+            events = vm.viewEvent,
+            onUsernameTextChanged = vm::onUsernameTextChanged,
+            onPasswordTextChanged = vm::onPasswordTextChanged,
+            onSignInClicked = vm::onSignInClicked,
+            onSignUpClicked = component::onSignUpClicked,
+            onAuthorized = component::onSuccessfulSignIn,
+        )
     }
-
-    val vm: SignInViewModel = koinViewModel(
-        viewModelStoreOwner = component,
-        scope = component.getDiScope(),
-    )
-
-    val state = vm.viewState.collectAsStateWithLifecycle().value
-
-    SignInContent(
-        modifier = Modifier
-            .fillMaxSize(),
-        state = state,
-        events = vm.viewEvent,
-        onUsernameTextChanged = vm::onUsernameTextChanged,
-        onPasswordTextChanged = vm::onPasswordTextChanged,
-        onSignInClicked = vm::onSignInClicked,
-        onSignUpClicked = component::onSignUpClicked,
-        onAuthorized = component::onSuccessfulSignIn,
-    )
 }
 
 @Composable
