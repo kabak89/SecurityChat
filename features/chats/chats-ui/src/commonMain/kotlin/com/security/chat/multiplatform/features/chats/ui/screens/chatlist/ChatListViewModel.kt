@@ -65,6 +65,12 @@ internal class ChatListViewModel(
             }
             .launchIn(viewModelScope)
 
+        chatsModel.isConnectedToInternetFlow()
+            .onEach { isConnectedToInternet ->
+                updateState { it.copy(isConnectedToInternet = isConnectedToInternet) }
+            }
+            .launchIn(viewModelScope)
+
         chatsModel.fetchChatsList.startOnSubscribe()
     }
 
@@ -73,6 +79,7 @@ internal class ChatListViewModel(
             loadingState = UiLceState.NotStarted,
             chats = Chats.EMPTY,
             errorDialogContent = null,
+            isConnectedToInternet = true,
         )
     }
 

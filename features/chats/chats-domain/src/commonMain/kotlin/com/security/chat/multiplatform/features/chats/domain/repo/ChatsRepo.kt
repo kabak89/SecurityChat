@@ -10,4 +10,5 @@ public interface ChatsRepo {
     public suspend fun createChat(secondUserId: String): CreateChatResult
     public fun getChatsListFlow(): Flow<List<ChatDescription>>
     public suspend fun fetchChatsList()
+    public fun isConnectedToInternetFlow(): Flow<Boolean>
 }

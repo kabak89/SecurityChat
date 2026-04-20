@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +44,7 @@ import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_add
 import securitychat.common.icons_kit.generated.resources.ic_settings
 import securitychat.common.localization.generated.resources.chat_list_title
+import securitychat.common.localization.generated.resources.chat_list_title_not_connected
 
 @Composable
 public fun ChatListScreen(
@@ -89,6 +91,11 @@ private fun ChatListContent(
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
+        val titleStringRes = if (state.isConnectedToInternet) {
+            StringRes.chat_list_title
+        } else {
+            StringRes.chat_list_title_not_connected
+        }
         ToolbarComponent(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -97,7 +104,7 @@ private fun ChatListContent(
                 onClicked = onSettingsClicked,
             ),
             centerContent = CenterContent.Title(
-                text = stringResource(StringRes.chat_list_title),
+                text = stringResource(titleStringRes),
             ),
             endContent = SideContent.Button(
                 icon = DrawableRes.ic_add,
@@ -124,12 +131,10 @@ private fun ChatListContent(
                             onChatClicked = onChatClicked,
                         )
                         if (index != lastIndex) {
-                            Spacer(
+                            Divider(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(1.dp)
-                                    .padding(start = 16.dp)
-                                    .background(color = AppTheme.colors.element),
+                                    .padding(start = 16.dp),
                             )
                         }
                     }
@@ -146,6 +151,19 @@ private fun ChatListContent(
             onNegativeButtonClicked = onCloseErrorDialogClicked,
         )
     }
+}
+
+@Composable
+private fun Divider(
+    modifier: Modifier = Modifier,
+) {
+    val elementColor = AppTheme.colors.element
+    val dividerColor = remember { elementColor.copy(alpha = 0.3f) }
+    Spacer(
+        modifier = modifier
+            .height(1.dp)
+            .background(color = dividerColor),
+    )
 }
 
 @Composable
@@ -215,6 +233,7 @@ internal fun ChatListContentPreview() {
                     ),
                 ),
                 errorDialogContent = null,
+                isConnectedToInternet = true,
             ),
             events = emptyFlow(),
             onAddClicked = {},
@@ -237,6 +256,7 @@ internal fun ChatListContentLoadingPreview() {
                 loadingState = UiLceState.Loading,
                 chats = Chats.EMPTY,
                 errorDialogContent = null,
+                isConnectedToInternet = true,
             ),
             events = emptyFlow(),
             onAddClicked = {},

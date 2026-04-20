@@ -10,4 +10,5 @@ internal data class ChatListState(
     val loadingState: UiLceState,
     val chats: Chats,
     val errorDialogContent: AlertDialogContent?,
+    val isConnectedToInternet: Boolean,
 )

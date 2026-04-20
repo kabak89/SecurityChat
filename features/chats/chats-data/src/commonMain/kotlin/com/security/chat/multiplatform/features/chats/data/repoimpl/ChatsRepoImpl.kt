@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chats.data.repoimpl
 
+import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequest
@@ -30,6 +31,7 @@ internal class ChatsRepoImpl(
     private val chatsStorage: ChatsStorage,
     private val usersStorage: UsersStorage,
     private val usersNetworkManager: UsersNetworkManager,
+    private val connectivityObserver: ConnectivityObserver,
 ) : ChatsRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -120,6 +122,10 @@ internal class ChatsRepoImpl(
 
         val storageModels = chats.map { it.toSM() }
         chatsStorage.saveChats(chats = storageModels)
+    }
+
+    override fun isConnectedToInternetFlow(): Flow<Boolean> {
+        return connectivityObserver.isOnline
     }
 
     private suspend fun getAndSaveUser(id: String): UserNM {

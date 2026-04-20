@@ -22,6 +22,7 @@ public interface ChatsModel : ScopedModel {
     public fun setUsername(username: String)
     public fun getAddChatStateFlow(): Flow<AddChatsState>
     public fun getChatListFlow(): Flow<List<ChatDescription>>
+    public fun isConnectedToInternetFlow(): Flow<Boolean>
 }
 
 internal class ChatsModelImpl(
@@ -74,6 +75,10 @@ internal class ChatsModelImpl(
 
     override fun getChatListFlow(): Flow<List<ChatDescription>> {
         return chatsRepo.getChatsListFlow()
+    }
+
+    override fun isConnectedToInternetFlow(): Flow<Boolean> {
+        return chatsRepo.isConnectedToInternetFlow()
     }
 
     private data class State(

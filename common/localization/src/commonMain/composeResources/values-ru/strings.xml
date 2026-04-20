@@ -10,6 +10,7 @@
     <string name="settings_main_log_out">Выйти</string>
 
     <string name="chat_list_title">Чаты</string>
+    <string name="chat_list_title_not_connected">Нет соединения</string>
 
     <string name="error_server_internal_error_title">Внутренняя ошибка сервера</string>
     <string name="error_server_internal_error_description">Сервер столкнулся с непредвиденной ситуацией, препятствующей выполнению запроса</string>
