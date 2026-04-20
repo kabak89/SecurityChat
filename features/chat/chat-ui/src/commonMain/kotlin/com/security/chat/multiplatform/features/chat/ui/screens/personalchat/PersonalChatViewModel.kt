@@ -53,6 +53,9 @@ internal class PersonalChatViewModel(
             .onEach { active ->
                 if (active) {
                     chatModel.syncMessages.startOnSubscribe()
+                    chatModel.onViewActive()
+                } else {
+                    chatModel.onViewInactive()
                 }
             }
             .launchIn(viewModelScope)

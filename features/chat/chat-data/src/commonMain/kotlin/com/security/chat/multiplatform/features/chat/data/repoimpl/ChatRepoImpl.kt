@@ -181,10 +181,11 @@ internal class ChatRepoImpl(
 
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
 
-        liveEventsManager.subscribe<ChatMessage, ChatSubscribeMessage>(
-            subscribeMessage = subscribeMessage,
-            type = "chat_message",
-        )
+        liveEventsManager
+            .subscribe<ChatMessage, ChatSubscribeMessage>(
+                subscribeMessage = subscribeMessage,
+                type = "chat_message",
+            )
             .collect { chatMessage ->
                 val newMessage = chatMessage.toDomain(
                     decryptMessage = { encryptedText ->

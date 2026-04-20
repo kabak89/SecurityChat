@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,6 +26,8 @@ public interface ChatModel : ScopedModel {
     public fun setCurrentMessageText(text: String)
     public fun getCurrentMessageFlow(): Flow<String>
     public fun getMessagesFlow(): Flow<List<Message>>
+    public fun onViewActive()
+    public fun onViewInactive()
 }
 
 internal class ChatModelImpl(
@@ -36,6 +39,8 @@ internal class ChatModelImpl(
     ) {
 
     private val stateFlow: MutableStateFlow<State> = MutableStateFlow(State())
+
+    private var newMessagesJob: Job? = null
 
     override val sendMessage: Task0<Unit> =
         task { ->
@@ -71,8 +76,6 @@ internal class ChatModelImpl(
                     stateFlow.update { it.copy(messages = messages) }
                 }
                 .launchIn(scope)
-
-            chatRepo.subscribeToNewMessages(chatId)
         }
     }
 
@@ -98,6 +101,17 @@ internal class ChatModelImpl(
         return stateFlow
             .map { it.messages }
             .distinctUntilChanged()
+    }
+
+    override fun onViewActive() {
+        newMessagesJob = scope.launch {
+            val chatId = stateFlow.map { it.chatId }.filterNotNull().first()
+            chatRepo.subscribeToNewMessages(chatId)
+        }
+    }
+
+    override fun onViewInactive() {
+        newMessagesJob?.cancel()
     }
 
     private data class State(
