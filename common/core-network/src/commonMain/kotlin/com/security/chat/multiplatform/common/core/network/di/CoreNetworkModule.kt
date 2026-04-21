@@ -32,8 +32,9 @@ public val coreNetworkModule: Module =
         single {
             LiveEventsManager(
                 json = get(),
-                socketConfig = get(),
                 coroutineScope = get(named(SCOPE_ID_ROOT)),
+                socketConfig = get(),
+                connectivityObserver = get(),
                 httpClientFactory = get(),
             )
         }
