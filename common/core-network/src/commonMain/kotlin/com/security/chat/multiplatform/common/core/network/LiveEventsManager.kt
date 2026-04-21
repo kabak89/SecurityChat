@@ -61,31 +61,31 @@ public class LiveEventsManager(
     @PublishedApi
     internal val subscribersCounter: MutableStateFlow<Int> = MutableStateFlow(0)
 
+    @PublishedApi
+    internal val activeSubscriptions: MutableStateFlow<Map<String, String>> =
+        MutableStateFlow(emptyMap())
+
     @OptIn(ExperimentalUuidApi::class)
     public inline fun <reified Event, reified SubscribeMessage> subscribe(
         subscribeMessage: SubscribeMessage,
         type: String,
     ): Flow<Event> {
         val id = Uuid.random().toString()
+        val socketSubscribeMessage = SocketSubscribeMessage(
+            id = id,
+            type = type,
+            payload = json.encodeToString(subscribeMessage),
+        )
+        val subscribeMessageJson = json.encodeToString(socketSubscribeMessage)
+
+        activeSubscriptions.update { it + (id to subscribeMessageJson) }
+        subscribersCounter.update { it + 1 }
 
         coroutineScope.launch {
-            //just to wait
             if (!isSocketOpened) {
-                launch {
-                    openScopeIfClosed()
-                }
-                socketReady.await()
+                openScopeIfClosed()
             }
-            val socketSubscribeMessage = SocketSubscribeMessage(
-                id = id,
-                type = type,
-                payload = json.encodeToString(subscribeMessage),
-            )
-            val valueToSend = json.encodeToString(socketSubscribeMessage)
-            messagesToSendFlow.send(valueToSend)
         }
-
-        subscribersCounter.update { it + 1 }
 
         return callbackFlow {
             incomingFlow
@@ -99,6 +99,8 @@ public class LiveEventsManager(
                 .launchIn(this)
 
             awaitClose {
+                activeSubscriptions.update { it - id }
+
                 val socketUnsubscribeMessage = SocketSubscribeMessage(
                     id = id,
                     type = UNSUBSCRIBE_MESSAGE_TYPE,
@@ -126,12 +128,25 @@ public class LiveEventsManager(
                 port = socketConfig.port,
                 path = socketConfig.path,
                 block = {
-                    val subscribeJob = launch {
+                    val outgoingMessagesJob = launch {
                         for (message in messagesToSendFlow) {
-                            Log.d { "message = $message" }
+                            Log.d { "outgoing message = $message" }
                             send(Frame.Text(message))
                         }
                     }
+
+                    val sentSubscriptions: MutableSet<String> = mutableSetOf()
+                    val replayJob = activeSubscriptions
+                        .onEach { current ->
+                            val newIds = current.keys - sentSubscriptions
+                            for (newId in newIds) {
+                                val message = current[newId] ?: continue
+                                Log.d { "subscribe message = $message" }
+                                send(Frame.Text(message))
+                                sentSubscriptions.add(newId)
+                            }
+                        }
+                        .launchIn(this)
 
                     socketReady.complete(Unit)
 
@@ -139,11 +154,10 @@ public class LiveEventsManager(
                         .onEach { subscribersCount ->
                             Log.d { "subscribersCount = $subscribersCount" }
                             if (subscribersCount == 0) {
-                                Log.d { "close started" }
-                                subscribeJob.cancelAndJoin()
+                                outgoingMessagesJob.cancelAndJoin()
+                                replayJob.cancelAndJoin()
                                 close()
                                 isSocketOpened = false
-                                Log.d { "close ended" }
                             }
                         }
                         .launchIn(this)
