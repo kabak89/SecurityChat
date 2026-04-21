@@ -13,19 +13,18 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -52,12 +51,6 @@ public class LiveEventsManager(
     internal val incomingFlow: MutableSharedFlow<SocketMessage> = MutableSharedFlow()
 
     @PublishedApi
-    internal val messagesToSendFlow: Channel<String> = Channel(Channel.UNLIMITED)
-
-    @PublishedApi
-    internal val subscribersCounter: MutableStateFlow<Int> = MutableStateFlow(0)
-
-    @PublishedApi
     internal val activeSubscriptions: MutableStateFlow<Map<String, String>> =
         MutableStateFlow(emptyMap())
 
@@ -74,37 +67,16 @@ public class LiveEventsManager(
         )
         val subscribeMessageJson = json.encodeToString(socketSubscribeMessage)
 
-        activeSubscriptions.update { it + (id to subscribeMessageJson) }
-        subscribersCounter.update { it + 1 }
-
-        coroutineScope.launch {
-            startSocketLoopIfNeeded()
-        }
-
-        return callbackFlow {
-            incomingFlow
-                .mapNotNull { socketMessage ->
-                    if (socketMessage.id != id) return@mapNotNull null
-                    json.decodeFromString<Event>(socketMessage.payload)
-                }
-                .onEach {
-                    trySendBlocking(it)
-                }
-                .launchIn(this)
-
-            awaitClose {
-                activeSubscriptions.update { it - id }
-
-                val socketUnsubscribeMessage = SocketSubscribeMessage(
-                    id = id,
-                    type = UNSUBSCRIBE_MESSAGE_TYPE,
-                    payload = id,
-                )
-                val unsubscribeMessageText = json.encodeToString(socketUnsubscribeMessage)
-                messagesToSendFlow.trySend(unsubscribeMessageText)
-                subscribersCounter.update { it - 1 }
+        return incomingFlow
+            .filter { it.id == id }
+            .map { json.decodeFromString<Event>(it.payload) }
+            .onStart {
+                activeSubscriptions.update { it + (id to subscribeMessageJson) }
+                coroutineScope.launch { startSocketLoopIfNeeded() }
             }
-        }
+            .onCompletion {
+                activeSubscriptions.update { it - id }
+            }
     }
 
     @PublishedApi
@@ -119,7 +91,7 @@ public class LiveEventsManager(
     private suspend fun runReconnectLoop() {
         var attempt = 0
         while (true) {
-            if (subscribersCounter.value == 0) {
+            if (activeSubscriptions.value.isEmpty()) {
                 Log.d { "reconnect loop: no subscribers, exit" }
                 return
             }
@@ -137,7 +109,7 @@ public class LiveEventsManager(
                 false
             }
 
-            if (subscribersCounter.value == 0) {
+            if (activeSubscriptions.value.isEmpty()) {
                 Log.d { "reconnect loop: subscribers drained, exit" }
                 return
             }
@@ -161,41 +133,42 @@ public class LiveEventsManager(
             port = socketConfig.port,
             path = socketConfig.path,
             block = {
-                val outgoingMessagesJob = launch {
-                    for (message in messagesToSendFlow) {
-                        Log.d { "outgoing message = $message" }
-                        send(Frame.Text(message))
-                    }
-                }
-
-                val sentSubscriptions: MutableSet<String> = mutableSetOf()
-                val replayJob = activeSubscriptions
+                val sent: MutableSet<String> = mutableSetOf()
+                val syncJob = activeSubscriptions
                     .onEach { current ->
-                        val newIds = current.keys - sentSubscriptions
-                        for (newId in newIds) {
+                        for (newId in current.keys - sent) {
                             val message = current[newId] ?: continue
                             Log.d { "subscribe message = $message" }
                             send(Frame.Text(message))
-                            sentSubscriptions.add(newId)
+                            sent.add(newId)
+                        }
+                        for (goneId in sent - current.keys) {
+                            val unsubscribe = SocketSubscribeMessage(
+                                id = goneId,
+                                type = UNSUBSCRIBE_MESSAGE_TYPE,
+                                payload = goneId,
+                            )
+                            val unsubscribeText = json.encodeToString(unsubscribe)
+                            Log.d { "unsubscribe message = $unsubscribeText" }
+                            send(Frame.Text(unsubscribeText))
+                            sent.remove(goneId)
                         }
                     }
                     .launchIn(this)
 
-                val watchdogJob = launch {
-                    connectivityObserver.isOnline.filter { !it }.first()
-                    Log.d { "watchdog: offline detected, closing socket" }
-                    close(CloseReason(CloseReason.Codes.GOING_AWAY, "offline"))
+                val closeGuardJob = launch {
+                    merge(
+                        connectivityObserver.isOnline
+                            .filter { !it }
+                            .map { CloseReason(CloseReason.Codes.GOING_AWAY, "offline") },
+                        activeSubscriptions
+                            .filter { it.isEmpty() }
+                            .map { CloseReason(CloseReason.Codes.NORMAL, "no subscribers") },
+                    ).first().let { reason ->
+                        Log.d { "closing socket: ${reason.message}" }
+                        close(reason)
+                    }
                 }
-
-                val noSubscribersJob = subscribersCounter
-                    .onEach { subscribersCount ->
-                        Log.d { "subscribersCount = $subscribersCount" }
-                        if (subscribersCount == 0) {
-                            Log.d { "no subscribers, closing socket" }
-                            close(CloseReason(CloseReason.Codes.NORMAL, "no subscribers"))
-                        }
-                    }
-                    .launchIn(this)
 
                 try {
                     for (receivedFrame in incoming) {
@@ -206,10 +179,8 @@ public class LiveEventsManager(
                         incomingFlow.emit(newMessage)
                     }
                 } finally {
-                    outgoingMessagesJob.cancel()
-                    replayJob.cancel()
-                    watchdogJob.cancel()
-                    noSubscribersJob.cancel()
+                    syncJob.cancel()
+                    closeGuardJob.cancel()
                 }
             },
         )
