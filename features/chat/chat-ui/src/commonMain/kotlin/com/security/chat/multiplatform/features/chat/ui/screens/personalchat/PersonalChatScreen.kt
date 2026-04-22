@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -106,11 +107,24 @@ private fun PersonalChatContent(
                 reverseLayout = true,
                 content = {
                     state.messages.forEach { message ->
-                        item(key = message.id) {
-                            MessageComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                message = message,
-                            )
+                        when (message) {
+                            is MessageUM.Incoming -> {
+                                item(key = message.id) {
+                                    IncomingMessageComponent(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        message = message,
+                                    )
+                                }
+                            }
+
+                            is MessageUM.Outgoing -> {
+                                item(key = message.id) {
+                                    OutgoingMessageComponent(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        message = message,
+                                    )
+                                }
+                            }
                         }
                     }
                 },
@@ -161,18 +175,40 @@ private fun PersonalChatContent(
 }
 
 @Composable
-private fun MessageComponent(
+private fun OutgoingMessageComponent(
     modifier: Modifier = Modifier,
-    message: MessageUM,
+    message: MessageUM.Outgoing,
+) {
+    Row(
+        modifier = modifier
+            .padding(all = 16.dp),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(start = 40.dp),
+            text = message.text,
+            color = AppTheme.colors.textPrimary,
+            style = AppTheme.typography.body,
+        )
+    }
+}
+
+@Composable
+private fun IncomingMessageComponent(
+    modifier: Modifier = Modifier,
+    message: MessageUM.Incoming,
 ) {
     Row(
         modifier = modifier
             .padding(all = 16.dp),
     ) {
         Text(
-            modifier = Modifier,
+            modifier = Modifier
+                .padding(end = 40.dp),
             text = message.text,
             color = AppTheme.colors.textPrimary,
+            style = AppTheme.typography.body,
         )
     }
 }
@@ -289,11 +325,11 @@ internal fun PersonalChatScreenPreview() {
                 message = "",
                 sendingMessageInProgress = false,
                 messages = listOf(
-                    MessageUM(
+                    MessageUM.Outgoing(
                         id = "1",
                         text = "some text",
                     ),
-                    MessageUM(
+                    MessageUM.Incoming(
                         id = "2",
                         text = "some text 2",
                     ),

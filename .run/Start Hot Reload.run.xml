@@ -5,24 +5,25 @@
             <option name="executionName" />
             <option name="externalProjectPath" value="$PROJECT_DIR$/shared" />
             <option name="externalSystemIdString" value="GRADLE" />
-            <option name="scriptParameters" value="--quiet" />
+            <option name="scriptParameters" value="" />
             <option name="taskDescriptions">
                 <list />
             </option>
             <option name="taskNames">
                 <list>
-                    <option value="hotRunJvm" />
-                    <option value="--mainClass" />
-                    <option value="&quot;com.security.chat.multiplatform.MainKt&quot;" />
+                    <option value=":shared:hotRunJvm" />
+                    <option value="--auto" />
                 </list>
             </option>
-            <option name="vmOptions"
-                value="-Dcompose.reload.build.warmup=true -Dcompose.reload.orchestration.port=63650" />
+            <option name="vmOptions" value="" />
         </ExternalSystemSettings>
         <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
         <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+        <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
         <DebugAllEnabled>false</DebugAllEnabled>
         <RunAsTest>false</RunAsTest>
+        <GradleProfilingDisabled>false</GradleProfilingDisabled>
+        <GradleCoverageDisabled>false</GradleCoverageDisabled>
         <method v="2" />
     </configuration>
 </component>

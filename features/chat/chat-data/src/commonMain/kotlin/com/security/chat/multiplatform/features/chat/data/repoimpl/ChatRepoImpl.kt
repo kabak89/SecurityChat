@@ -133,6 +133,7 @@ internal class ChatRepoImpl(
                             privateKeyString = privateKey,
                         )
                     },
+                    appOwnerId = userId,
                 )
             }
             .map {
@@ -166,9 +167,13 @@ internal class ChatRepoImpl(
             limit = Long.MAX_VALUE,
         )
             .map { messages ->
+                val userId = checkNotNull(userStorage.getUserId())
+
                 messages
                     .map { message ->
-                        message.toDomain()
+                        message.toDomain(
+                            appOwnerId = userId,
+                        )
                     }
             }
             .distinctUntilChanged()
@@ -182,6 +187,7 @@ internal class ChatRepoImpl(
         )
 
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
+        val userId = checkNotNull(userStorage.getUserId())
 
         liveEventsManager
             .subscribe<ChatMessage, ChatSubscribeMessage>(
@@ -196,6 +202,7 @@ internal class ChatRepoImpl(
                             privateKeyString = privateKey,
                         )
                     },
+                    appOwnerId = userId,
                 )
 
                 val storageModel = newMessage.toSM(chatId)

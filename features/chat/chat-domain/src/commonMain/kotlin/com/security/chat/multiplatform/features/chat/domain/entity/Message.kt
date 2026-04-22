@@ -5,4 +5,5 @@ public data class Message(
     val text: String,
     val authorId: String,
     val timestamp: Long,
+    val direction: MessageDirection,
 )

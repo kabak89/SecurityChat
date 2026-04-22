@@ -2,8 +2,19 @@ package com.security.chat.multiplatform.features.chat.ui.screens.personalchat.en
 
 import androidx.compose.runtime.Immutable
 
-@Immutable
-internal data class MessageUM(
-    val id: String,
-    val text: String,
-)
+internal sealed interface MessageUM {
+
+    val id: String
+
+    @Immutable
+    data class Outgoing(
+        override val id: String,
+        val text: String,
+    ) : MessageUM
+
+    @Immutable
+    data class Incoming(
+        override val id: String,
+        val text: String,
+    ) : MessageUM
+}
