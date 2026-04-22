@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chat.data.repoimpl
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
+import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.time.TimeProvider
 import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.entity.ChatSubscribeMessage
@@ -39,10 +40,11 @@ internal class ChatRepoImpl(
     private val chatStorage: ChatStorage,
     private val timeProvider: TimeProvider,
     private val liveEventsManager: LiveEventsManager,
+    private val networkConfig: NetworkConfig,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
+        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
     }
 
     @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)

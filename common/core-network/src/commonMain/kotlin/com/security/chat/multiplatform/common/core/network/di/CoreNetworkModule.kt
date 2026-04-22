@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.common.core.network.di
 
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
+import com.security.chat.multiplatform.common.core.network.BuildKonfig
 import com.security.chat.multiplatform.common.core.network.HttpClientFactory
 import com.security.chat.multiplatform.common.core.network.HttpClientFactoryImpl
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
@@ -39,9 +40,11 @@ public val coreNetworkModule: Module =
             )
         }
 
+        val host = BuildKonfig.baseHost
+
         single {
             SocketConfig(
-                host = "192.168.1.5",
+                host = host,
                 path = "/ws",
                 port = 80,
             )
@@ -49,7 +52,7 @@ public val coreNetworkModule: Module =
 
         single {
             NetworkConfig(
-                host = "http://192.168.1.5",
+                host = "http://$host",
                 port = 80,
             )
         }

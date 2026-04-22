@@ -1,5 +1,4 @@
 plugins {
-    //trick: for the same plugin versions in all sub-modules
     alias(libs.plugins.androidApplication).apply(false)
     alias(libs.plugins.android.kotlin.multiplatform.library).apply(false)
     alias(libs.plugins.kotlinAndroid).apply(false)
@@ -9,4 +8,5 @@ plugins {
     alias(libs.plugins.jetbrainsCompose).apply(false)
     alias(libs.plugins.composeHotReload).apply(false)
     alias(libs.plugins.kotlinCocoapods).apply(false)
+    alias(libs.plugins.buildkonfig).apply(false)
 }

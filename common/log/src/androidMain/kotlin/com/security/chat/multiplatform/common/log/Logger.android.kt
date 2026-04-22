@@ -5,7 +5,7 @@ import timber.log.Timber
 internal actual class Logger {
 
     init {
-        if (BuildKonfig.IS_DEBUG) {
+        if (BuildKonfig.ENABLE_LOGS) {
             Timber.plant(LinkingDebugTree())
         }
     }

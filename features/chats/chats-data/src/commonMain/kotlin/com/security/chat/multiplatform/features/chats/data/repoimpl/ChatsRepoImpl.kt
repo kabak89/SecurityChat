@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chats.data.repoimpl
 import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
+import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequest
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatResponse
 import com.security.chat.multiplatform.features.chats.data.entity.FindUserResponse
@@ -32,10 +33,11 @@ internal class ChatsRepoImpl(
     private val usersStorage: UsersStorage,
     private val usersNetworkManager: UsersNetworkManager,
     private val connectivityObserver: ConnectivityObserver,
+    private val networkConfig: NetworkConfig,
 ) : ChatsRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
+        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
     }
 
     override suspend fun findUser(username: String): FindUserResult {

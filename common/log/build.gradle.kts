@@ -1,26 +1,28 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
+import com.securitychat.gradle.ConventionBasePluginExtension.Companion.ENABLE_LOGS_KEY
+import com.securitychat.gradle.ConventionBasePluginExtension.Companion.enableLogs
 
 plugins {
     id("securitychat.convention.base")
     alias(libs.plugins.buildkonfig)
 }
 
-/**
- * Gradle property `isDebug` (e.g. `-PisDebug=false`).
- * When absent, defaults to `true`.
- */
-val isDebug: Boolean = findProperty("isDebug")?.toString()?.toBooleanStrictOrNull() ?: true
+val moduleNamespace = "com.security.chat.multiplatform.common.log"
 
 buildkonfig {
-    packageName = "com.security.chat.multiplatform.common.log"
+    packageName = moduleNamespace
 
     defaultConfigs {
-        buildConfigField(BOOLEAN, "IS_DEBUG", isDebug.toString())
+        buildConfigField(
+            type = BOOLEAN,
+            name = ENABLE_LOGS_KEY,
+            value = enableLogs(project).toString(),
+        )
     }
 }
 
 conventionBasePlugin {
-    namespace = "com.security.chat.multiplatform.common.log"
+    namespace = moduleNamespace
 }
 
 kotlin {

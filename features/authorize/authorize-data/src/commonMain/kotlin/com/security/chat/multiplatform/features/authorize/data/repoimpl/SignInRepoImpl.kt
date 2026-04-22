@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.features.authorize.data.repoimpl
 
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
+import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.features.authorize.data.entity.AuthRequest
 import com.security.chat.multiplatform.features.authorize.data.entity.AuthResponse
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
@@ -14,10 +15,11 @@ import org.kotlincrypto.hash.sha2.SHA256
 internal class SignInRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
     private val userStorage: UserStorage,
+    private val networkConfig: NetworkConfig,
 ) : SignInRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "http://192.168.1.5:80")
+        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
     }
 
     override suspend fun signIn(username: String, password: String): SignInResult {
