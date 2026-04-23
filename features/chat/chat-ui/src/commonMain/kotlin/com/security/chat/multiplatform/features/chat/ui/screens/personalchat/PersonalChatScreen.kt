@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,10 +102,18 @@ private fun PersonalChatContent(
                 .weight(1f),
         ) {
             val hazeState = rememberHazeState()
+            val listState = rememberLazyListState()
+            val newestMessageId = state.messages.firstOrNull()?.id
+            LaunchedEffect(newestMessageId) {
+                if (newestMessageId != null && listState.firstVisibleItemIndex <= 1) {
+                    listState.animateScrollToItem(index = 0)
+                }
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize(1f)
                     .hazeSource(state = hazeState),
+                state = listState,
                 reverseLayout = true,
                 content = {
                     state.messages.forEach { message ->
