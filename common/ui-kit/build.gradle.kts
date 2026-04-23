@@ -22,6 +22,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)
+            implementation(libs.androidx.activity.compose)
         }
     }
 }

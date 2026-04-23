@@ -56,6 +56,8 @@ public fun AppTheme(
         lightColorPalette
     }
 
+    SystemBarsEffect(useDarkTheme = useDarkTheme)
+
     MaterialTheme(
         typography = Typography(),
     ) {
