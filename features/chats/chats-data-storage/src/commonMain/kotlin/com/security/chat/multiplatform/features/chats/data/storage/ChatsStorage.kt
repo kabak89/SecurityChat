@@ -18,6 +18,7 @@ public interface ChatsStorage {
     public suspend fun getChat(id: String): ChatSM?
     public suspend fun clearAll()
     public fun getChatsFlow(): Flow<List<ChatSM>>
+    public fun getChatFlow(id: String): Flow<ChatSM?>
 }
 
 internal class ChatsStorageImpl(
@@ -74,6 +75,18 @@ internal class ChatsStorageImpl(
                     .map { query ->
                         query.executeAsList()
                             .map { table -> table.toSM() }
+                    }
+                    .flowOn(dispatcherProvider.IO)
+            }
+    }
+
+    override fun getChatFlow(id: String): Flow<ChatSM?> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.personalChatTableQueries.getById(id)
+                    .asFlow()
+                    .map { query ->
+                        query.executeAsOneOrNull()?.toSM()
                     }
                     .flowOn(dispatcherProvider.IO)
             }

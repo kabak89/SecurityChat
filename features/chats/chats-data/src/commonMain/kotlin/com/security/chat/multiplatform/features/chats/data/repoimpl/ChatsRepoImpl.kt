@@ -23,8 +23,9 @@ import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
 
 internal class ChatsRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -80,14 +81,20 @@ internal class ChatsRepoImpl(
 
     override fun getChatsListFlow(): Flow<List<ChatDescription>> {
         return chatsStorage.getChatsFlow()
-            .map { chatList ->
-                chatList.map { chatSM ->
-                    val companionId = chatSM.companionId
-                    val companionName = usersStorage.getUser(companionId)?.name ?: run {
-                        val user = getAndSaveUser(companionId)
-                        user.name
+            .flatMapLatest { chatList ->
+                val userFlows = chatList.map { chat ->
+                    usersStorage.getUserFlow(chat.interlocutorId)
+                }
+                combine(userFlows) { users ->
+                    chatList.map { chatSM ->
+                        val interlocutorId = chatSM.interlocutorId
+                        val interlocutorName =
+                            users.find { it?.id == interlocutorId }?.name ?: run {
+                                val user = getAndSaveUser(interlocutorId)
+                                user.name
+                            }
+                        chatSM.toDomain(interlocutorName = interlocutorName)
                     }
-                    chatSM.toDomain(companionName = companionName)
                 }
             }
             .distinctUntilChanged()

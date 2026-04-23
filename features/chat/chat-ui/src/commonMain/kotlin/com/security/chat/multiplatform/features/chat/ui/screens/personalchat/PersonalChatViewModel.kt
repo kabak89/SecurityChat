@@ -9,6 +9,7 @@ import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.domain.ChatModel
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -28,6 +29,8 @@ internal class PersonalChatViewModel(
                 updateState { it.copy(message = currentMessage) }
             }
             .launchIn(viewModelScope)
+
+        chatModel.fetchCompanionInfo.start()
 
         chatModel.sendMessage.jobFlow
             .asLceState()
@@ -59,6 +62,14 @@ internal class PersonalChatViewModel(
                 }
             }
             .launchIn(viewModelScope)
+
+        chatModel.getInterlocutorInfoFlow()
+            .filterNotNull()
+            .onEach { interlocutor ->
+                val interlocutorUM = interlocutor.toUi()
+                updateState { it.copy(interlocutor = interlocutorUM) }
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): PersonalChatState {
@@ -67,6 +78,7 @@ internal class PersonalChatViewModel(
             sendingMessageInProgress = false,
             messages = emptyList(),
             syncState = UiLceState.NotStarted,
+            interlocutor = null,
         )
     }
 

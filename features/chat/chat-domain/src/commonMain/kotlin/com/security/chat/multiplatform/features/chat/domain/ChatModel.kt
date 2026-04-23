@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chat.domain
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ import ru.kode.remo.Task0
 public interface ChatModel : ScopedModel {
     public val sendMessage: Task0<Unit>
     public val syncMessages: Task0<Unit>
+    public val fetchCompanionInfo: Task0<Unit>
 
     public fun setChatId(id: String)
     public fun setCurrentMessageText(text: String)
@@ -28,6 +30,7 @@ public interface ChatModel : ScopedModel {
     public fun getMessagesFlow(): Flow<List<Message>>
     public fun onViewActive()
     public fun onViewInactive()
+    public fun getInterlocutorInfoFlow(): Flow<Interlocutor?>
 }
 
 internal class ChatModelImpl(
@@ -41,6 +44,7 @@ internal class ChatModelImpl(
     private val stateFlow: MutableStateFlow<State> = MutableStateFlow(State())
 
     private var newMessagesJob: Job? = null
+    private var publishOnlineStatusJob: Job? = null
 
     override val sendMessage: Task0<Unit> =
         task { ->
@@ -63,6 +67,12 @@ internal class ChatModelImpl(
         task { ->
             val chatId = checkNotNull(stateFlow.value.chatId)
             chatRepo.fetchMessages(chatId = chatId)
+        }
+
+    override val fetchCompanionInfo: Task0<Unit> =
+        task { ->
+            val chatId = checkNotNull(stateFlow.value.chatId)
+            chatRepo.fetchCompanionInfo(chatId = chatId)
         }
 
     override fun onPostStart() {
@@ -108,10 +118,20 @@ internal class ChatModelImpl(
             val chatId = stateFlow.map { it.chatId }.filterNotNull().first()
             chatRepo.subscribeToNewMessages(chatId)
         }
+
+        publishOnlineStatusJob = scope.launch {
+            chatRepo.setUserOnline()
+        }
     }
 
     override fun onViewInactive() {
         newMessagesJob?.cancel()
+        publishOnlineStatusJob?.cancel()
+    }
+
+    override fun getInterlocutorInfoFlow(): Flow<Interlocutor?> {
+        val chatId = checkNotNull(stateFlow.value.chatId)
+        return chatRepo.getInterlocutorInfoFlow(chatId)
     }
 
     private data class State(

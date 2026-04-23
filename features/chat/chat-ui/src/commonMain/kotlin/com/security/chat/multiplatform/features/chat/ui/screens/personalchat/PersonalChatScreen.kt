@@ -45,6 +45,7 @@ import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.InterlocutorUM
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -102,7 +103,6 @@ private fun PersonalChatContent(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize(1f)
-                    // Pass it the HazeState we stored above
                     .hazeSource(state = hazeState),
                 reverseLayout = true,
                 content = {
@@ -129,7 +129,7 @@ private fun PersonalChatContent(
                     }
                 },
             )
-            ToolbarComponent(
+            Toolbar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .hazeEffect(
@@ -141,26 +141,14 @@ private fun PersonalChatContent(
                             ),
                             blurRadius = 16.dp,
                             fallbackTint = HazeTint(
-                                color = AppTheme.colors.backgroundPrimary,
+                                color = AppTheme.colors.backgroundPrimary.copy(alpha = 0.95f),
                             ),
                         ),
                     )
                     .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
-                startContent = SideContent.Button(
-                    icon = DrawableRes.ic_back,
-                    onClicked = onBackClicked,
-                ),
-                centerContent = CenterContent.Title(
-                    text = "Chat",
-                ),
-                endContent = SideContent.Custom(
-                    content = {
-                        SyncComponent(
-                            syncState = state.syncState,
-                            onSyncClicked = onSyncClicked,
-                        )
-                    },
-                ),
+                state = state,
+                onBackClicked = onBackClicked,
+                onSyncClicked = onSyncClicked,
             )
         }
         EditMessageComponent(
@@ -172,6 +160,33 @@ private fun PersonalChatContent(
             onSendMessageClicked = onSendMessageClicked,
         )
     }
+}
+
+@Composable
+private fun Toolbar(
+    modifier: Modifier = Modifier,
+    state: PersonalChatState,
+    onBackClicked: () -> Unit,
+    onSyncClicked: () -> Unit,
+) {
+    ToolbarComponent(
+        modifier = modifier,
+        startContent = SideContent.Button(
+            icon = DrawableRes.ic_back,
+            onClicked = onBackClicked,
+        ),
+        centerContent = CenterContent.Title(
+            text = state.interlocutor?.name.toString(),
+        ),
+        endContent = SideContent.Custom(
+            content = {
+                SyncComponent(
+                    syncState = state.syncState,
+                    onSyncClicked = onSyncClicked,
+                )
+            },
+        ),
+    )
 }
 
 @Composable
@@ -335,6 +350,10 @@ internal fun PersonalChatScreenPreview() {
                     ),
                 ),
                 syncState = UiLceState.Ready,
+                interlocutor = InterlocutorUM(
+                    name = "User 1",
+                    isOnline = false,
+                ),
             ),
             events = emptyFlow(),
             onBackClicked = {},

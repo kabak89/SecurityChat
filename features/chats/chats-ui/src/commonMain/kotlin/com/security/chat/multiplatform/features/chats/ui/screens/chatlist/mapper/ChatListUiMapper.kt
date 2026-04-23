@@ -6,7 +6,7 @@ import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity
 internal fun ChatDescription.toUi(): ChatItem {
     return ChatItem(
         id = id,
-        companionName = companionName,
-        nameAbbreviation = companionName.take(2).uppercase(),
+        companionName = interlocutorName,
+        nameAbbreviation = interlocutorName.take(2).uppercase(),
     )
 }

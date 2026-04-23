@@ -10,23 +10,32 @@ import com.security.chat.multiplatform.features.chat.data.entity.ChatSubscribeMe
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.GetMessagesResponse
 import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
+import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
+import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
+import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
+import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.RSA
 import dev.whyoleg.cryptography.algorithms.SHA512
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlin.io.encoding.Base64
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
@@ -41,6 +50,7 @@ internal class ChatRepoImpl(
     private val timeProvider: TimeProvider,
     private val liveEventsManager: LiveEventsManager,
     private val networkConfig: NetworkConfig,
+    private val usersNetworkManager: UsersNetworkManager,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -66,7 +76,7 @@ internal class ChatRepoImpl(
     override suspend fun uploadMessages(chatId: String) {
         val authorId = checkNotNull(userStorage.getUserId())
         val chat = checkNotNull(chatsStorage.getChat(chatId))
-        val companionId = chat.companionId
+        val companionId = chat.interlocutorId
 
         val publicKey = usersStorage.getUser(companionId)?.publicKey ?: run {
             val userInfo = networkManager.runGet<FindUserResponse>(
@@ -216,6 +226,62 @@ internal class ChatRepoImpl(
                         messageIds = listOf(newMessage.id),
                     ),
                 )
+            }
+    }
+
+    override suspend fun fetchCompanionInfo(chatId: String) {
+        val chat = requireNotNull(chatsStorage.getChat(chatId))
+        val companionId = chat.interlocutorId
+        val userNM = usersNetworkManager.getUser(companionId)
+        usersStorage.saveUser(user = userNM.toSM())
+    }
+
+    override fun getInterlocutorInfoFlow(chatId: String): Flow<Interlocutor?> {
+        return chatsStorage.getChatFlow(chatId)
+            .flatMapLatest { chat ->
+                chat ?: return@flatMapLatest flowOf(null)
+
+                val subscribeMessage = OnlineStatusSubscribeMessage(
+                    targetUserId = chat.interlocutorId,
+                )
+
+                val onlineStatusFlow = liveEventsManager
+                    .subscribe<OnlineInfoMessage, OnlineStatusSubscribeMessage>(
+                        subscribeMessage = subscribeMessage,
+                        type = "online_status_receive",
+                    )
+                    .map { it.isOnline }
+                    .onStart { emit(false) }
+
+                combine(
+                    usersStorage.getUserFlow(chat.interlocutorId),
+                    onlineStatusFlow,
+                ) { userSM, isOnline ->
+                    userSM ?: return@combine null
+
+                    Interlocutor(
+                        id = userSM.id,
+                        name = userSM.name,
+                        isOnline = isOnline,
+                    )
+                }
+                    .distinctUntilChanged()
+            }
+    }
+
+    override suspend fun setUserOnline() {
+        val userId = checkNotNull(userStorage.getUserId())
+        val subscribeMessage = OnlineStatusPublisherMessage(
+            userId = userId,
+        )
+
+        liveEventsManager
+            .subscribe<String, OnlineStatusPublisherMessage>(
+                subscribeMessage = subscribeMessage,
+                type = "online_status_publish",
+            )
+            .collect {
+                //no messages expected
             }
     }
 

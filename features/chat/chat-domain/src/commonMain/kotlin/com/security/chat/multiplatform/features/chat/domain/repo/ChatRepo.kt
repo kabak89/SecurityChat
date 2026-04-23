@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chat.domain.repo
 
+import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import kotlinx.coroutines.flow.Flow
 
@@ -19,4 +20,7 @@ public interface ChatRepo {
     public fun getMessagesFlow(chatId: String): Flow<List<Message>>
 
     public suspend fun subscribeToNewMessages(chatId: String)
+    public suspend fun fetchCompanionInfo(chatId: String)
+    public fun getInterlocutorInfoFlow(chatId: String): Flow<Interlocutor?>
+    public suspend fun setUserOnline()
 }

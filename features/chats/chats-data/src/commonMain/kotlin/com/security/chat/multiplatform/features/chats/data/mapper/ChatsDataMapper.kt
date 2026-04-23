@@ -7,17 +7,17 @@ import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescript
 internal fun ChatDescription.toSM(): ChatSM {
     return ChatSM(
         id = id,
-        companionId = companionId,
+        interlocutorId = companionId,
     )
 }
 
 internal fun ChatSM.toDomain(
-    companionName: String,
+    interlocutorName: String,
 ): ChatDescription {
     return ChatDescription(
         id = id,
-        companionId = companionId,
-        companionName = companionName,
+        companionId = interlocutorId,
+        interlocutorName = interlocutorName,
     )
 }
 
@@ -28,6 +28,6 @@ internal fun ChatResponse.toDomain(
     return ChatDescription(
         id = id,
         companionId = companionId,
-        companionName = companionName,
+        interlocutorName = companionName,
     )
 }

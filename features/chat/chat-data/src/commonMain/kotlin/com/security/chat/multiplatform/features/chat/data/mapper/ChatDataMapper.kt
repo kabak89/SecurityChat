@@ -4,6 +4,8 @@ import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
+import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
+import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 
 internal suspend fun ChatMessage.toDomain(
     decryptMessage: suspend (encryptedText: String) -> String,
@@ -53,5 +55,13 @@ internal fun Message.toSM(
         //TODO
         status = MessageSM.Status.Received,
         timestamp = timestamp,
+    )
+}
+
+internal fun UserNM.toSM(): UserSM {
+    return UserSM(
+        id = userId,
+        publicKey = publicKey,
+        name = name,
     )
 }
