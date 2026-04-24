@@ -22,10 +22,10 @@ internal actual fun SystemBarsEffect(useDarkTheme: Boolean) {
                 detectDarkMode = { useDarkTheme },
             ),
             navigationBarStyle = if (useDarkTheme) {
-                SystemBarStyle.dark(scrim = Color.BLACK)
+                SystemBarStyle.dark(scrim = Color.TRANSPARENT)
             } else {
                 SystemBarStyle.light(
-                    scrim = Color.WHITE,
+                    scrim = Color.TRANSPARENT,
                     darkScrim = Color.BLACK,
                 )
             },
