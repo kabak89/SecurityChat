@@ -15,9 +15,12 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.provider.optimal)
+            implementation(libs.paging.common)
 
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreTime)
+            implementation(projects.common.coreThreading)
+            implementation(projects.common.log)
 
             implementation(projects.features.chat.chatDomain)
             implementation(projects.features.user.userDataStorage)

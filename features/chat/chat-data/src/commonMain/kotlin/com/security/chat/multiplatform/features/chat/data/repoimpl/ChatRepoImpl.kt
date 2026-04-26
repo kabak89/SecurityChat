@@ -1,9 +1,14 @@
 package com.security.chat.multiplatform.features.chat.data.repoimpl
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
+import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.core.time.TimeProvider
 import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.entity.ChatSubscribeMessage
@@ -16,6 +21,7 @@ import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSub
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.mapper.toSM
+import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
@@ -51,6 +57,7 @@ internal class ChatRepoImpl(
     private val liveEventsManager: LiveEventsManager,
     private val networkConfig: NetworkConfig,
     private val usersNetworkManager: UsersNetworkManager,
+    private val dispatcherProvider: DispatcherProviderInterface,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -170,23 +177,28 @@ internal class ChatRepoImpl(
         chatStorage.saveMessages(messages)
     }
 
-    override fun getMessagesFlow(chatId: String): Flow<List<Message>> {
-        //TODO add paging
-        return chatStorage.getMessagesFlow(
-            chatId = chatId,
-            limit = Long.MAX_VALUE,
-        )
-            .map { messages ->
+    override fun getMessagesPager(chatId: String): Flow<PagingData<Message>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = MESSAGES_PAGE_SIZE,
+                initialLoadSize = MESSAGES_INITIAL_LOAD_SIZE,
+                prefetchDistance = MESSAGES_PREFETCH_DISTANCE,
+                enablePlaceholders = false,
+            ),
+            pagingSourceFactory = {
+                MessagesPagingSource(
+                    chatId = chatId,
+                    chatStorage = chatStorage,
+                    dispatcherProvider = dispatcherProvider,
+                )
+            },
+        ).flow
+            .map { pagingData ->
                 val userId = checkNotNull(userStorage.getUserId())
-
-                messages
-                    .map { message ->
-                        message.toDomain(
-                            appOwnerId = userId,
-                        )
-                    }
+                pagingData.map { message ->
+                    message.toDomain(appOwnerId = userId)
+                }
             }
-            .distinctUntilChanged()
     }
 
     override suspend fun subscribeToNewMessages(chatId: String) {
@@ -309,5 +321,8 @@ internal class ChatRepoImpl(
         val messageBytes = Base64.decode(text)
         return privateKey.decryptor().decrypt(messageBytes).decodeToString()
     }
-
 }
+
+private const val MESSAGES_PAGE_SIZE = 40
+private const val MESSAGES_INITIAL_LOAD_SIZE = 60
+private const val MESSAGES_PREFETCH_DISTANCE = 20

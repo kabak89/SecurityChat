@@ -10,6 +10,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.coreDomain)
+            api(libs.paging.common)
         }
     }
 }

@@ -34,6 +34,7 @@ buildkonfig = "0.17.1"
 timber = "5.0.1"
 willena-sqlite-jdbc = "3.51.2.0"
 haze = "1.7.2"
+paging = "3.5.0-rc01"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -100,6 +101,9 @@ ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", v
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+
+paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
+paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 
 # build-logic (compileOnly for convention plugins)
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }

@@ -1,6 +1,9 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.personalchat
 
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
@@ -8,7 +11,9 @@ import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
 import com.security.chat.multiplatform.features.chat.domain.ChatModel
+import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -18,6 +23,11 @@ internal class PersonalChatViewModel(
     private val chatModel: ChatModel,
     private val params: PersonalChatComponent,
 ) : BaseViewModel<PersonalChatState, PersonalChatEvent>() {
+
+    val messages: Flow<PagingData<MessageUM>> =
+        chatModel.getMessagesPager()
+            .map { pagingData -> pagingData.map { it.toUi() } }
+            .cachedIn(viewModelScope)
 
     override fun onPostStart() {
         super.onPostStart()
@@ -36,13 +46,6 @@ internal class PersonalChatViewModel(
             .asLceState()
             .onEach { state ->
                 updateState { it.copy(sendingMessageInProgress = state.isLoading) }
-            }
-            .launchIn(viewModelScope)
-
-        chatModel.getMessagesFlow()
-            .onEach { messages ->
-                val newMessages = messages.map { it.toUi() }
-                updateState { it.copy(messages = newMessages) }
             }
             .launchIn(viewModelScope)
 
@@ -76,7 +79,6 @@ internal class PersonalChatViewModel(
         return PersonalChatState(
             message = "",
             sendingMessageInProgress = false,
-            messages = emptyList(),
             syncState = UiLceState.NotStarted,
             interlocutor = null,
         )
@@ -93,5 +95,4 @@ internal class PersonalChatViewModel(
     fun onSyncClicked() {
         chatModel.syncMessages.startOnSubscribe()
     }
-
 }

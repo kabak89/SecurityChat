@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +46,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.isLoading
@@ -66,6 +70,7 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_back
@@ -77,11 +82,13 @@ internal fun PersonalChatScreen(
     component: PersonalChatComponent,
 ) {
     Screen(component) { state: PersonalChatState, vm: PersonalChatViewModel ->
+        val messages = vm.messages.collectAsLazyPagingItems()
         PersonalChatContent(
             modifier = Modifier
                 .fillMaxSize()
                 .imePadding(),
             state = state,
+            messages = messages,
             events = vm.viewEvent,
             onBackClicked = component::onExitClicked,
             onMessageEdited = vm::onMessageEdited,
@@ -95,6 +102,7 @@ internal fun PersonalChatScreen(
 private fun PersonalChatContent(
     modifier: Modifier,
     state: PersonalChatState,
+    messages: LazyPagingItems<MessageUM>,
     events: Flow<PersonalChatEvent>,
     onBackClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
@@ -130,7 +138,9 @@ private fun PersonalChatContent(
             state = state,
             toolbarHeight = with(localDensity) { toolbarHeight.toDp() },
             editMessageComponentHeight = with(localDensity) { editMessageComponentHeight.toDp() },
+            messages = messages,
         )
+        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         Toolbar(
             modifier = Modifier
                 .fillMaxWidth()
@@ -139,7 +149,12 @@ private fun PersonalChatContent(
                     style = hazeStyle,
                 )
                 .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                .onGloballyPositioned { toolbarHeight = it.size.height },
+                .onGloballyPositioned {
+                    val topPaddingInPixels = with(localDensity) {
+                        statusBarHeight.toPx()
+                    }.toInt()
+                    toolbarHeight = it.size.height + topPaddingInPixels
+                },
             state = state,
             onBackClicked = onBackClicked,
             onSyncClicked = onSyncClicked,
@@ -184,39 +199,35 @@ private fun MessagesComponent(
     state: PersonalChatState,
     toolbarHeight: Dp,
     editMessageComponentHeight: Dp,
+    messages: LazyPagingItems<MessageUM>,
 ) {
-    val listState = rememberLazyListState()
-    val newestMessageId = state.messages.firstOrNull()?.id
-    LaunchedEffect(newestMessageId) {
-        if (newestMessageId != null && listState.firstVisibleItemIndex <= 1) {
-            listState.animateScrollToItem(index = 0)
-        }
-    }
     LazyColumn(
         modifier = modifier,
-        state = listState,
+        state = rememberLazyListState(),
         reverseLayout = true,
         contentPadding = PaddingValues(top = toolbarHeight, bottom = editMessageComponentHeight),
         content = {
-            state.messages.forEach { message ->
+            items(
+                count = messages.itemCount,
+                key = messages.itemKey { it.id },
+                contentType = messages.itemContentType { message ->
+                    when (message) {
+                        is MessageUM.Incoming -> "incoming"
+                        is MessageUM.Outgoing -> "outgoing"
+                    }
+                },
+            ) { index ->
+                val message = messages[index] ?: return@items
                 when (message) {
-                    is MessageUM.Incoming -> {
-                        item(key = message.id) {
-                            IncomingMessageComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                message = message,
-                            )
-                        }
-                    }
+                    is MessageUM.Incoming -> IncomingMessageComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        message = message,
+                    )
 
-                    is MessageUM.Outgoing -> {
-                        item(key = message.id) {
-                            OutgoingMessageComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                message = message,
-                            )
-                        }
-                    }
+                    is MessageUM.Outgoing -> OutgoingMessageComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        message = message,
+                    )
                 }
             }
         },
@@ -395,28 +406,34 @@ private fun EditMessageComponent(
 @Preview
 @Composable
 internal fun PersonalChatScreenPreview() {
+    val previewMessages = flowOf(
+        PagingData.from(
+            data = listOf(
+                MessageUM.Outgoing(
+                    id = "1",
+                    text = "some text",
+                ),
+                MessageUM.Incoming(
+                    id = "2",
+                    text = "some text 2",
+                ),
+            ),
+        ),
+    ).collectAsLazyPagingItems()
+
     AppTheme {
         PersonalChatContent(
             modifier = Modifier.fillMaxSize(),
             state = PersonalChatState(
                 message = "",
                 sendingMessageInProgress = false,
-                messages = listOf(
-                    MessageUM.Outgoing(
-                        id = "1",
-                        text = "some text",
-                    ),
-                    MessageUM.Incoming(
-                        id = "2",
-                        text = "some text 2",
-                    ),
-                ),
                 syncState = UiLceState.Ready,
                 interlocutor = InterlocutorUM(
                     name = "User 1",
                     isOnline = false,
                 ),
             ),
+            messages = previewMessages,
             events = emptyFlow(),
             onBackClicked = {},
             onMessageEdited = {},

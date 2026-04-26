@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chat.domain.repo
 
+import androidx.paging.PagingData
 import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,7 @@ public interface ChatRepo {
         chatId: String,
     )
 
-    public fun getMessagesFlow(chatId: String): Flow<List<Message>>
+    public fun getMessagesPager(chatId: String): Flow<PagingData<Message>>
 
     public suspend fun subscribeToNewMessages(chatId: String)
     public suspend fun fetchCompanionInfo(chatId: String)

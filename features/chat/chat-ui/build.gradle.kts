@@ -13,6 +13,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.compose.resources)
             implementation(libs.haze)
+            implementation(libs.paging.compose)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)

@@ -32,7 +32,6 @@ class ConventionBasePlugin : Plugin<Project> {
 
         target.extensions.configure<KotlinMultiplatformExtension> {
             explicitApi = ExplicitApiMode.Strict
-            iosX64()
             iosArm64()
             iosSimulatorArm64()
             jvm()

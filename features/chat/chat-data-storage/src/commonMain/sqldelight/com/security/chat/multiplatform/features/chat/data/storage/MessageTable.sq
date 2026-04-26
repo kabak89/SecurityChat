@@ -24,9 +24,35 @@ getPaged:
 SELECT *
 FROM MessageTable
 WHERE chatId = ?
-ORDER BY timestamp DESC
+ORDER BY timestamp DESC, id DESC
 LIMIT :limit
 OFFSET :offset;
+
+getNewest:
+SELECT *
+FROM MessageTable
+WHERE chatId = :chatId
+ORDER BY timestamp DESC, id DESC
+LIMIT :limit;
+
+getOlderThan:
+SELECT *
+FROM MessageTable
+WHERE chatId = :chatId
+  AND timestamp < :beforeTimestamp
+ORDER BY timestamp DESC, id DESC
+LIMIT :limit;
+
+getNewerThan:
+SELECT * FROM (
+  SELECT *
+  FROM MessageTable
+  WHERE chatId = :chatId
+    AND timestamp > :afterTimestamp
+  ORDER BY timestamp ASC, id ASC
+  LIMIT :limit
+)
+ORDER BY timestamp DESC, id DESC;
 
 removeAll:
 DELETE FROM MessageTable;

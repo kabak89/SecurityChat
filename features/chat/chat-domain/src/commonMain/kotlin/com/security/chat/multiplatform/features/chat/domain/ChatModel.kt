@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chat.domain
 
+import androidx.paging.PagingData
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
@@ -12,9 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
@@ -27,7 +27,7 @@ public interface ChatModel : ScopedModel {
     public fun setChatId(id: String)
     public fun setCurrentMessageText(text: String)
     public fun getCurrentMessageFlow(): Flow<String>
-    public fun getMessagesFlow(): Flow<List<Message>>
+    public fun getMessagesPager(): Flow<PagingData<Message>>
     public fun onViewActive()
     public fun onViewInactive()
     public fun getInterlocutorInfoFlow(): Flow<Interlocutor?>
@@ -75,20 +75,6 @@ internal class ChatModelImpl(
             chatRepo.fetchCompanionInfo(chatId = chatId)
         }
 
-    override fun onPostStart() {
-        super.onPostStart()
-
-        scope.launch {
-            val chatId = stateFlow.map { it.chatId }.filterNotNull().first()
-
-            chatRepo.getMessagesFlow(chatId)
-                .onEach { messages ->
-                    stateFlow.update { it.copy(messages = messages) }
-                }
-                .launchIn(scope)
-        }
-    }
-
     override fun setChatId(id: String) {
         if (stateFlow.value.chatId != null) {
             error("Do not change chat id")
@@ -107,10 +93,12 @@ internal class ChatModelImpl(
             .distinctUntilChanged()
     }
 
-    override fun getMessagesFlow(): Flow<List<Message>> {
+    override fun getMessagesPager(): Flow<PagingData<Message>> {
         return stateFlow
-            .map { it.messages }
+            .map { it.chatId }
             .distinctUntilChanged()
+            .filterNotNull()
+            .flatMapLatest { chatId -> chatRepo.getMessagesPager(chatId) }
     }
 
     override fun onViewActive() {
@@ -137,7 +125,5 @@ internal class ChatModelImpl(
     private data class State(
         val currentMessage: String = "",
         val chatId: String? = null,
-        val messages: List<Message> = emptyList(),
     )
-
 }
