@@ -38,41 +38,9 @@ internal class MessagesPagingSource(
             val limit = params.loadSize.toLong()
 
             val items = when (params) {
-                is LoadParams.Prepend -> {
-                    val key = params.key
-
-                    chatStorage
-                        .getNewerMessages(
-                            chatId = chatId,
-                            afterTimestamp = key,
-                            limit = limit,
-                        )
-                }
-
-                is LoadParams.Append -> {
-                    val key = params.key
-
-                    chatStorage
-                        .getOlderMessages(
-                            chatId = chatId,
-                            beforeTimestamp = key,
-                            limit = limit,
-                        )
-                }
-
-                is LoadParams.Refresh -> {
-                    val key = params.key
-
-                    if (key != null) {
-                        chatStorage.getOlderMessages(
-                            chatId = chatId,
-                            beforeTimestamp = key,
-                            limit = limit,
-                        )
-                    } else {
-                        chatStorage.getNewestMessages(chatId = chatId, limit = limit)
-                    }
-                }
+                is LoadParams.Prepend -> loadPrepend(key = params.key, limit = limit)
+                is LoadParams.Append -> loadAppend(key = params.key, limit = limit)
+                is LoadParams.Refresh -> loadRefresh(anchorTimestamp = params.key, limit = limit)
             }
             LoadResult.Page(
                 data = items,
@@ -85,9 +53,46 @@ internal class MessagesPagingSource(
         }
     }
 
+    private suspend fun loadPrepend(key: Long, limit: Long): List<MessageSM> {
+        return chatStorage
+            .getClosestNewerMessages(
+                chatId = chatId,
+                afterTimestamp = key,
+                limit = limit,
+            )
+            .asReversed()
+    }
+
+    private suspend fun loadAppend(key: Long, limit: Long): List<MessageSM> {
+        return chatStorage.getOlderMessages(
+            chatId = chatId,
+            beforeTimestamp = key,
+            limit = limit,
+        )
+    }
+
+    private suspend fun loadRefresh(anchorTimestamp: Long?, limit: Long): List<MessageSM> {
+        if (anchorTimestamp == null) {
+            return chatStorage.getNewestMessages(chatId = chatId, limit = limit)
+        }
+        val newerHalfLimit = limit / 2
+        val newerAsc = chatStorage.getClosestNewerMessages(
+            chatId = chatId,
+            afterTimestamp = anchorTimestamp,
+            limit = newerHalfLimit,
+        )
+        val olderLimit = limit - newerAsc.size
+        val olderAndAnchor = chatStorage.getOlderMessages(
+            chatId = chatId,
+            beforeTimestamp = anchorTimestamp + 1L,
+            limit = olderLimit,
+        )
+        return newerAsc.asReversed() + olderAndAnchor
+    }
+
     override fun getRefreshKey(state: PagingState<Long, MessageSM>): Long? {
         val anchor = state.anchorPosition ?: return null
         if (anchor < state.config.prefetchDistance) return null
-        return state.closestItemToPosition(anchor)?.timestamp?.plus(1L)
+        return state.closestItemToPosition(anchor)?.timestamp
     }
 }

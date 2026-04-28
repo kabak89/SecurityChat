@@ -22,11 +22,13 @@ kotlin {
 }
 
 android {
-    namespace = "com.security.chat.multiplatform.android"
+    val appId = "com.security.chat.multiplatform.android"
+
+    namespace = appId
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.security.chat.multiplatform.android"
+        applicationId = appId
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

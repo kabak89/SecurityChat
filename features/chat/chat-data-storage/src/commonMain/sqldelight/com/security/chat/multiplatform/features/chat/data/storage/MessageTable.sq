@@ -48,12 +48,12 @@ WHERE chatId = :chatId
 ORDER BY timestamp DESC, id DESC
 LIMIT :limit;
 
-getNewerThan:
+getClosestNewerThan:
 SELECT *
 FROM MessageTable
 WHERE chatId = :chatId
   AND timestamp > :afterTimestamp
-ORDER BY timestamp DESC, id DESC
+ORDER BY timestamp ASC, id ASC
 LIMIT :limit;
 
 removeAll:

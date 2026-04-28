@@ -25,7 +25,12 @@ public interface ChatStorage {
         limit: Long,
     ): List<MessageSM>
 
-    public suspend fun getNewerMessages(
+    /**
+     * Returns up to [limit] messages with `timestamp > afterTimestamp`, ordered by `timestamp ASC`
+     * (closest-newer first). Use this for contiguous pagination toward newer messages: it never
+     * leaves a gap between [afterTimestamp] and the returned items.
+     */
+    public suspend fun getClosestNewerMessages(
         chatId: String,
         afterTimestamp: Long,
         limit: Long,
@@ -114,14 +119,14 @@ internal class ChatStorageImpl(
         }
     }
 
-    override suspend fun getNewerMessages(
+    override suspend fun getClosestNewerMessages(
         chatId: String,
         afterTimestamp: Long,
         limit: Long,
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
             dbCreator.getDb().messageTableQueries
-                .getNewerThan(
+                .getClosestNewerThan(
                     chatId = chatId,
                     afterTimestamp = afterTimestamp,
                     limit = limit,
