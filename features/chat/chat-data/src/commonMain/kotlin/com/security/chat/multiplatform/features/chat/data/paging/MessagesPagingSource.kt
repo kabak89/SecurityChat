@@ -36,33 +36,42 @@ internal class MessagesPagingSource(
     override suspend fun load(params: LoadParams<Long>): LoadResult<Long, MessageSM> {
         return try {
             val limit = params.loadSize.toLong()
+
             val items = when (params) {
                 is LoadParams.Prepend -> {
+                    val key = params.key
+
                     chatStorage
                         .getNewerMessages(
                             chatId = chatId,
-                            afterTimestamp = params.key,
+                            afterTimestamp = key,
                             limit = limit,
                         )
                 }
 
                 is LoadParams.Append -> {
+                    val key = params.key
+
                     chatStorage
                         .getOlderMessages(
                             chatId = chatId,
-                            beforeTimestamp = params.key,
+                            beforeTimestamp = key,
                             limit = limit,
                         )
                 }
 
                 is LoadParams.Refresh -> {
-                    params.key?.let { key ->
+                    val key = params.key
+
+                    if (key != null) {
                         chatStorage.getOlderMessages(
                             chatId = chatId,
                             beforeTimestamp = key,
                             limit = limit,
                         )
-                    } ?: chatStorage.getNewestMessages(chatId = chatId, limit = limit)
+                    } else {
+                        chatStorage.getNewestMessages(chatId = chatId, limit = limit)
+                    }
                 }
             }
             LoadResult.Page(
@@ -71,12 +80,14 @@ internal class MessagesPagingSource(
                 nextKey = items.lastOrNull()?.timestamp,
             )
         } catch (e: Exception) {
+            Log.e(e, "error in MessagesPagingSource")
             LoadResult.Error(e)
         }
     }
 
     override fun getRefreshKey(state: PagingState<Long, MessageSM>): Long? {
         val anchor = state.anchorPosition ?: return null
+        if (anchor < state.config.prefetchDistance) return null
         return state.closestItemToPosition(anchor)?.timestamp?.plus(1L)
     }
 }

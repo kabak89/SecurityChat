@@ -10,6 +10,7 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.core.time.TimeProvider
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.entity.ChatSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
@@ -69,13 +70,16 @@ internal class ChatRepoImpl(
         message: String,
         chatId: String,
     ) {
+        val timestamp = timeProvider.now().toEpochMilliseconds()
+        Log.d { "qewqewq new message timestamp = $timestamp, text = $message" }
+
         val messageSM = MessageSM(
             id = Uuid.random().toString(),
             chatId = chatId,
             text = message,
             authorId = checkNotNull(userStorage.getUserId()),
             status = MessageSM.Status.Created,
-            timestamp = timeProvider.now().toEpochMilliseconds(),
+            timestamp = timestamp,
         )
         chatStorage.saveMessage(messageSM)
     }
@@ -323,6 +327,6 @@ internal class ChatRepoImpl(
     }
 }
 
-private const val MESSAGES_PAGE_SIZE = 40
+private const val MESSAGES_PAGE_SIZE = 60
 private const val MESSAGES_INITIAL_LOAD_SIZE = 60
 private const val MESSAGES_PREFETCH_DISTANCE = 20

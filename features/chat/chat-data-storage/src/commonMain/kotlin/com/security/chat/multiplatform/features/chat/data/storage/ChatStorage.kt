@@ -34,6 +34,7 @@ public interface ChatStorage {
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
     public suspend fun updateMessage(message: MessageSM)
     public suspend fun clearAll()
+    public suspend fun getMessageByTimestamp(timestamp: Long): MessageSM?
 }
 
 internal class ChatStorageImpl(
@@ -152,6 +153,13 @@ internal class ChatStorageImpl(
     override suspend fun clearAll() {
         withContext(dispatcherProvider.IO) {
             dbCreator.getDb().messageTableQueries.removeAll()
+        }
+    }
+
+    override suspend fun getMessageByTimestamp(timestamp: Long): MessageSM? {
+        return withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageTableQueries.getByTimestamp(timestamp).executeAsOneOrNull()
+                ?.toSM()
         }
     }
 }

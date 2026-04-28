@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -32,10 +33,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -131,6 +134,11 @@ private fun PersonalChatContent(
         var toolbarHeight by remember { mutableStateOf(0) }
         var editMessageComponentHeight by remember { mutableStateOf(0) }
         val localDensity = LocalDensity.current
+        val lazyListState = rememberLazyListState()
+        StickToNewestMessageEffect(
+            lazyListState = lazyListState,
+            messages = messages,
+        )
         MessagesComponent(
             modifier = Modifier
                 .fillMaxSize()
@@ -139,6 +147,7 @@ private fun PersonalChatContent(
             toolbarHeight = with(localDensity) { toolbarHeight.toDp() },
             editMessageComponentHeight = with(localDensity) { editMessageComponentHeight.toDp() },
             messages = messages,
+            lazyListState = lazyListState,
         )
         val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         Toolbar(
@@ -194,16 +203,44 @@ private fun PersonalChatContent(
 }
 
 @Composable
+private fun StickToNewestMessageEffect(
+    lazyListState: LazyListState,
+    messages: LazyPagingItems<MessageUM>,
+) {
+    var stickToBottom by remember { mutableStateOf(true) }
+
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.isScrollInProgress }
+            .collect { scrolling ->
+                if (!scrolling) {
+                    stickToBottom = lazyListState.firstVisibleItemIndex == 0 &&
+                            lazyListState.firstVisibleItemScrollOffset == 0
+                }
+            }
+    }
+
+    LaunchedEffect(lazyListState, messages) {
+        snapshotFlow { messages.itemSnapshotList.items.firstOrNull()?.id }
+            .collect { newestId ->
+                if (newestId != null && stickToBottom) {
+                    lazyListState.animateScrollToItem(0)
+                }
+            }
+    }
+}
+
+@Composable
 private fun MessagesComponent(
     modifier: Modifier = Modifier,
     state: PersonalChatState,
     toolbarHeight: Dp,
     editMessageComponentHeight: Dp,
     messages: LazyPagingItems<MessageUM>,
+    lazyListState: LazyListState,
 ) {
     LazyColumn(
         modifier = modifier,
-        state = rememberLazyListState(),
+        state = lazyListState,
         reverseLayout = true,
         contentPadding = PaddingValues(top = toolbarHeight, bottom = editMessageComponentHeight),
         content = {
