@@ -39,6 +39,7 @@ include(
     ":common:app-lifecycle",
     ":common:log",
     ":common:error",
+    ":common:device-info",
 )
 include(
     ":features:splash:splash-component",
@@ -97,4 +98,8 @@ include(
     ":features:profile:profile-domain",
     ":features:profile:profile-data",
     ":features:profile:profile-data-storage",
+)
+include(
+    ":features:push:push-domain",
+    ":features:push:push-data",
 )

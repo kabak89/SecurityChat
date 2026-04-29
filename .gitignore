@@ -13,3 +13,6 @@ xcuserdata
 .kotlin
 
 *.podspec
+
+# Firebase configuration: must be downloaded from Firebase console
+androidApp/google-services.json

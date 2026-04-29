@@ -8,10 +8,13 @@ import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
+import com.security.chat.multiplatform.di.initKoin
 import org.koin.core.component.KoinComponent
 import javax.swing.SwingUtilities
 
 public fun main() {
+    initKoin()
+
     val lifecycle = LifecycleRegistry()
 
     lifecycle.doOnCreate {

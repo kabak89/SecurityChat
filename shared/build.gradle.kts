@@ -51,10 +51,14 @@ kotlin {
             implementation(projects.common.iconsKit)
             implementation(projects.common.uiKit)
             implementation(projects.common.appLifecycle)
+            implementation(projects.common.deviceInfo)
 
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.users.usersDataStorage)
             implementation(projects.features.settings.settingsDataStorage)
+
+            implementation(projects.features.push.pushDomain)
+            implementation(projects.features.push.pushData)
 
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.splash.splashUi)

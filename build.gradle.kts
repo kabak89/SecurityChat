@@ -9,4 +9,5 @@ plugins {
     alias(libs.plugins.composeHotReload).apply(false)
     alias(libs.plugins.kotlinCocoapods).apply(false)
     alias(libs.plugins.buildkonfig).apply(false)
+    alias(libs.plugins.googleServices).apply(false)
 }

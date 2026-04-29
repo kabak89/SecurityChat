@@ -21,12 +21,12 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
-import com.security.chat.multiplatform.di.diModules
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
+import com.security.chat.multiplatform.features.push.domain.PushModel
 import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
 import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
 import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
@@ -34,17 +34,15 @@ import com.security.chat.multiplatform.features.settings.ui.screens.authorize.Au
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
-import com.security.chat.multiplatform.features.user.data.storage.di.userDataStorageModule
 import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.core.context.loadKoinModules
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.bind
@@ -71,11 +69,6 @@ public class RootComponentImpl(
 
     init {
         println("RootComponentImpl doOnCreate")
-        startKoin(
-            appDeclaration = {
-                modules(diModules)
-            },
-        )
 
         diScope = getKoin().createScope(
             scopeId = SCOPE_ID_ROOT,
@@ -103,7 +96,6 @@ public class RootComponentImpl(
         loadKoinModules(
             listOf(
                 coroutineScopeModule,
-                userDataStorageModule,
                 usersDataStorageModule,
                 settingsDataStorageModule,
             ),
@@ -111,6 +103,12 @@ public class RootComponentImpl(
 
         lifecycle.doOnCreate {
             onCreate()
+
+            val pushModel: PushModel = getKoin().get()
+            val rootCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_ROOT))
+            rootCoroutineScope.launch {
+                pushModel.registerCurrentToken()
+            }
         }
 
         lifecycle.doOnDestroy {
@@ -121,8 +119,6 @@ public class RootComponentImpl(
 
             diScope?.close()
             println("scope $SCOPE_ID_ROOT closed")
-
-            stopKoin()
         }
     }
 
@@ -177,10 +173,20 @@ public class RootComponentImpl(
     }
 
     private fun createMainComponent(componentContext: ComponentContext): MainComponent {
+        registerPushTokenAfterSignIn()
         return MainComponentImpl(
             componentContext = componentContext,
             onLogout = { navigation.replaceAll(Params.Authorize) },
         )
+    }
+
+    //TODO move somewhere
+    private fun registerPushTokenAfterSignIn() {
+        val pushModel: PushModel = getKoin().get()
+        val rootCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_ROOT))
+        rootCoroutineScope.launch {
+            pushModel.registerCurrentToken()
+        }
     }
 
     private fun createSplashComponent(

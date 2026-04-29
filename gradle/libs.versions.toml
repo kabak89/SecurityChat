@@ -35,6 +35,8 @@ timber = "5.0.1"
 willena-sqlite-jdbc = "3.51.2.0"
 haze = "1.7.2"
 paging = "3.5.0-rc01"
+firebase-bom = "33.7.0"
+google-services = "4.4.2"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -105,6 +107,9 @@ haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
 paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+
 # build-logic (compileOnly for convention plugins)
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 android-gradleApi = { module = "com.android.tools.build:gradle-api", version.ref = "agp" }
@@ -122,3 +127,4 @@ jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "google-services" }
