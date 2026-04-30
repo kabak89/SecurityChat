@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.common.platform.android
+package com.security.chat.multiplatform.common.platformspecific
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,7 +9,8 @@ import com.security.chat.multiplatform.RootContent
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
 import org.koin.android.ext.android.get
 
-class MainActivity : ComponentActivity() {
+public class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val root = RootComponentImpl(

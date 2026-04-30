@@ -40,6 +40,7 @@ include(
     ":common:log",
     ":common:error",
     ":common:device-info",
+    ":common:platform-specific",
 )
 include(
     ":features:splash:splash-component",
