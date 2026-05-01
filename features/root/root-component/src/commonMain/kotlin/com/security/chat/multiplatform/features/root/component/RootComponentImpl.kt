@@ -1,40 +1,24 @@
-package com.security.chat.multiplatform
+package com.security.chat.multiplatform.features.root.component
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
-import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
-import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
 import com.security.chat.multiplatform.features.push.domain.PushModel
-import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
-import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
-import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
-import com.security.chat.multiplatform.features.settings.ui.screens.authorize.AuthorizeScreen
+import com.security.chat.multiplatform.features.root.component.api.RootComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
-import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
-import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -47,18 +31,6 @@ import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.bind
 import org.koin.dsl.module
-
-public interface RootComponent : BackHandlerOwner, DiScopeHolder {
-    public val childStack: Value<ChildStack<*, Child>>
-
-    public fun onBackClicked()
-
-    public sealed interface Child {
-        public class Splash(public val component: SplashComponent) : Child
-        public class Authorize(public val component: AuthorizeComponent) : Child
-        public class Main(public val component: MainComponent) : Child
-    }
-}
 
 public class RootComponentImpl(
     private val onCreate: () -> Unit = {},
@@ -96,8 +68,6 @@ public class RootComponentImpl(
         loadKoinModules(
             listOf(
                 coroutineScopeModule,
-                usersDataStorageModule,
-                settingsDataStorageModule,
             ),
         )
 
@@ -146,7 +116,6 @@ public class RootComponentImpl(
         return diScope!!
     }
 
-    //scope and params corresponding
     private fun createChild(
         params: Params,
         componentContext: ComponentContext,
@@ -208,7 +177,6 @@ public class RootComponentImpl(
         )
     }
 
-    //scope params
     @Serializable
     private sealed interface Params {
 
@@ -220,39 +188,5 @@ public class RootComponentImpl(
 
         @Serializable
         data object Main : Params
-
-    }
-
-}
-
-@Composable
-public fun RootContent(rootComponent: RootComponent) {
-    val settingsStorage: SettingsStorage = rootComponent.getKoin().get()
-    val theme = settingsStorage.getCurrentThemeFlow().collectAsState(ThemeSM.Auto).value
-
-    val useDarkTheme = when (theme) {
-        ThemeSM.Auto -> isSystemInDarkTheme()
-        ThemeSM.Dark -> true
-        ThemeSM.Light -> false
-    }
-
-    AppTheme(
-        useDarkTheme = useDarkTheme,
-    ) {
-        Children(
-            stack = rootComponent.childStack,
-            animation = predictiveBackAnimation(
-                backHandler = rootComponent.backHandler,
-                fallbackAnimation = stackAnimation(slide()),
-                onBack = rootComponent::onBackClicked,
-            ),
-            content = {
-                when (val child = it.instance) {
-                    is RootComponent.Child.Splash -> SplashScreen(component = child.component)
-                    is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
-                    is RootComponent.Child.Main -> MainScreen(component = child.component)
-                }
-            },
-        )
     }
 }

@@ -9,6 +9,6 @@ public actual fun initKoin(appDeclaration: KoinAppDeclaration) {
     startKoin {
         androidLogger(level = Level.NONE)
         appDeclaration()
-        modules(rootDiModules)
+        modules(commonAppDiModules)
     }
 }

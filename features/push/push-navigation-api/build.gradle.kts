@@ -1,0 +1,13 @@
+plugins {
+    id("securitychat.convention.base")
+}
+
+conventionBasePlugin {
+    namespace = "com.security.chat.multiplatform.features.push.navigation.api"
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {}
+    }
+}

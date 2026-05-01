@@ -23,13 +23,10 @@ public interface MainComponent : BackHandlerOwner {
     public val childStack: Value<ChildStack<*, Child>>
 
     public sealed interface Child {
-
         public class Chats(public val component: ChatsComponent) : Child
         public class Settings(public val component: SettingsComponent) : Child
         public class Chat(public val component: ChatComponent) : Child
-
     }
-
 }
 
 public class MainComponentImpl(
@@ -109,7 +106,5 @@ public class MainComponentImpl(
         data class ChatParams(
             val chatId: String,
         ) : Params()
-
     }
-
 }

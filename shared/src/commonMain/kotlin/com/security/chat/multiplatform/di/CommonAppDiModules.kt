@@ -9,10 +9,13 @@ import com.security.chat.multiplatform.common.device.info.di.deviceInfoModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
 import com.security.chat.multiplatform.features.push.data.di.pushDataModule
 import com.security.chat.multiplatform.features.push.domain.di.pushDomainModule
+import com.security.chat.multiplatform.features.push.navigation.impl.di.pushNavigationModule
+import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
 import com.security.chat.multiplatform.features.user.data.storage.di.userDataStorageModule
+import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
 import org.koin.core.module.Module
 
-internal val rootDiModules: List<Module> =
+internal val commonAppDiModules: List<Module> =
     listOf(
         sharedModule,
         coreThreadingModule,
@@ -24,7 +27,10 @@ internal val rootDiModules: List<Module> =
         deviceInfoModule,
 
         userDataStorageModule,
+        usersDataStorageModule,
+        settingsDataStorageModule,
 
         pushDataModule,
         pushDomainModule,
+        pushNavigationModule,
     )

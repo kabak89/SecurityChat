@@ -6,6 +6,8 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.ApplicationLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
+import com.security.chat.multiplatform.features.root.component.RootComponentImpl
+import com.security.chat.multiplatform.features.root.ui.screens.root.RootContent
 import org.koin.core.component.KoinComponent
 import platform.UIKit.UIViewController
 

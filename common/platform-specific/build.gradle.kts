@@ -15,7 +15,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
 
-            implementation(projects.shared)
+            implementation(projects.features.root.rootComponent)
+            implementation(projects.features.root.rootUi)
         }
     }
 }

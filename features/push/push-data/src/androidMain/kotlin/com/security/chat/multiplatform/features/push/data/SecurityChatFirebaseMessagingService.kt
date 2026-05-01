@@ -1,9 +1,9 @@
 package com.security.chat.multiplatform.features.push.data
 
 import android.Manifest
-import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -11,6 +11,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.push.domain.PushRepository
+import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,6 +24,7 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val pushRepository: PushRepository by inject()
+    private val intentBuilder: IntentBuilder by inject()
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -67,15 +69,34 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                     getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.createNotificationChannel(channel)
 
+                val intent = intentBuilder.getOpenAppIntent(this)
+
+                val pendingIntent: PendingIntent = PendingIntent.getActivity(
+                    /* context = */
+                    this,
+                    /* requestCode = */
+                    0,
+                    /* intent = */
+                    intent,
+                    /* flags = */
+                    PendingIntent.FLAG_IMMUTABLE,
+                )
+
                 val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
-                    .setSmallIcon(R.drawable.ic_secure)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("New message")
                     .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setContentIntent(pendingIntent)
                     .setAutoCancel(true)
 
                 val notificationManagerCompat = NotificationManagerCompat.from(this)
-                // notificationId — уникальное число для каждого уведомления
-                notificationManagerCompat.notify(101, builder.build())
+                //TODO change id
+                notificationManagerCompat.notify(
+                    /* id = */
+                    101,
+                    /* notification = */
+                    builder.build(),
+                )
             }
 
             else -> {

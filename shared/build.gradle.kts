@@ -53,21 +53,18 @@ kotlin {
             implementation(projects.common.appLifecycle)
             implementation(projects.common.deviceInfo)
 
+            implementation(projects.features.root.rootComponent)
+            implementation(projects.features.root.rootUi)
+
             implementation(projects.features.user.userDataStorage)
+
             implementation(projects.features.users.usersDataStorage)
+
             implementation(projects.features.settings.settingsDataStorage)
 
             implementation(projects.features.push.pushDomain)
             implementation(projects.features.push.pushData)
-
-            implementation(projects.features.splash.splashComponent)
-            implementation(projects.features.splash.splashUi)
-
-            implementation(projects.features.authorize.authorizeComponent)
-            implementation(projects.features.authorize.authorizeUi)
-
-            implementation(projects.features.main.mainComponent)
-            implementation(projects.features.main.mainUi)
+            implementation(projects.features.push.pushNavigationImpl)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)

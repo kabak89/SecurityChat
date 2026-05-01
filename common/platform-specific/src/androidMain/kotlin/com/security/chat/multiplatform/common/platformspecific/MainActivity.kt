@@ -4,10 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.arkivanov.decompose.defaultComponentContext
-import com.security.chat.multiplatform.RootComponentImpl
-import com.security.chat.multiplatform.RootContent
-import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
-import org.koin.android.ext.android.get
+import com.security.chat.multiplatform.features.root.component.RootComponentImpl
+import com.security.chat.multiplatform.features.root.ui.screens.root.RootContent
 
 public class MainActivity : ComponentActivity() {
 
@@ -15,10 +13,6 @@ public class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val root = RootComponentImpl(
             componentContext = defaultComponentContext(),
-            onCreate = {
-                val appLifecycleChanger: AppLifecycleChanger = get()
-                appLifecycleChanger.onAppStarted()
-            },
         )
 
         setContent {

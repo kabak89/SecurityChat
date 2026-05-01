@@ -15,6 +15,7 @@ kotlin {
     }
 
     dependencies {
+        implementation(projects.shared)
         implementation(projects.common.platformSpecific)
     }
 }

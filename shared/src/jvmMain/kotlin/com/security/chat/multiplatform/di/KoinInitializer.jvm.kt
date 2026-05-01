@@ -6,6 +6,6 @@ import org.koin.dsl.KoinAppDeclaration
 public actual fun initKoin(appDeclaration: KoinAppDeclaration) {
     startKoin {
         appDeclaration()
-        modules(rootDiModules)
+        modules(commonAppDiModules)
     }
 }

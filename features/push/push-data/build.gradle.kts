@@ -19,11 +19,18 @@ kotlin {
             implementation(projects.common.deviceInfo)
 
             implementation(projects.features.push.pushDomain)
+            implementation(projects.features.push.pushNavigationApi)
             implementation(projects.features.user.userDataStorage)
         }
         androidMain.dependencies {
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)
+        }
+    }
+
+    android {
+        androidResources {
+            enable = true
         }
     }
 }

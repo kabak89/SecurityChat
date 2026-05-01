@@ -103,4 +103,11 @@ include(
 include(
     ":features:push:push-domain",
     ":features:push:push-data",
+    ":features:push:push-navigation-api",
+    ":features:push:push-navigation-impl",
+)
+include(
+    ":features:root:root-component",
+    ":features:root:root-component-api",
+    ":features:root:root-ui",
 )
