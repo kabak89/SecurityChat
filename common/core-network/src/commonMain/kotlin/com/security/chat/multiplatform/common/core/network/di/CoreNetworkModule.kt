@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.common.core.network.di
 
-import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.network.BuildKonfig
 import com.security.chat.multiplatform.common.core.network.HttpClientFactory
 import com.security.chat.multiplatform.common.core.network.HttpClientFactoryImpl
@@ -33,7 +33,7 @@ public val coreNetworkModule: Module =
         single {
             LiveEventsManager(
                 json = get(),
-                coroutineScope = get(named(SCOPE_ID_ROOT)),
+                coroutineScope = get(named(SCOPE_ID_APP)),
                 socketConfig = get(),
                 connectivityObserver = get(),
                 httpClientFactory = get(),

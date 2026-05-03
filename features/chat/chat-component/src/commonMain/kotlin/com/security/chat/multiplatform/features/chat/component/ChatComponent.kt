@@ -10,7 +10,6 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chat.data.di.chatDataModule
-import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataStorageModule
 import com.security.chat.multiplatform.features.chat.domain.di.chatDomainModule
 import com.security.chat.multiplatform.features.chat.ui.di.chatUiModule
 import kotlinx.serialization.Serializable
@@ -43,7 +42,6 @@ public class ChatComponentImpl(
             chatUiModule,
             chatDomainModule,
             chatDataModule,
-            chatDataStorageModule,
         )
         getKoin().loadModules(featureModules)
         doOnDestroy {

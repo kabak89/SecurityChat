@@ -5,7 +5,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.dsl.KoinAppDeclaration
 
-public actual fun initKoin(appDeclaration: KoinAppDeclaration) {
+internal actual fun initKoin(appDeclaration: KoinAppDeclaration) {
     startKoin {
         androidLogger(level = Level.NONE)
         appDeclaration()

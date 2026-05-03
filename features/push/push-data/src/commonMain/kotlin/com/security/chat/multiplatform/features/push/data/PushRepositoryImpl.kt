@@ -7,10 +7,14 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.device.info.DeviceInfoManager
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
+import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
+import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.push.data.entity.SyncedPushToken
 import com.security.chat.multiplatform.features.push.data.network.RegisterDeviceTokenRequest
 import com.security.chat.multiplatform.features.push.domain.PushRepository
+import com.security.chat.multiplatform.features.push.domain.entity.MessagesText
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
+import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import kotlinx.coroutines.withContext
 
 public class PushRepositoryImpl(
@@ -20,6 +24,9 @@ public class PushRepositoryImpl(
     private val deviceInfoManager: DeviceInfoManager,
     private val encryptedSettings: EncryptedSettings,
     private val dispatcherProviderInterface: DispatcherProviderInterface,
+    private val chatsStorage: ChatsStorage,
+    private val usersStorage: UsersStorage,
+    private val chatDataHelper: ChatDataHelper,
 ) : PushRepository {
 
     private val networkManager: NetworkManager by lazy {
@@ -32,11 +39,28 @@ public class PushRepositoryImpl(
             .getOrNull()
             ?: return
 
-        sendIfNeeded(token = token, force = false)
+        //TODO check push token after profile auth
+        sendIfNeeded(token = token, force = true)
     }
 
     override suspend fun onTokenRefreshed(token: String) {
         sendIfNeeded(token = token, force = true)
+    }
+
+    override suspend fun getInterlocutorName(chatId: String): String? {
+        val interlocutorId = chatsStorage.getChat(chatId)?.interlocutorId ?: return null
+        return usersStorage.getUser(interlocutorId)?.name
+    }
+
+    override suspend fun processNewMessages(
+        serializedMessages: String,
+        chatId: String,
+    ): MessagesText {
+        val messagesTexts = chatDataHelper.processNewMessages(
+            serializedMessages = serializedMessages,
+            chatId = chatId,
+        )
+        return MessagesText(messagesTexts.joinToString(separator = "\n"))
     }
 
     private suspend fun sendIfNeeded(token: String, force: Boolean) {

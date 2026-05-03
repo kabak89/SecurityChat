@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.features.settings.data.storage.di
 
-import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_UI
 import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
 import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorageImpl
 import org.koin.core.module.Module
@@ -14,7 +14,7 @@ public val settingsDataStorageModule: Module =
             SettingsStorageImpl(
                 publicSettings = get(),
                 lifecycle = get(),
-                coroutineScope = get(named(SCOPE_ID_ROOT)),
+                coroutineScope = get(named(SCOPE_ID_UI)),
                 dispatcherProviderInterface = get(),
             )
         } bind SettingsStorage::class

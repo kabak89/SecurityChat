@@ -9,7 +9,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
-import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_UI
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
@@ -43,16 +43,16 @@ public class RootComponentImpl(
         println("RootComponentImpl doOnCreate")
 
         diScope = getKoin().createScope(
-            scopeId = SCOPE_ID_ROOT,
-            qualifier = named(SCOPE_ID_ROOT),
+            scopeId = SCOPE_ID_UI,
+            qualifier = named(SCOPE_ID_UI),
         )
 
-        println("scope $SCOPE_ID_ROOT created")
+        println("scope $SCOPE_ID_UI created")
 
         val coroutineScopeModule = module {
-            single(named(SCOPE_ID_ROOT)) {
+            single(named(SCOPE_ID_UI)) {
                 val errorHandler = CoroutineExceptionHandler { _, e ->
-                    println("error in coroutine scope in $SCOPE_ID_ROOT DI scope: $e")
+                    println("error in coroutine scope in $SCOPE_ID_UI DI scope: $e")
                 }
 
                 val dispatcherProvider: DispatcherProviderInterface = get()
@@ -60,7 +60,7 @@ public class RootComponentImpl(
                     dispatcherProvider.IO +
                             SupervisorJob() +
                             errorHandler +
-                            CoroutineName(SCOPE_ID_ROOT),
+                            CoroutineName(SCOPE_ID_UI),
                 )
             } bind CoroutineScope::class
         }
@@ -75,7 +75,7 @@ public class RootComponentImpl(
             onCreate()
 
             val pushModel: PushModel = getKoin().get()
-            val rootCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_ROOT))
+            val rootCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_UI))
             rootCoroutineScope.launch {
                 pushModel.registerCurrentToken()
             }
@@ -84,11 +84,11 @@ public class RootComponentImpl(
         lifecycle.doOnDestroy {
             println("RootComponentImpl doOnDestroy")
 
-            val scopedCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_ROOT))
+            val scopedCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_UI))
             scopedCoroutineScope.cancel()
 
             diScope?.close()
-            println("scope $SCOPE_ID_ROOT closed")
+            println("scope $SCOPE_ID_UI closed")
         }
     }
 
@@ -142,20 +142,10 @@ public class RootComponentImpl(
     }
 
     private fun createMainComponent(componentContext: ComponentContext): MainComponent {
-        registerPushTokenAfterSignIn()
         return MainComponentImpl(
             componentContext = componentContext,
             onLogout = { navigation.replaceAll(Params.Authorize) },
         )
-    }
-
-    //TODO move somewhere
-    private fun registerPushTokenAfterSignIn() {
-        val pushModel: PushModel = getKoin().get()
-        val rootCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_ROOT))
-        rootCoroutineScope.launch {
-            pushModel.registerCurrentToken()
-        }
     }
 
     private fun createSplashComponent(

@@ -1,13 +1,13 @@
 package com.security.chat.multiplatform.features.chat.data.mapper
 
-import com.security.chat.multiplatform.features.chat.data.entity.ChatMessage
+import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
 import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 
-internal suspend fun ChatMessage.toDomain(
+internal suspend fun ChatMessageNM.toDomain(
     decryptMessage: suspend (encryptedText: String) -> String,
     appOwnerId: String,
 ): Message {

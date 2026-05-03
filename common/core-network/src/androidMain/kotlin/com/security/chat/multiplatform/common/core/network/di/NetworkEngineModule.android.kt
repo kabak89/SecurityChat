@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.common.core.network.di
 
-import com.security.chat.multiplatform.common.core.component.SCOPE_ID_ROOT
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.ConnectivityObserverAndroid
 import io.ktor.client.engine.HttpClientEngine
@@ -17,7 +17,7 @@ public actual val networkEngineModule: Module =
         single {
             ConnectivityObserverAndroid(
                 context = get(),
-                coroutineScope = get(named(SCOPE_ID_ROOT)),
+                coroutineScope = get(named(SCOPE_ID_APP)),
             )
         } bind ConnectivityObserver::class
     }

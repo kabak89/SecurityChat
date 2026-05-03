@@ -79,6 +79,8 @@ include(
     ":features:chat:chat-domain",
     ":features:chat:chat-data",
     ":features:chat:chat-data-storage",
+    ":features:chat:chat-data-network",
+    ":features:chat:chat-data-common",
 )
 include(
     ":features:users:users-data-storage",

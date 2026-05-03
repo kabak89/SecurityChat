@@ -30,4 +30,7 @@
     <string name="profile_update">Update</string>
     <string name="profile_update_conflict_error_title">Error of profile update</string>
     <string name="profile_update_conflict_error_description">User with such login already exists</string>
+
+    <string name="push_channel_name_new_message">New messages</string>
+    <string name="push_channel_description_new_message">Channel for new chat messages</string>
 </resources>

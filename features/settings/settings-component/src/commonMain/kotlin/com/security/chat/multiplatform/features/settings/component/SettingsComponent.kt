@@ -9,7 +9,6 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.features.chat.data.storage.di.chatDataStorageModule
 import com.security.chat.multiplatform.features.profile.component.ProfileComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Profile
@@ -37,7 +36,6 @@ public class SettingsComponentImpl(
             settingsUiModule,
             settingsDomainModule,
             settingsDataModule,
-            chatDataStorageModule,
         )
         getKoin().loadModules(featureModules)
         doOnDestroy {

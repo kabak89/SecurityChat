@@ -30,4 +30,7 @@
     <string name="profile_update">Обновить</string>
     <string name="profile_update_conflict_error_title">Ошибка обновления профиля</string>
     <string name="profile_update_conflict_error_description">Пользователь с таким логином уже существует</string>
+
+    <string name="push_channel_name_new_message">Новые сообщения</string>
+    <string name="push_channel_description_new_message">Канал для новых сообщений в чате</string>
 </resources>

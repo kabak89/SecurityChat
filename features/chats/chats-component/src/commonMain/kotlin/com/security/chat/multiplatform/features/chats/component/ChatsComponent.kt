@@ -11,7 +11,6 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
-import com.security.chat.multiplatform.features.chats.data.storage.di.chatsDataStorageModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
 import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
 import com.security.chat.multiplatform.features.users.data.network.di.usersNetworkManager
@@ -34,7 +33,6 @@ public class ChatsComponentImpl(
             chatsUiModule,
             chatsDomainModule,
             chatsDataModule,
-            chatsDataStorageModule,
             usersNetworkManager,
         )
         getKoin().loadModules(featureModules)

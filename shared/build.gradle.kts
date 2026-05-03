@@ -56,11 +56,15 @@ kotlin {
             implementation(projects.features.root.rootComponent)
             implementation(projects.features.root.rootUi)
 
+            implementation(projects.features.chat.chatDataCommon)
+
             implementation(projects.features.user.userDataStorage)
-
             implementation(projects.features.users.usersDataStorage)
-
             implementation(projects.features.settings.settingsDataStorage)
+            implementation(projects.features.chats.chatsDataStorage)
+            implementation(projects.features.chat.chatDataStorage)
+
+            implementation(projects.features.chat.chatDataNetwork)
 
             implementation(projects.features.push.pushDomain)
             implementation(projects.features.push.pushData)

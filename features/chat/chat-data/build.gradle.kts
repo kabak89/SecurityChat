@@ -13,8 +13,6 @@ kotlin {
             implementation(libs.kotlinx.serialization)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.cryptography.core)
-            implementation(libs.cryptography.provider.optimal)
             implementation(libs.paging.common)
 
             implementation(projects.common.coreNetwork)
@@ -23,11 +21,13 @@ kotlin {
             implementation(projects.common.log)
 
             implementation(projects.features.chat.chatDomain)
+            implementation(projects.features.chat.chatDataCommon)
+            implementation(projects.features.chat.chatDataNetwork)
+            implementation(projects.features.chat.chatDataStorage)
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.users.usersDataStorage)
             implementation(projects.features.users.usersDataNetwork)
             implementation(projects.features.chats.chatsDataStorage)
-            implementation(projects.features.chat.chatDataStorage)
         }
     }
 }

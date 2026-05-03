@@ -9,20 +9,24 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.push.domain.PushRepository
 import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilder
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import securitychat.common.localization.generated.resources.push_channel_description_new_message
+import securitychat.common.localization.generated.resources.push_channel_name_new_message
 
 public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), KoinComponent {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(throwable)
+    }
     private val pushRepository: PushRepository by inject()
     private val intentBuilder: IntentBuilder by inject()
 
@@ -30,7 +34,7 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
         super.onNewToken(token)
         Log.d { "FCM onNewToken: ${token.take(n = 12)}…" }
 
-        scope.launch {
+        runBlocking(Dispatchers.IO + coroutineExceptionHandler) {
             pushRepository.onTokenRefreshed(token = token)
         }
     }
@@ -39,6 +43,12 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
+        runBlocking(Dispatchers.IO + coroutineExceptionHandler) {
+            processNewMessage(message)
+        }
+    }
+
+    private suspend fun processNewMessage(message: RemoteMessage) {
         val data = message.data
 
         Log.d { "new push message: $data" }
@@ -50,25 +60,9 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
 
         when (messageType) {
             "chat_message" -> {
-                //TODO localize
-                val name = "New messages"
-                val descriptionText = "Channel for new chat messages"
-                val importance = NotificationManager.IMPORTANCE_HIGH
-                val channel = NotificationChannel(
-                    /* id = */
-                    NEW_MESSAGES_CHANNEL,
-                    /* name = */
-                    name,
-                    /* importance = */
-                    importance,
-                ).apply {
-                    description = descriptionText
-                }
-
                 val notificationManager: NotificationManager =
                     getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.createNotificationChannel(channel)
-
+                createChannel(notificationManager)
                 val intent = intentBuilder.getOpenAppIntent(this)
 
                 val pendingIntent: PendingIntent = PendingIntent.getActivity(
@@ -82,18 +76,30 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                     PendingIntent.FLAG_IMMUTABLE,
                 )
 
+                val chatId = requireNotNull(data["chatId"])
+                val interlocutorName = requireNotNull(pushRepository.getInterlocutorName(chatId))
+                val serializedMessages = requireNotNull(data["messages"])
+
+                val notificationText =
+                    requireNotNull(
+                        pushRepository.processNewMessages(
+                            serializedMessages = serializedMessages,
+                            chatId = chatId,
+                        ),
+                    )
+
                 val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
                     .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle("New message")
+                    .setContentTitle(interlocutorName)
+                    .setContentText(notificationText.value)
                     .setPriority(NotificationCompat.PRIORITY_MAX)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true)
 
                 val notificationManagerCompat = NotificationManagerCompat.from(this)
-                //TODO change id
                 notificationManagerCompat.notify(
                     /* id = */
-                    101,
+                    chatId.hashCode(),
                     /* notification = */
                     builder.build(),
                 )
@@ -106,9 +112,21 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
         }
     }
 
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
+    private suspend fun createChannel(notificationManager: NotificationManager) {
+        val name = getString(StringRes.push_channel_name_new_message)
+        val descriptionText = getString(StringRes.push_channel_description_new_message)
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(
+            /* id = */
+            NEW_MESSAGES_CHANNEL,
+            /* name = */
+            name,
+            /* importance = */
+            importance,
+        ).apply {
+            description = descriptionText
+        }
+        notificationManager.createNotificationChannel(channel)
     }
 }
 
