@@ -34,10 +34,14 @@ import org.koin.dsl.module
 
 public class RootComponentImpl(
     private val onCreate: () -> Unit = {},
+    initialDeepLink: RootComponent.DeepLink? = null,
     componentContext: ComponentContext,
 ) : RootComponent, ComponentContext by componentContext {
 
     private var diScope: Scope? = null
+
+    private var pendingChatId: String? =
+        (initialDeepLink as? RootComponent.DeepLink.OpenChat)?.chatId
 
     init {
         println("RootComponentImpl doOnCreate")
@@ -112,6 +116,19 @@ public class RootComponentImpl(
         navigation.pop()
     }
 
+    override fun handleDeepLink(link: RootComponent.DeepLink) {
+        when (link) {
+            is RootComponent.DeepLink.OpenChat -> {
+                val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
+                if (activeMain != null) {
+                    activeMain.component.openChat(chatId = link.chatId)
+                } else {
+                    pendingChatId = link.chatId
+                }
+            }
+        }
+    }
+
     override fun getDiScope(): Scope {
         return diScope!!
     }
@@ -142,9 +159,12 @@ public class RootComponentImpl(
     }
 
     private fun createMainComponent(componentContext: ComponentContext): MainComponent {
+        val chatId = pendingChatId
+        pendingChatId = null
         return MainComponentImpl(
             componentContext = componentContext,
             onLogout = { navigation.replaceAll(Params.Authorize) },
+            initialChatId = chatId,
         )
     }
 

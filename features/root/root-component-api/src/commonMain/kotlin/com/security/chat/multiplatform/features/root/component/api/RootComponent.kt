@@ -13,9 +13,15 @@ public interface RootComponent : BackHandlerOwner, DiScopeHolder {
 
     public fun onBackClicked()
 
+    public fun handleDeepLink(link: DeepLink)
+
     public sealed interface Child {
         public class Splash(public val component: SplashComponent) : Child
         public class Authorize(public val component: AuthorizeComponent) : Child
         public class Main(public val component: MainComponent) : Child
+    }
+
+    public sealed interface DeepLink {
+        public data class OpenChat(val chatId: String) : DeepLink
     }
 }

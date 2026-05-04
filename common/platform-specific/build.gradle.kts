@@ -17,6 +17,7 @@ kotlin {
 
             implementation(projects.features.root.rootComponent)
             implementation(projects.features.root.rootUi)
+            implementation(projects.features.push.pushNavigationApi)
         }
     }
 }

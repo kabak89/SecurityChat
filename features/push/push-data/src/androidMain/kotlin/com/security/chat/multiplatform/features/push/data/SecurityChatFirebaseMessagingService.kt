@@ -63,22 +63,23 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                 val notificationManager: NotificationManager =
                     getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 createChannel(notificationManager)
-                val intent = intentBuilder.getOpenAppIntent(this)
+
+                val chatId = requireNotNull(data["chatId"])
+                val interlocutorName = requireNotNull(pushRepository.getInterlocutorName(chatId))
+                val serializedMessages = requireNotNull(data["messages"])
+
+                val intent = intentBuilder.getOpenChatIntent(context = this, chatId = chatId)
 
                 val pendingIntent: PendingIntent = PendingIntent.getActivity(
                     /* context = */
                     this,
                     /* requestCode = */
-                    0,
+                    chatId.hashCode(),
                     /* intent = */
                     intent,
                     /* flags = */
-                    PendingIntent.FLAG_IMMUTABLE,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
-
-                val chatId = requireNotNull(data["chatId"])
-                val interlocutorName = requireNotNull(pushRepository.getInterlocutorName(chatId))
-                val serializedMessages = requireNotNull(data["messages"])
 
                 val notificationText =
                     requireNotNull(

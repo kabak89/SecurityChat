@@ -14,6 +14,7 @@
         <activity
             android:name="com.security.chat.multiplatform.common.platformspecific.MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
