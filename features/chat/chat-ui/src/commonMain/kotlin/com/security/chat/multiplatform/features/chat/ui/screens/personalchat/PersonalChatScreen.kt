@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -64,6 +63,8 @@ import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.component.IncomingMessageComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.component.OutgoingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.InterlocutorUM
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle
@@ -299,45 +300,6 @@ private fun Toolbar(
 }
 
 @Composable
-private fun OutgoingMessageComponent(
-    modifier: Modifier = Modifier,
-    message: MessageUM.Outgoing,
-) {
-    Row(
-        modifier = modifier
-            .padding(all = 16.dp),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        Text(
-            modifier = Modifier
-                .padding(start = 40.dp),
-            text = message.text,
-            color = AppTheme.colors.textPrimary,
-            style = AppTheme.typography.body,
-        )
-    }
-}
-
-@Composable
-private fun IncomingMessageComponent(
-    modifier: Modifier = Modifier,
-    message: MessageUM.Incoming,
-) {
-    Row(
-        modifier = modifier
-            .padding(all = 16.dp),
-    ) {
-        Text(
-            modifier = Modifier
-                .padding(end = 40.dp),
-            text = message.text,
-            color = AppTheme.colors.textPrimary,
-            style = AppTheme.typography.body,
-        )
-    }
-}
-
-@Composable
 private fun SyncComponent(
     modifier: Modifier = Modifier,
     syncState: UiLceState,
@@ -449,14 +411,17 @@ internal fun PersonalChatScreenPreview() {
                 MessageUM.Outgoing(
                     id = "1",
                     text = "some text",
+                    datetimeText = "12:10",
                 ),
                 MessageUM.Incoming(
                     id = "2",
                     text = "some text 2",
+                    datetimeText = "12:10",
                 ),
             ),
         ),
-    ).collectAsLazyPagingItems()
+    )
+        .collectAsLazyPagingItems()
 
     AppTheme {
         PersonalChatContent(

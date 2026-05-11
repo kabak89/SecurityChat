@@ -14,6 +14,7 @@ kotlin {
             implementation(libs.compose.resources)
             implementation(libs.haze)
             implementation(libs.paging.compose)
+            implementation(libs.kotlinx.datetime)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)

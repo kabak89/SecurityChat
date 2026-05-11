@@ -118,7 +118,11 @@ public class AppTypography internal constructor(
         fontWeight = W500,
     ),
     public val body: TextStyle = TextStyle(
-        fontSize = 14.sp,
+        fontSize = 15.sp,
+        fontWeight = W400,
+    ),
+    public val annotation: TextStyle = TextStyle(
+        fontSize = 12.sp,
         fontWeight = W400,
     ),
 )
