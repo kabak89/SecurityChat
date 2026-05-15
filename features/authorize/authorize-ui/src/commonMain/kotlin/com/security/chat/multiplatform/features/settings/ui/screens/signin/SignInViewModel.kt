@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
 import kotlinx.coroutines.flow.filterNotNull
@@ -35,12 +36,12 @@ internal class SignInViewModel(
                     SignInResult.Success -> sendEvent(SignInEvent.Authorized)
                     SignInResult.UserNotExists -> {
                         //TODO
-                        println("UserNotExists")
+                        Log.d { "UserNotExists" }
                     }
 
                     SignInResult.WrongPassword -> {
                         //TODO
-                        println("WrongPassword")
+                        Log.d { "WrongPassword" }
                     }
                 }
             }

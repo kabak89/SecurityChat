@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.di
 
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +19,7 @@ public fun initDI(appDeclaration: KoinAppDeclaration = {}) {
     val coroutineScopeModule = module {
         single(named(SCOPE_ID_APP)) {
             val errorHandler = CoroutineExceptionHandler { _, e ->
-                println("error in coroutine scope in $SCOPE_ID_APP DI scope: $e")
+                Log.e(e, "error in coroutine scope in $SCOPE_ID_APP DI scope")
             }
 
             val dispatcherProvider: DispatcherProviderInterface = get()

@@ -6,6 +6,7 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.ApplicationLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.root.component.RootComponentImpl
 import com.security.chat.multiplatform.features.root.ui.screens.root.RootContent
 import org.koin.core.component.KoinComponent
@@ -16,7 +17,7 @@ public fun rootViewController(): UIViewController {
     val lifecycle = ApplicationLifecycle()
     lifecycle.subscribe(
         onCreate = {
-            println("ApplicationLifecycle onCreate")
+            Log.d { "ApplicationLifecycle onCreate" }
 
             val appLifecycleChanger: AppLifecycleChanger = DiInjector().getKoin().get()
             appLifecycleChanger.onAppStarted()

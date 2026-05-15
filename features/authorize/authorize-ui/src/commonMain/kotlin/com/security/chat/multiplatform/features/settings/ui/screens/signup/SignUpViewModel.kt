@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.authorize.domain.SignUpModel
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpResult
 import kotlinx.coroutines.flow.filterNotNull
@@ -42,7 +43,7 @@ internal class SignUpViewModel(
                 when (result) {
                     SignUpResult.LoginAlreadyExists -> {
                         //TODO
-                        println("LoginAlreadyExists")
+                        Log.d { "LoginAlreadyExists" }
                     }
 
                     SignUpResult.Success -> {

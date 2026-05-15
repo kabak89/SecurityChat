@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.common.core.network
 
 import com.security.chat.multiplatform.common.core.error.NetworkError
+import com.security.chat.multiplatform.common.log.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
@@ -25,7 +26,7 @@ internal class HttpClientFactoryImpl(
     override fun build(): HttpClient {
         val networkLogger: Logger = object : Logger {
             override fun log(message: String) {
-                println(message)
+                Log.d { message }
             }
         }
 

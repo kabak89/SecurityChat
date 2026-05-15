@@ -21,9 +21,7 @@ public class DestructiveMigrationSchema(
         newVersion: Long,
         vararg callbacks: AfterVersion,
     ): QueryResult.AsyncValue<Unit> {
-        println("Migration started, oldVersion = $oldVersion, newVersion = $newVersion")
-
-        Log.d { "Try to use migrations" }
+        Log.d { "Migration started, oldVersion = $oldVersion, newVersion = $newVersion" }
 
         try {
             return schema.migrate(
@@ -66,7 +64,7 @@ public class DestructiveMigrationSchema(
                 try {
                     driver.execute(identifier = null, sql = "DROP TABLE $table", parameters = 0)
                 } catch (e: Exception) {
-                    println("Handled migration error: $e")
+                    Log.e(e, "Handled migration error")
                     errorOccurred = true
                 }
             }

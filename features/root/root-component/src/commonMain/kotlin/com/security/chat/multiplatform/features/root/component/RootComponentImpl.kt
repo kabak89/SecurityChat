@@ -11,6 +11,7 @@ import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_UI
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
@@ -44,19 +45,19 @@ public class RootComponentImpl(
         (initialDeepLink as? RootComponent.DeepLink.OpenChat)?.chatId
 
     init {
-        println("RootComponentImpl doOnCreate")
+        Log.d { "RootComponentImpl doOnCreate" }
 
         diScope = getKoin().createScope(
             scopeId = SCOPE_ID_UI,
             qualifier = named(SCOPE_ID_UI),
         )
 
-        println("scope $SCOPE_ID_UI created")
+        Log.d { "scope $SCOPE_ID_UI created" }
 
         val coroutineScopeModule = module {
             single(named(SCOPE_ID_UI)) {
                 val errorHandler = CoroutineExceptionHandler { _, e ->
-                    println("error in coroutine scope in $SCOPE_ID_UI DI scope: $e")
+                    Log.e(e, "error in coroutine scope in $SCOPE_ID_UI DI scope")
                 }
 
                 val dispatcherProvider: DispatcherProviderInterface = get()
@@ -86,13 +87,13 @@ public class RootComponentImpl(
         }
 
         lifecycle.doOnDestroy {
-            println("RootComponentImpl doOnDestroy")
+            Log.d { "RootComponentImpl doOnDestroy" }
 
             val scopedCoroutineScope: CoroutineScope = getKoin().get(named(SCOPE_ID_UI))
             scopedCoroutineScope.cancel()
 
             diScope?.close()
-            println("scope $SCOPE_ID_UI closed")
+            Log.d { "scope $SCOPE_ID_UI closed" }
         }
     }
 
