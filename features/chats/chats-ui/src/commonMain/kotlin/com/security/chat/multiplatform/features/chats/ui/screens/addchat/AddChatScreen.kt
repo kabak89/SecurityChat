@@ -9,24 +9,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
+import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import securitychat.common.icons_kit.generated.resources.ic_back
 
 @Composable
@@ -70,7 +73,7 @@ private fun AddChatContent(
 
     Column(
         modifier = modifier
-            .background(Color.White)
+            .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
             .systemBarsPadding()
             .imePadding(),
@@ -106,14 +109,14 @@ private fun AddChatContent(
                     .align(alignment = Alignment.CenterHorizontally),
             )
         } else {
-            Button(
+            ButtonPrimary(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                onClick = onFindClicked,
-                content = {
-                    Text("Find")
-                },
+                content = ButtonContent.Text(
+                    text = "Find",
+                ),
+                onClicked = onFindClicked,
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -127,6 +130,27 @@ private fun AddChatContent(
             onDismissRequest = onCloseDialogClicked,
             onPositiveButtonClicked = onCloseDialogClicked,
             onNegativeButtonClicked = null,
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun AddChatContentPreview() {
+    AppTheme {
+        AddChatContent(
+            modifier = Modifier.fillMaxSize(),
+            state = AddChatState(
+                username = "john_doe",
+                isLoading = false,
+                showNotFoundDialog = false,
+            ),
+            events = emptyFlow(),
+            onBackClicked = {},
+            onUsernameTextChanged = {},
+            onFindClicked = {},
+            onChatCreated = {},
+            onCloseDialogClicked = {},
         )
     }
 }

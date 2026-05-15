@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chats.data.repoimpl
 
+import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
@@ -20,8 +21,6 @@ import com.security.chat.multiplatform.features.users.data.network.UsersNetworkM
 import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -55,9 +54,9 @@ internal class ChatsRepoImpl(
                 login = response.login,
                 publicKey = response.publicKey,
             )
-        } catch (e: ClientRequestException) {
-            when (e.response.status) {
-                HttpStatusCode.NotFound -> FindUserResult.NotFound
+        } catch (e: NetworkError) {
+            when (e.statusCode) {
+                404 -> FindUserResult.NotFound
                 else -> throw e
             }
         }

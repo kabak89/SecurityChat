@@ -17,6 +17,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
 
             implementation(projects.common.coreNetwork)
+            implementation(projects.common.error)
 
             implementation(projects.features.chats.chatsDomain)
             implementation(projects.features.chats.chatsDataStorage)
