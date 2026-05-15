@@ -15,6 +15,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.ui.Screen
@@ -99,6 +100,7 @@ private fun SignUpContent(
             enabled = !state.isLoading,
         )
         Spacer(Modifier.height(16.dp))
+        val passwordVisualTransformation = PasswordVisualTransformation()
         TextField(
             modifier = Modifier
                 .fillMaxWidth()
@@ -109,6 +111,7 @@ private fun SignUpContent(
                 Text("Password")
             },
             enabled = !state.isLoading,
+            visualTransformation = passwordVisualTransformation,
         )
         Spacer(Modifier.height(16.dp))
         TextField(
@@ -121,6 +124,7 @@ private fun SignUpContent(
                 Text("Repeat password")
             },
             enabled = !state.isLoading,
+            visualTransformation = passwordVisualTransformation,
         )
         Spacer(Modifier.height(16.dp))
         if (state.isLoading) {
