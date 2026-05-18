@@ -11,6 +11,7 @@ import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.push.data.entity.SyncedPushToken
 import com.security.chat.multiplatform.features.push.data.network.RegisterDeviceTokenRequest
+import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
 import com.security.chat.multiplatform.features.push.domain.entity.MessagesText
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
@@ -27,6 +28,8 @@ public class PushRepositoryImpl(
     private val chatsStorage: ChatsStorage,
     private val usersStorage: UsersStorage,
     private val chatDataHelper: ChatDataHelper,
+    private val pushStorage: PushStorage,
+    private val pushNotificationsManager: PushNotificationsManager,
 ) : PushRepository {
 
     private val networkManager: NetworkManager by lazy {
@@ -61,6 +64,21 @@ public class PushRepositoryImpl(
             chatId = chatId,
         )
         return MessagesText(messagesTexts.joinToString(separator = "\n"))
+    }
+
+    override fun setShowNotificationsForChat(chatId: String, show: Boolean) {
+        pushStorage.setShowNotificationsForChat(
+            chatId = chatId,
+            show = show,
+        )
+    }
+
+    override fun isNotificationForChatMustBeShown(chatId: String): Boolean {
+        return pushStorage.isNotificationForChatMustBeShown(chatId = chatId)
+    }
+
+    override fun clearNotificationsForChat(chatId: String) {
+        pushNotificationsManager.clearNotificationsForChat(chatId)
     }
 
     private suspend fun sendIfNeeded(token: String, force: Boolean) {

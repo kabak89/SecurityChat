@@ -13,6 +13,7 @@ import com.security.chat.multiplatform.features.chat.component.api.PersonalChatC
 import com.security.chat.multiplatform.features.chat.domain.ChatModel
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
+import com.security.chat.multiplatform.features.push.domain.PushModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.onEach
 internal class PersonalChatViewModel(
     private val chatModel: ChatModel,
     private val params: PersonalChatComponent,
+    private val pushModel: PushModel,
 ) : BaseViewModel<PersonalChatState, PersonalChatEvent>() {
 
     val messages: Flow<PagingData<MessageUM>> =
@@ -60,8 +62,10 @@ internal class PersonalChatViewModel(
                 if (active) {
                     chatModel.syncMessages.startOnSubscribe()
                     chatModel.onViewActive()
+                    pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
                 } else {
                     chatModel.onViewInactive()
+                    pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
                 }
             }
             .launchIn(viewModelScope)
@@ -73,6 +77,8 @@ internal class PersonalChatViewModel(
                 updateState { it.copy(interlocutor = interlocutorUM) }
             }
             .launchIn(viewModelScope)
+
+        pushModel.clearNotificationsForChat(chatId = params.chatId)
     }
 
     override fun createInitialState(): PersonalChatState {
@@ -82,6 +88,11 @@ internal class PersonalChatViewModel(
             syncState = UiLceState.NotStarted,
             interlocutor = null,
         )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
     }
 
     fun onMessageEdited(message: String) {

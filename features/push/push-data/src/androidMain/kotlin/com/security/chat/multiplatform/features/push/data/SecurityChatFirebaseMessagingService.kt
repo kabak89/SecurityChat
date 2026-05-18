@@ -11,6 +11,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.log.Log
+import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
 import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilder
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -29,6 +30,7 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
     }
     private val pushRepository: PushRepository by inject()
     private val intentBuilder: IntentBuilder by inject()
+    private val pushStorage: PushStorage by inject()
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -65,6 +67,12 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                 createChannel(notificationManager)
 
                 val chatId = requireNotNull(data["chatId"])
+
+                if (!pushStorage.isNotificationForChatMustBeShown(chatId)) {
+                    Log.d { "push message for chat $chatId must not be shown" }
+                    return
+                }
+
                 val interlocutorName = requireNotNull(pushRepository.getInterlocutorName(chatId))
                 val serializedMessages = requireNotNull(data["messages"])
 

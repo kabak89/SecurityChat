@@ -29,6 +29,7 @@ internal class ChatDataHelperImpl(
 
     override suspend fun fetchAndSaveMessages(chatId: String) {
         val messages = fetchMessages(chatId = chatId)
+        if (messages.isEmpty()) return
         val messageIds = messages.map { it.id }
         val companionId = messages.first().authorId
 
