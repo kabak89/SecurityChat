@@ -3,7 +3,6 @@ package com.security.chat.multiplatform.features.authorize.domain
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignInStateInfo
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignInRepo
 import kotlinx.coroutines.flow.Flow
@@ -19,9 +18,7 @@ public interface SignInModel : ScopedModel {
 
     public fun setUsername(userName: String)
     public fun setPassword(password: String)
-    public fun getAuthResultFlow(): Flow<SignInResult?>
     public fun getStateFlow(): Flow<SignInStateInfo>
-
 }
 
 internal class SignInModelImpl(
@@ -39,12 +36,10 @@ internal class SignInModelImpl(
             val username = stateFlow.value.username
             val password = stateFlow.value.password
 
-            val result = signInRepo.signIn(
+            signInRepo.signIn(
                 username = username,
                 password = password,
             )
-
-            stateFlow.update { it.copy(signInResult = result) }
         }
 
     override fun setUsername(userName: String) {
@@ -55,18 +50,16 @@ internal class SignInModelImpl(
         stateFlow.update { it.copy(password = password) }
     }
 
-    override fun getAuthResultFlow(): Flow<SignInResult?> {
-        return stateFlow
-            .map { it.signInResult }
-            .distinctUntilChanged()
-    }
-
     override fun getStateFlow(): Flow<SignInStateInfo> {
         return stateFlow
             .map {
+                val username = it.username
+                val password = it.password
+
                 SignInStateInfo(
-                    username = it.username,
-                    password = it.password,
+                    username = username,
+                    password = password,
+                    isSignInEnabled = username.isNotBlank() && password.isNotBlank(),
                 )
             }
             .distinctUntilChanged()
@@ -75,7 +68,5 @@ internal class SignInModelImpl(
     private data class State(
         val username: String = "",
         val password: String = "",
-        val signInResult: SignInResult? = null,
     )
-
 }

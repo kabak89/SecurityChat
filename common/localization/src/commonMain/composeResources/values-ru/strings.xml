@@ -33,4 +33,10 @@
 
     <string name="push_channel_name_new_message">Новые сообщения</string>
     <string name="push_channel_description_new_message">Канал для новых сообщений в чате</string>
+
+    <string name="sign_in_user_not_found_error_title">Пользователь не найден</string>
+    <string name="sign_in_user_not_found_error_description">Пользователь с таким именем не найден</string>
+
+    <string name="sign_in_wrong_password_error_title">Неверный пароль</string>
+    <string name="sign_in_wrong_password_error_description">Введен неверный пароль для этого имени</string>
 </resources>

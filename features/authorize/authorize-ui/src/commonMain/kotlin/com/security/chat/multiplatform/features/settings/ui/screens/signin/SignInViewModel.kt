@@ -3,13 +3,23 @@ package com.security.chat.multiplatform.features.settings.ui.screens.signin
 import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
+import com.security.chat.multiplatform.common.core.error.NetworkError
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
-import com.security.chat.multiplatform.common.log.Log
+import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
+import com.security.chat.multiplatform.common.core.ui.entity.isLoading
+import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
+import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
-import com.security.chat.multiplatform.features.authorize.domain.entity.SignInResult
-import kotlinx.coroutines.flow.filterNotNull
+import com.security.chat.multiplatform.features.settings.ui.screens.signin.entity.AlertDialogDescriptor
+import com.security.chat.multiplatform.features.settings.ui.screens.signin.mapper.signInErrorMapper
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import ru.kode.remo.successResults
+import securitychat.common.localization.generated.resources.common_close
+import securitychat.common.localization.generated.resources.common_retry
 
 internal class SignInViewModel(
     private val signInModel: SignInModel,
@@ -24,40 +34,70 @@ internal class SignInViewModel(
                     oldState.copy(
                         username = domainState.username,
                         password = domainState.password,
+                        isSignInEnabled = domainState.isSignInEnabled,
                     )
                 }
             }
             .launchIn(viewModelScope)
 
-        signInModel.getAuthResultFlow()
-            .filterNotNull()
-            .onEach { result ->
-                when (result) {
-                    SignInResult.Success -> sendEvent(SignInEvent.Authorized)
-                    SignInResult.UserNotExists -> {
-                        //TODO
-                        Log.d { "UserNotExists" }
-                    }
-
-                    SignInResult.WrongPassword -> {
-                        //TODO
-                        Log.d { "WrongPassword" }
-                    }
-                }
-            }
-            .launchIn(viewModelScope)
-
-        signInModel.signIn.jobFlow.asLceState()
+        signInModel.signIn.jobFlow.asLceState().map { it.toUiLceState(::signInErrorMapper) }
             .onEach { state ->
                 val isLoading = state.isLoading
 
                 updateState { it.copy(isLoading = isLoading) }
 
-                val error = state.error
+                if (state is UiLceState.Error) {
+                    val cause = state.error.cause
 
-                if (error != null) {
-                    //TODO
+                    val alertDialogDescriptor = when {
+                        cause is NetworkError &&
+                                (cause.statusCode == 404 || cause.statusCode == 403) -> {
+                            val content = AlertDialogContent(
+                                title = state.error.title,
+                                message = state.error.description,
+                                positiveButtonText = resPrintableText(StringRes.common_close),
+                            )
+                            AlertDialogDescriptor(
+                                content = content,
+                                dismissAction = {
+                                    updateState { it.copy(alertDialogDescriptor = null) }
+                                },
+                                positiveAction = {
+                                    updateState { it.copy(alertDialogDescriptor = null) }
+                                },
+                            )
+                        }
+
+                        else -> {
+                            val content = AlertDialogContent(
+                                title = state.error.title,
+                                message = state.error.description,
+                                positiveButtonText = resPrintableText(StringRes.common_close),
+                                negativeButtonText = resPrintableText(StringRes.common_retry),
+                            )
+                            AlertDialogDescriptor(
+                                content = content,
+                                dismissAction = {
+                                    updateState { it.copy(alertDialogDescriptor = null) }
+                                },
+                                positiveAction = {
+                                    updateState { it.copy(alertDialogDescriptor = null) }
+                                },
+                                negativeAction = {
+                                    updateState { it.copy(alertDialogDescriptor = null) }
+                                    signInModel.signIn.startOnSubscribe()
+                                },
+                            )
+                        }
+                    }
+                    updateState { it.copy(alertDialogDescriptor = alertDialogDescriptor) }
                 }
+            }
+            .launchIn(viewModelScope)
+
+        signInModel.signIn.jobFlow.successResults()
+            .onEach {
+                sendEvent(SignInEvent.Authorized)
             }
             .launchIn(viewModelScope)
     }
@@ -67,6 +107,8 @@ internal class SignInViewModel(
             username = "",
             password = "",
             isLoading = false,
+            isSignInEnabled = false,
+            alertDialogDescriptor = null,
         )
     }
 

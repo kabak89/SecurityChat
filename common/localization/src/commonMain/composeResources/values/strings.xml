@@ -33,4 +33,10 @@
 
     <string name="push_channel_name_new_message">New messages</string>
     <string name="push_channel_description_new_message">Channel for new chat messages</string>
+
+    <string name="sign_in_user_not_found_error_title">User not found</string>
+    <string name="sign_in_user_not_found_error_description">No user with this name was found</string>
+
+    <string name="sign_in_wrong_password_error_title">Wrong password</string>
+    <string name="sign_in_wrong_password_error_description">The password entered for this username is incorrect</string>
 </resources>

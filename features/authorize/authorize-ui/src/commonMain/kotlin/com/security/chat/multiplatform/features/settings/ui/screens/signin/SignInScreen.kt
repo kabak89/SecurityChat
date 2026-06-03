@@ -25,6 +25,7 @@ import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignInComponent
 import kotlinx.coroutines.flow.Flow
@@ -128,8 +129,17 @@ private fun SignInContent(
                     .padding(horizontal = 16.dp),
                 content = ButtonContent.Text("Sign In"),
                 onClicked = onSignInClicked,
+                enabled = state.isSignInEnabled,
             )
         }
+    }
+    if (state.alertDialogDescriptor != null) {
+        AlertDialogComponent(
+            content = state.alertDialogDescriptor.content,
+            onDismissRequest = state.alertDialogDescriptor.dismissAction,
+            onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
+            onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+        )
     }
 }
 
@@ -143,6 +153,8 @@ internal fun SignInContentPreview() {
                 username = "john.doe",
                 password = "password",
                 isLoading = false,
+                isSignInEnabled = false,
+                alertDialogDescriptor = null,
             ),
             events = emptyFlow(),
             onUsernameTextChanged = {},
@@ -164,6 +176,8 @@ internal fun SignInContentPreviewLoading() {
                 username = "john.doe",
                 password = "password",
                 isLoading = true,
+                isSignInEnabled = false,
+                alertDialogDescriptor = null,
             ),
             events = emptyFlow(),
             onUsernameTextChanged = {},
