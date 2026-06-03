@@ -11,7 +11,7 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataModule
 import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
-import com.security.chat.multiplatform.features.settings.ui.di.authorizeUiModule
+import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
 import kotlinx.serialization.Serializable
 import org.koin.mp.KoinPlatform.getKoin
 

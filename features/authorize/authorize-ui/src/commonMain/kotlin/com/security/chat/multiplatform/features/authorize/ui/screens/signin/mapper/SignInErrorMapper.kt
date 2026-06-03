@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signin.mapper
+package com.security.chat.multiplatform.features.authorize.ui.screens.signin.mapper
 
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.localization.StringRes

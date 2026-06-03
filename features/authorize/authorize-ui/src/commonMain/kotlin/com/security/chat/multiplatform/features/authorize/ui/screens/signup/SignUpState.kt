@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signup
+package com.security.chat.multiplatform.features.authorize.ui.screens.signup
 
 internal data class SignUpState(
     val username: String,

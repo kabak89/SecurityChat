@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signin.entity
+package com.security.chat.multiplatform.features.authorize.ui.screens.signin.entity
 
 import androidx.compose.runtime.Immutable
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent

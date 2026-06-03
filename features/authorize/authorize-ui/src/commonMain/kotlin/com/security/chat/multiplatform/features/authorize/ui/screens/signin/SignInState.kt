@@ -1,6 +1,6 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signin
+package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
-import com.security.chat.multiplatform.features.settings.ui.screens.signin.entity.AlertDialogDescriptor
+import com.security.chat.multiplatform.features.authorize.ui.screens.signin.entity.AlertDialogDescriptor
 
 internal data class SignInState(
     val username: String,

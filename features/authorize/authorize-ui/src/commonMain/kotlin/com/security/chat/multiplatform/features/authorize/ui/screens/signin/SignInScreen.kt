@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signin
+package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

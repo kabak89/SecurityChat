@@ -8,11 +8,11 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
 import com.security.chat.multiplatform.features.root.component.api.RootComponent
 import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
 import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
-import com.security.chat.multiplatform.features.settings.ui.screens.authorize.AuthorizeScreen
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
 
 @Composable

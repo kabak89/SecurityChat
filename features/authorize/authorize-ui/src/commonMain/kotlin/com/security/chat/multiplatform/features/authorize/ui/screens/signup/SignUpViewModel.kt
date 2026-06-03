@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signup
+package com.security.chat.multiplatform.features.authorize.ui.screens.signup
 
 import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState

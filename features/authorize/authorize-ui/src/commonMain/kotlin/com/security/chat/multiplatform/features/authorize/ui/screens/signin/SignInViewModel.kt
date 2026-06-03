@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.signin
+package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
 import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.domain.asLceState
@@ -12,8 +12,8 @@ import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
-import com.security.chat.multiplatform.features.settings.ui.screens.signin.entity.AlertDialogDescriptor
-import com.security.chat.multiplatform.features.settings.ui.screens.signin.mapper.signInErrorMapper
+import com.security.chat.multiplatform.features.authorize.ui.screens.signin.entity.AlertDialogDescriptor
+import com.security.chat.multiplatform.features.authorize.ui.screens.signin.mapper.signInErrorMapper
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach

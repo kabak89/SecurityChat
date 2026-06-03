@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.settings.ui.screens.authorize
+package com.security.chat.multiplatform.features.authorize.ui.screens.authorize
 
 import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.extensions.compose.stack.Children
@@ -6,8 +6,8 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
-import com.security.chat.multiplatform.features.settings.ui.screens.signin.SignInScreen
-import com.security.chat.multiplatform.features.settings.ui.screens.signup.SignUpScreen
+import com.security.chat.multiplatform.features.authorize.ui.screens.signin.SignInScreen
+import com.security.chat.multiplatform.features.authorize.ui.screens.signup.SignUpScreen
 
 @Composable
 public fun AuthorizeScreen(component: AuthorizeComponent) {
