@@ -1,9 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.googleServices)
 }
 
@@ -22,6 +21,24 @@ kotlin {
 
 android {
     val appId = "com.security.chat.multiplatform.android"
+    val signingProperties = Properties().apply {
+        val file = rootProject.file("keystore.properties")
+        if (file.exists()) {
+            file.inputStream().use(::load)
+        }
+    }
+    val releaseStoreFilePath = signingProperties.getProperty("storeFile")
+        ?: providers.gradleProperty("RELEASE_STORE_FILE").orNull
+    val releaseStorePassword = signingProperties.getProperty("storePassword")
+        ?: providers.gradleProperty("RELEASE_STORE_PASSWORD").orNull
+    val releaseKeyAlias = signingProperties.getProperty("keyAlias")
+        ?: providers.gradleProperty("RELEASE_KEY_ALIAS").orNull
+    val releaseKeyPassword = signingProperties.getProperty("keyPassword")
+        ?: providers.gradleProperty("RELEASE_KEY_PASSWORD").orNull
+    val hasReleaseSigning = !releaseStoreFilePath.isNullOrBlank() &&
+            !releaseStorePassword.isNullOrBlank() &&
+            !releaseKeyAlias.isNullOrBlank() &&
+            !releaseKeyPassword.isNullOrBlank()
 
     namespace = appId
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -31,10 +48,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
-    }
-    buildFeatures {
-        compose = true
+        versionName = "0.0.1"
     }
     packaging {
         resources {
@@ -42,9 +56,26 @@ android {
             excludes += "DebugProbesKt.bin"
         }
     }
+
+    val variantNameRelease = "release"
+
+    signingConfigs {
+        create(variantNameRelease) {
+            if (hasReleaseSigning) {
+                storeFile = file(releaseStoreFilePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
-        getByName("release") {
+        getByName(variantNameRelease) {
             isMinifyEnabled = true
+            isShrinkResources = true
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName(variantNameRelease)
+            }
         }
     }
     compileOptions {

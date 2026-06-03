@@ -16,3 +16,7 @@ xcuserdata
 
 # Firebase configuration: must be downloaded from Firebase console
 androidApp/google-services.json
+
+# files for publishing
+keystore.properties
+release.keystore
