@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -40,6 +42,27 @@ public sealed interface PrintableText {
 
 }
 
+public suspend fun PrintableText.resolveNoCompose(): String {
+    return when (this) {
+        is PrintableText.Raw -> this.s
+
+        is PrintableText.PluralRes -> {
+            getPluralString(
+                this.resId,
+                this.quantity,
+                *this.params.resolveFormatArgsNoCompose(),
+            )
+        }
+
+        is PrintableText.StringRes -> {
+            getString(
+                this.resId,
+                *this.params.resolveFormatArgsNoCompose(),
+            )
+        }
+    }
+}
+
 @Composable
 public fun PrintableText.resolve(): String {
     return when (this) {
@@ -68,6 +91,18 @@ internal fun Array<out Any>.resolveFormatArgs(): Array<Any> {
         .map {
             if (it is PrintableText) {
                 it.resolve()
+            } else {
+                it
+            }
+        }
+        .toTypedArray()
+}
+
+internal suspend fun Array<out Any>.resolveFormatArgsNoCompose(): Array<Any> {
+    return this
+        .map {
+            if (it is PrintableText) {
+                it.resolveNoCompose()
             } else {
                 it
             }

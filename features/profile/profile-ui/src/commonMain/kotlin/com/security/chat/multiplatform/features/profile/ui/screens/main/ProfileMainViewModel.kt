@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.profile.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
+import com.mobilebytelabs.kmptoolkit.clipboard.copyToClipboard
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.localization.StringRes
@@ -8,6 +9,8 @@ import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
+import com.security.chat.multiplatform.common.device.info.DeviceInfoManager
+import com.security.chat.multiplatform.common.device.info.entity.Platform
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.features.profile.domain.ProfileModel
 import com.security.chat.multiplatform.features.profile.ui.screens.main.entity.DialogContent
@@ -18,10 +21,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import securitychat.common.localization.generated.resources.common_close
 import securitychat.common.localization.generated.resources.common_retry
+import securitychat.common.localization.generated.resources.profile_copied
 
 internal class ProfileMainViewModel(
     private val profileModel: ProfileModel,
-) : BaseViewModel<ProfileMainState, Unit>() {
+    private val deviceInfoManager: DeviceInfoManager,
+) : BaseViewModel<ProfileMainState, ProfileMainEvent>() {
 
     override fun onPostStart() {
         super.onPostStart()
@@ -64,7 +69,12 @@ internal class ProfileMainViewModel(
         profileModel.getProfileFlow()
             .filterNotNull()
             .onEach { profile ->
-                updateState { it.copy(login = profile.name) }
+                updateState {
+                    it.copy(
+                        login = profile.name,
+                        privateKey = profile.privateKey,
+                    )
+                }
             }
             .launchIn(viewModelScope)
 
@@ -121,6 +131,8 @@ internal class ProfileMainViewModel(
             changeNameState = UiLceState.NotStarted,
             loginChangeEnabled = false,
             dialogContent = null,
+            privateKey = "",
+            isPrivateKeyHidden = true,
         )
     }
 
@@ -130,5 +142,23 @@ internal class ProfileMainViewModel(
 
     fun onUpdateUsernameClicked() {
         profileModel.updateUserInfo.startOnSubscribe()
+    }
+
+    fun onTogglePrivateKeyVisibilityClicked() {
+        updateState { it.copy(isPrivateKeyHidden = !it.isPrivateKeyHidden) }
+    }
+
+    fun onCopyPrivateKeyClicked() {
+        copyToClipboard(currentViewState.privateKey)
+
+        when (deviceInfoManager.getPlatform()) {
+            Platform.Android -> Unit
+
+            Platform.IOS,
+            Platform.Desktop,
+                -> {
+                sendEvent(ProfileMainEvent.Toast(resPrintableText(StringRes.profile_copied)))
+            }
+        }
     }
 }

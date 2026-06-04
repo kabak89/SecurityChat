@@ -120,7 +120,7 @@ public class PushRepositoryImpl(
             request = RegisterDeviceTokenRequest(
                 userId = userId,
                 token = token,
-                platform = deviceInfoManager.getPlatform(),
+                platform = deviceInfoManager.getPlatform().platformName,
             ),
         )
     }

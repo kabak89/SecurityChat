@@ -25,9 +25,14 @@
     <string name="error_unknown_description">Something went wrong</string>
 
     <string name="profile_title">Profile</string>
-    <string name="profile_login_label">Login:</string>
+    <string name="profile_login_label">Login</string>
     <string name="profile_login_placeholder">Username</string>
     <string name="profile_update">Update</string>
+    <string name="profile_show_private_key">Show</string>
+    <string name="profile_hide_private_key">Hide</string>
+    <string name="profile_copy_private_key">Copy</string>
+    <string name="profile_copied">Copied</string>
+    <string name="profile_section_private_key">Private key</string>
     <string name="profile_update_conflict_error_title">Error of profile update</string>
     <string name="profile_update_conflict_error_description">User with such login already exists</string>
 
@@ -36,7 +41,6 @@
 
     <string name="sign_in_user_not_found_error_title">User not found</string>
     <string name="sign_in_user_not_found_error_description">No user with this name was found</string>
-
     <string name="sign_in_wrong_password_error_title">Wrong password</string>
     <string name="sign_in_wrong_password_error_description">The password entered for this username is incorrect</string>
 </resources>

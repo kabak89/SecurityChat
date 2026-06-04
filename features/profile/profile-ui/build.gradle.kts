@@ -12,9 +12,12 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.resources)
+            implementation(libs.kmp.clipboard)
+            implementation(libs.kmp.toast)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)
+            implementation(projects.common.deviceInfo)
 
             api(projects.features.profile.profileComponentApi)
 

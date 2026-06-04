@@ -25,9 +25,14 @@
     <string name="error_unknown_description">Что то пошло не так</string>
 
     <string name="profile_title">Профиль</string>
-    <string name="profile_login_label">Имя пользователя:</string>
+    <string name="profile_login_label">Имя пользователя</string>
     <string name="profile_login_placeholder">Имя</string>
     <string name="profile_update">Обновить</string>
+    <string name="profile_show_private_key">Показать</string>
+    <string name="profile_hide_private_key">Скрыть</string>
+    <string name="profile_copy_private_key">Скопировать</string>
+    <string name="profile_copied">Скопировано</string>
+    <string name="profile_section_private_key">Приватный ключ</string>
     <string name="profile_update_conflict_error_title">Ошибка обновления профиля</string>
     <string name="profile_update_conflict_error_description">Пользователь с таким логином уже существует</string>
 
@@ -36,7 +41,6 @@
 
     <string name="sign_in_user_not_found_error_title">Пользователь не найден</string>
     <string name="sign_in_user_not_found_error_description">Пользователь с таким именем не найден</string>
-
     <string name="sign_in_wrong_password_error_title">Неверный пароль</string>
     <string name="sign_in_wrong_password_error_description">Введен неверный пароль для этого имени</string>
 </resources>

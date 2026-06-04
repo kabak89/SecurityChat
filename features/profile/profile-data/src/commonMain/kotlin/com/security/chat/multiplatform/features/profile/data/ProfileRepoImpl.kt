@@ -20,8 +20,11 @@ internal class ProfileRepoImpl(
 
     override suspend fun getProfile(): Profile? {
         val name = userStorage.getUserName() ?: return null
+        val privateKey = userStorage.getKeys()?.privateKey ?: return null
+
         return Profile(
             name = name,
+            privateKey = privateKey,
         )
     }
 

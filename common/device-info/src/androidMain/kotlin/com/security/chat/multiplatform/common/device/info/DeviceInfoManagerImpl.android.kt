@@ -1,6 +1,8 @@
 package com.security.chat.multiplatform.common.device.info
 
+import com.security.chat.multiplatform.common.device.info.entity.Platform
+
 internal actual class DeviceInfoManagerImpl : DeviceInfoManager {
 
-    override fun getPlatform(): String = "android"
+    override fun getPlatform(): Platform = Platform.Android
 }

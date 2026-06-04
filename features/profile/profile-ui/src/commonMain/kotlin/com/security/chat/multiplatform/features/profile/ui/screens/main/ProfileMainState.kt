@@ -11,6 +11,8 @@ internal data class ProfileMainState(
     val login: String,
     val changeNameState: UiLceState,
     val loginChangeEnabled: Boolean,
+    val privateKey: String,
+    val isPrivateKeyHidden: Boolean,
     val dialogContent: DialogContent?,
 ) {
     val showLoading: Boolean = fetchInfoState.isLoading || changeNameState.isLoading
