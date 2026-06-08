@@ -220,8 +220,11 @@ private fun ProfileContent(
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        color = AppTheme.colors.backgroundSecondary,
+                        shape = AppTheme.shapes.roundedRectangle16,
+                    )
                     .blur(radius = animatedBlur)
-                    .background(AppTheme.colors.backgroundSecondary)
                     .padding(8.dp),
                 text = state.privateKey,
                 color = AppTheme.colors.textSecondary,
