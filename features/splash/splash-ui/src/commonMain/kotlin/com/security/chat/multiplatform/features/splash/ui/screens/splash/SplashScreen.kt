@@ -12,6 +12,7 @@ import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
+import com.security.chat.multiplatform.features.splash.component.UserState
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -24,8 +25,7 @@ public fun SplashScreen(
                 .fillMaxSize(),
             state = state,
             events = vm.viewEvent,
-            onUserNotAuthorized = component::onGoAuthorization,
-            onUserAuthorized = component::onUserAuthorized,
+            onSplashFinished = component::onFinished,
         )
     }
 }
@@ -35,15 +35,13 @@ private fun SplashContent(
     modifier: Modifier = Modifier,
     state: SplashState,
     events: Flow<SplashEvent>,
-    onUserNotAuthorized: () -> Unit,
-    onUserAuthorized: () -> Unit,
+    onSplashFinished: (userState: UserState) -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                SplashEvent.UserNotAuthorized -> onUserNotAuthorized()
-                SplashEvent.UserAuthorized -> onUserAuthorized()
+                is SplashEvent.UserStateReceived -> onSplashFinished(event.userState)
             }
         },
     )

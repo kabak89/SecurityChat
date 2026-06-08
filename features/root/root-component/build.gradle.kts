@@ -14,11 +14,12 @@ kotlin {
 
             implementation(projects.common.coreThreading)
 
+            implementation(projects.features.push.pushDomain)
             implementation(projects.features.root.rootUi)
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.splash.splashComponent)
             implementation(projects.features.authorize.authorizeComponent)
-            implementation(projects.features.push.pushDomain)
+            implementation(projects.features.onboarding.onboardingComponent)
         }
     }
 }

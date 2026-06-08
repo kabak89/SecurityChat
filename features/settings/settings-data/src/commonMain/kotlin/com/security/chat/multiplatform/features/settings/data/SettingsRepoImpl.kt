@@ -20,8 +20,7 @@ internal class SettingsRepoImpl(
 ) : SettingsRepo {
 
     override suspend fun logout() {
-        userStorage.clearUserId()
-        userStorage.clearKeys()
+        userStorage.clearAll()
         chatsStorage.clearAll()
         chatStorage.clearAll()
     }

@@ -11,4 +11,7 @@ public class SplashRepoImpl(
         return userStorage.isUserAuthorized()
     }
 
+    override suspend fun isOnboardingPassed(): Boolean {
+        return userStorage.getIsOnboardingPassed()
+    }
 }

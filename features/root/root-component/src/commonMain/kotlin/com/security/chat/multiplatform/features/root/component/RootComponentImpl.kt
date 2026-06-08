@@ -16,6 +16,8 @@ import com.security.chat.multiplatform.features.authorize.component.AuthorizeCom
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
+import com.security.chat.multiplatform.features.onboarding.component.OnboardingComponentImpl
+import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent
 import com.security.chat.multiplatform.features.push.domain.PushModel
 import com.security.chat.multiplatform.features.root.component.api.RootComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
@@ -156,6 +158,12 @@ public class RootComponentImpl(
                     component = createMainComponent(componentContext = componentContext),
                 )
             }
+
+            Params.Onboarding -> {
+                RootComponent.Child.Onboarding(
+                    component = createOnboardingComponent(componentContext = componentContext),
+                )
+            }
         }
     }
 
@@ -174,8 +182,13 @@ public class RootComponentImpl(
     ): SplashComponent {
         return SplashComponentImpl(
             componentContext = componentContext,
-            goToAuthorize = { navigation.replaceAll(Params.Authorize) },
-            goAuthorizedZone = { navigation.replaceAll(Params.Main) },
+            onSplashFinished = { state ->
+                when {
+                    !state.isAuthorized -> navigation.replaceAll(Params.Authorize)
+                    !state.isOnboardingPassed -> navigation.replaceAll(Params.Onboarding)
+                    else -> navigation.replaceAll(Params.Main)
+                }
+            },
         )
     }
 
@@ -183,6 +196,15 @@ public class RootComponentImpl(
         componentContext: ComponentContext,
     ): AuthorizeComponent {
         return AuthorizeComponentImpl(
+            componentContext = componentContext,
+            onFinished = { navigation.replaceAll(Params.Main) },
+        )
+    }
+
+    private fun createOnboardingComponent(
+        componentContext: ComponentContext,
+    ): OnboardingComponent {
+        return OnboardingComponentImpl(
             componentContext = componentContext,
             onFinished = { navigation.replaceAll(Params.Main) },
         )
@@ -199,5 +221,8 @@ public class RootComponentImpl(
 
         @Serializable
         data object Main : Params
+
+        @Serializable
+        data object Onboarding : Params
     }
 }

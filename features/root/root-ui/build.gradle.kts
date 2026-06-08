@@ -23,6 +23,7 @@ kotlin {
             implementation(projects.features.main.mainUi)
             implementation(projects.features.main.mainComponent)
             implementation(projects.features.settings.settingsDataStorage)
+            implementation(projects.features.onboarding.onboardingUi)
         }
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)

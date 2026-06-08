@@ -10,8 +10,7 @@ import com.security.chat.multiplatform.features.splash.ui.di.splashUiModule
 import org.koin.core.qualifier.named
 
 public class SplashComponentImpl(
-    private val goToAuthorize: () -> Unit,
-    private val goAuthorizedZone: () -> Unit,
+    private val onSplashFinished: (userState: UserState) -> Unit,
     componentContext: ComponentContext,
 ) : SplashComponent,
     BaseComponentImpl(
@@ -35,12 +34,8 @@ public class SplashComponentImpl(
         }
     }
 
-    override fun onGoAuthorization() {
-        goToAuthorize()
-    }
-
-    override fun onUserAuthorized() {
-        goAuthorizedZone()
+    override fun onFinished(userState: UserState) {
+        onSplashFinished(userState)
     }
 }
 

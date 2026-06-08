@@ -10,6 +10,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeScreen
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
+import com.security.chat.multiplatform.features.onboarding.ui.screens.root.OnboardingRootScreen
 import com.security.chat.multiplatform.features.root.component.api.RootComponent
 import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
 import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
@@ -41,6 +42,7 @@ public fun RootContent(rootComponent: RootComponent) {
                     is RootComponent.Child.Splash -> SplashScreen(component = child.component)
                     is RootComponent.Child.Authorize -> AuthorizeScreen(component = child.component)
                     is RootComponent.Child.Main -> MainScreen(component = child.component)
+                    is RootComponent.Child.Onboarding -> OnboardingRootScreen(child.component)
                 }
             },
         )

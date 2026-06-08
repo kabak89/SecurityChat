@@ -38,6 +38,7 @@ haze = "1.7.2"
 paging = "3.5.0-rc01"
 kmp-clipboard = "0.1.0"
 kmp-toast = "0.1.0"
+navigationeventCompose = "1.1.0"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -118,6 +119,8 @@ kmp-toast = { module = "io.github.mobilebytelabs:kmp-toast", version.ref = "kmp-
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 android-gradleApi = { module = "com.android.tools.build:gradle-api", version.ref = "agp" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "navigationeventCompose" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

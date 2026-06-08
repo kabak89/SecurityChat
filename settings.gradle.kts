@@ -113,3 +113,10 @@ include(
     ":features:root:root-component-api",
     ":features:root:root-ui",
 )
+include(
+    ":features:onboarding:onboarding-component",
+    ":features:onboarding:onboarding-component-api",
+    ":features:onboarding:onboarding-ui",
+    ":features:onboarding:onboarding-domain",
+    ":features:onboarding:onboarding-data",
+)

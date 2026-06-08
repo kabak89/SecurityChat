@@ -7,12 +7,13 @@ public interface UserStorage {
     public suspend fun isUserAuthorized(): Boolean
     public suspend fun saveUserId(userId: String)
     public suspend fun getUserId(): String?
-    public suspend fun clearUserId()
     public suspend fun saveKeys(cryptoKeys: CryptoKeys)
     public suspend fun getKeys(): CryptoKeys?
-    public suspend fun clearKeys()
     public suspend fun saveUserName(name: String)
     public suspend fun getUserName(): String?
+    public suspend fun saveOnboardingPassed()
+    public suspend fun getIsOnboardingPassed(): Boolean
+    public suspend fun clearAll()
 }
 
 internal class UserStorageImpl(
@@ -32,13 +33,6 @@ internal class UserStorageImpl(
 
     override suspend fun getUserId(): String? {
         return encryptedSettings.getString(key = KEY_USER_ID)
-    }
-
-    override suspend fun clearUserId() {
-        encryptedSettings.putString(
-            key = KEY_USER_ID,
-            value = null,
-        )
     }
 
     override suspend fun saveKeys(cryptoKeys: CryptoKeys) {
@@ -67,17 +61,6 @@ internal class UserStorageImpl(
         )
     }
 
-    override suspend fun clearKeys() {
-        encryptedSettings.putString(
-            key = KEY_PUBLIC_KEY,
-            value = null,
-        )
-        encryptedSettings.putString(
-            key = KEY_PRIVATE_KEY,
-            value = null,
-        )
-    }
-
     override suspend fun saveUserName(name: String) {
         encryptedSettings.putString(
             key = KEY_USER_NAME,
@@ -88,9 +71,44 @@ internal class UserStorageImpl(
     override suspend fun getUserName(): String? {
         return encryptedSettings.getString(key = KEY_USER_NAME)
     }
+
+    override suspend fun saveOnboardingPassed() {
+        encryptedSettings.putBoolean(
+            key = KEY_IS_ONBOARDING_PASSED,
+            value = true,
+        )
+    }
+
+    override suspend fun getIsOnboardingPassed(): Boolean {
+        return encryptedSettings.getBoolean(KEY_IS_ONBOARDING_PASSED) ?: false
+    }
+
+    override suspend fun clearAll() {
+        encryptedSettings.putString(
+            key = KEY_USER_ID,
+            value = null,
+        )
+        encryptedSettings.putString(
+            key = KEY_PUBLIC_KEY,
+            value = null,
+        )
+        encryptedSettings.putString(
+            key = KEY_PRIVATE_KEY,
+            value = null,
+        )
+        encryptedSettings.putString(
+            key = KEY_USER_NAME,
+            value = null,
+        )
+        encryptedSettings.putBoolean(
+            key = KEY_IS_ONBOARDING_PASSED,
+            value = null,
+        )
+    }
 }
 
 private const val KEY_USER_ID = "KEY_USER_ID"
 private const val KEY_PUBLIC_KEY = "KEY_PUBLIC_KEY"
 private const val KEY_PRIVATE_KEY = "KEY_PRIVATE_KEY"
 private const val KEY_USER_NAME = "KEY_USER_NAME"
+private const val KEY_IS_ONBOARDING_PASSED = "KEY_IS_ONBOARDING_PASSED"

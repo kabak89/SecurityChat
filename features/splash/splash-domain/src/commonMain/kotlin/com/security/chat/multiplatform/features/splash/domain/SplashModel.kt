@@ -15,7 +15,7 @@ import ru.kode.remo.Task0
 public interface SplashModel : ScopedModel {
     public val fetchUserState: Task0<Unit>
 
-    public fun getUserStateFlow(): Flow<UserState>
+    public fun getUserStateFlow(): Flow<UserState?>
 }
 
 internal class SplashModelImpl(
@@ -31,22 +31,22 @@ internal class SplashModelImpl(
     override val fetchUserState: Task0<Unit> =
         task { ->
             val isUserAuthorized = splashRepo.isUserAuthorized()
-            val userState = if (isUserAuthorized) {
-                UserState.Authorized
-            } else {
-                UserState.NotAuthorized
-            }
+            val isOnboardingPassed = splashRepo.isOnboardingPassed()
+            val userState = UserState(
+                isAuthorized = isUserAuthorized,
+                isOnboardingPassed = isOnboardingPassed,
+            )
             stateFlow.update { it.copy(userState = userState) }
         }
 
-    override fun getUserStateFlow(): Flow<UserState> {
+    override fun getUserStateFlow(): Flow<UserState?> {
         return stateFlow
             .map { it.userState }
             .distinctUntilChanged()
     }
 
     private data class State(
-        val userState: UserState = UserState.Unknown,
+        val userState: UserState? = null,
     )
 
 }
