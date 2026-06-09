@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.onboarding.ui.screens.main
+package com.security.chat.multiplatform.features.onboarding.ui.screens.notificationpermission
 
 import androidx.lifecycle.viewModelScope
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
@@ -7,22 +7,22 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import ru.kode.remo.successResults
 
-internal class OnboardingMainViewModel(
+internal class NotificationPermissionViewModel(
     private val onboardingModel: OnboardingModel,
-) : BaseViewModel<OnboardingMainState, OnboardingMainEvent>() {
+) : BaseViewModel<NotificationPermissionState, NotificationPermissionEvent>() {
 
     override fun onPostStart() {
         super.onPostStart()
 
         onboardingModel.finishOnboarding.jobFlow.successResults()
             .onEach {
-                sendEvent(OnboardingMainEvent.Finished)
+                sendEvent(NotificationPermissionEvent.Finished)
             }
             .launchIn(viewModelScope)
     }
 
-    override fun createInitialState(): OnboardingMainState {
-        return OnboardingMainState()
+    override fun createInitialState(): NotificationPermissionState {
+        return NotificationPermissionState()
     }
 
     fun onFinishOnboardingClicked() {

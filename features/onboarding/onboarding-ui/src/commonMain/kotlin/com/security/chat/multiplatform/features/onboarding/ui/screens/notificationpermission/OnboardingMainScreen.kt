@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.onboarding.ui.screens.main
+package com.security.chat.multiplatform.features.onboarding.ui.screens.notificationpermission
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,11 +29,11 @@ import kotlinx.coroutines.flow.emptyFlow
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-internal fun OnboardingMainScreen(
+internal fun NotificationPermissionScreen(
     component: OnboardingMainComponent,
 ) {
-    Screen(component) { state: OnboardingMainState, vm: OnboardingMainViewModel ->
-        OnboardingMainScreenContent(
+    Screen(component) { state: NotificationPermissionState, vm: NotificationPermissionViewModel ->
+        NotificationPermissionScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .imePadding(),
@@ -52,10 +52,10 @@ internal fun OnboardingMainScreen(
 }
 
 @Composable
-private fun OnboardingMainScreenContent(
+private fun NotificationPermissionScreenContent(
     modifier: Modifier,
-    state: OnboardingMainState,
-    events: Flow<OnboardingMainEvent>,
+    state: NotificationPermissionState,
+    events: Flow<NotificationPermissionEvent>,
     onSkipClicked: () -> Unit,
     onFinishClicked: () -> Unit,
     close: () -> Unit,
@@ -64,7 +64,7 @@ private fun OnboardingMainScreenContent(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                OnboardingMainEvent.Finished -> close()
+                NotificationPermissionEvent.Finished -> close()
             }
         },
     )
@@ -107,11 +107,11 @@ private fun OnboardingMainScreenContent(
 
 @Preview
 @Composable
-internal fun OnboardingMainScreenPreview() {
+internal fun NotificationPermissionScreenPreview() {
     AppTheme {
-        OnboardingMainScreenContent(
+        NotificationPermissionScreenContent(
             modifier = Modifier.fillMaxSize(),
-            state = OnboardingMainState(),
+            state = NotificationPermissionState(),
             events = emptyFlow(),
             onSkipClicked = {},
             onFinishClicked = {},

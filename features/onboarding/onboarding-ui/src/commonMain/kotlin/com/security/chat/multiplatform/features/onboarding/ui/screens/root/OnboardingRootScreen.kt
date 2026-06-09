@@ -6,7 +6,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent
-import com.security.chat.multiplatform.features.onboarding.ui.screens.main.OnboardingMainScreen
+import com.security.chat.multiplatform.features.onboarding.ui.screens.notificationpermission.NotificationPermissionScreen
 
 @Composable
 public fun OnboardingRootScreen(
@@ -22,7 +22,7 @@ public fun OnboardingRootScreen(
         content = {
             when (val child = it.instance) {
                 is OnboardingComponent.Child.OnboardingMain -> {
-                    OnboardingMainScreen(
+                    NotificationPermissionScreen(
                         component = child.component,
                     )
                 }
