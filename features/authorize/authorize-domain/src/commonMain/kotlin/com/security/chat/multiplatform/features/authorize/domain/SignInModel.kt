@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 
 public interface SignInModel : ScopedModel {
@@ -42,6 +43,15 @@ internal class SignInModelImpl(
             )
         }
 
+    override fun onPostStart() {
+        super.onPostStart()
+
+        scope.launch {
+            val onboardingPassed = signInRepo.isOnboardingPassed()
+            stateFlow.update { it.copy(isOnboardingPassed = onboardingPassed) }
+        }
+    }
+
     override fun setUsername(userName: String) {
         stateFlow.update { it.copy(username = userName) }
     }
@@ -60,6 +70,7 @@ internal class SignInModelImpl(
                     username = username,
                     password = password,
                     isSignInEnabled = username.isNotBlank() && password.isNotBlank(),
+                    isOnboardingPassed = it.isOnboardingPassed,
                 )
             }
             .distinctUntilChanged()
@@ -68,5 +79,6 @@ internal class SignInModelImpl(
     private data class State(
         val username: String = "",
         val password: String = "",
+        val isOnboardingPassed: Boolean = false,
     )
 }

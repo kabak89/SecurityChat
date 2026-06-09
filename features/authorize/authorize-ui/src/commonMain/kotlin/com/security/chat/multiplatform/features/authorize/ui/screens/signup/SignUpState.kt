@@ -6,4 +6,5 @@ internal data class SignUpState(
     val passwordRepeat: String,
     val isLoading: Boolean,
     val nextButtonEnabled: Boolean,
+    val isOnboardingPassed: Boolean,
 )

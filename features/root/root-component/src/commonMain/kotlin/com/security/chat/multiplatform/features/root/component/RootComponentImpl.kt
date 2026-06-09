@@ -197,7 +197,12 @@ public class RootComponentImpl(
     ): AuthorizeComponent {
         return AuthorizeComponentImpl(
             componentContext = componentContext,
-            onFinished = { navigation.replaceAll(Params.Main) },
+            onFinished = { state ->
+                when (state.isOnboardingPassed) {
+                    true -> navigation.replaceAll(Params.Main)
+                    false -> navigation.replaceAll(Params.Onboarding)
+                }
+            },
         )
     }
 

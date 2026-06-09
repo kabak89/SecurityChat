@@ -9,10 +9,14 @@ public interface AuthorizeComponent : BackHandlerOwner {
     public val childStack: Value<ChildStack<*, Child>>
 
     public fun onBackClicked()
-    public fun onCloseClicked()
+    public fun onCloseClicked(userState: UserState)
 
     public sealed interface Child {
         public class SignUp(public val component: SignUpComponent) : Child
         public class SignIn(public val component: SignInComponent) : Child
     }
 }
+
+public data class UserState(
+    val isOnboardingPassed: Boolean,
+)

@@ -4,12 +4,13 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.SignInComponent
+import com.security.chat.multiplatform.features.authorize.component.api.UserState
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
 import org.koin.core.qualifier.named
 
 public class SignInComponentImpl(
     private val onSignUp: () -> Unit,
-    private val onSignedIn: () -> Unit,
+    private val onSignedIn: (userState: UserState) -> Unit,
     componentContext: ComponentContext,
 ) : SignInComponent,
     BaseComponentImpl(
@@ -28,8 +29,8 @@ public class SignInComponentImpl(
         onSignUp()
     }
 
-    override fun onSuccessfulSignIn() {
-        onSignedIn()
+    override fun onSuccessfulSignIn(userState: UserState) {
+        onSignedIn(userState)
     }
 
 }

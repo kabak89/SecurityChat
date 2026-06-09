@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 
 public interface SignUpModel : ScopedModel {
@@ -45,6 +46,15 @@ internal class SignUpModelImpl(
             stateFlow.update { it.copy(result = result) }
         }
 
+    override fun onPostStart() {
+        super.onPostStart()
+
+        scope.launch {
+            val onboardingPassed = signUpRepo.isOnboardingPassed()
+            stateFlow.update { it.copy(isOnboardingPassed = onboardingPassed) }
+        }
+    }
+
     override fun setUsername(userName: String) {
         stateFlow.update { it.copy(username = userName) }
     }
@@ -65,6 +75,7 @@ internal class SignUpModelImpl(
                     password = state.password,
                     passwordRepeat = state.passwordRepeat,
                     formFilled = state.formFilled,
+                    isOnboardingPassed = state.isOnboardingPassed,
                 )
             }
             .distinctUntilChanged()
@@ -81,6 +92,7 @@ internal class SignUpModelImpl(
         val password: String = "",
         val passwordRepeat: String = "",
         val result: SignUpResult? = null,
+        val isOnboardingPassed: Boolean = false,
     ) {
         val formFilled: Boolean =
             username.isNotBlank() &&

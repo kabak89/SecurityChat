@@ -16,6 +16,7 @@ kotlin {
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)
+            implementation(projects.common.permission)
 
             api(projects.features.onboarding.onboardingComponentApi)
 

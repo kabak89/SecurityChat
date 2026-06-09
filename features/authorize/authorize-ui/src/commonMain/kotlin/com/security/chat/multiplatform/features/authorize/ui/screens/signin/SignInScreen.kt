@@ -28,6 +28,7 @@ import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignInComponent
+import com.security.chat.multiplatform.features.authorize.component.api.UserState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -45,7 +46,11 @@ internal fun SignInScreen(
             onPasswordTextChanged = vm::onPasswordTextChanged,
             onSignInClicked = vm::onSignInClicked,
             onSignUpClicked = component::onSignUpClicked,
-            onAuthorized = component::onSuccessfulSignIn,
+            onAuthorized = {
+                component.onSuccessfulSignIn(
+                    userState = UserState(state.isOnboardingPassed),
+                )
+            },
         )
     }
 }
@@ -65,9 +70,7 @@ private fun SignInContent(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                SignInEvent.Authorized -> {
-                    onAuthorized()
-                }
+                SignInEvent.Authorized -> onAuthorized()
             }
         },
     )
@@ -155,6 +158,7 @@ internal fun SignInContentPreview() {
                 isLoading = false,
                 isSignInEnabled = false,
                 alertDialogDescriptor = null,
+                isOnboardingPassed = false,
             ),
             events = emptyFlow(),
             onUsernameTextChanged = {},
@@ -178,6 +182,7 @@ internal fun SignInContentPreviewLoading() {
                 isLoading = true,
                 isSignInEnabled = false,
                 alertDialogDescriptor = null,
+                isOnboardingPassed = false,
             ),
             events = emptyFlow(),
             onUsernameTextChanged = {},

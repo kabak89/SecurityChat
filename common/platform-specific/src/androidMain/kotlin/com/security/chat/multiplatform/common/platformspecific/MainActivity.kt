@@ -31,10 +31,10 @@ public class MainActivity : ComponentActivity() {
         setIntent(intent)
         intent.toDeepLink()?.let(root::handleDeepLink)
     }
+}
 
-    private fun Intent.toDeepLink(): RootComponent.DeepLink? {
-        if (action != IntentBuilderContract.ACTION_OPEN_CHAT) return null
-        val chatId = getStringExtra(IntentBuilderContract.EXTRA_CHAT_ID) ?: return null
-        return RootComponent.DeepLink.OpenChat(chatId = chatId)
-    }
+private fun Intent.toDeepLink(): RootComponent.DeepLink? {
+    if (action != IntentBuilderContract.ACTION_OPEN_CHAT) return null
+    val chatId = getStringExtra(IntentBuilderContract.EXTRA_CHAT_ID) ?: return null
+    return RootComponent.DeepLink.OpenChat(chatId = chatId)
 }

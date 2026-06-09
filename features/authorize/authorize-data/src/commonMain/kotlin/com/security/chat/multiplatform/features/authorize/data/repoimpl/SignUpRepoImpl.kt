@@ -53,6 +53,10 @@ internal class SignUpRepoImpl(
         }
     }
 
+    override suspend fun isOnboardingPassed(): Boolean {
+        return userStorage.getIsOnboardingPassed()
+    }
+
     private fun sha256Hash(input: String): String {
         return SHA256().digest(input.encodeToByteArray()).decodeToString()
     }

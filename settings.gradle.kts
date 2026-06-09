@@ -41,6 +41,7 @@ include(
     ":common:error",
     ":common:device-info",
     ":common:platform-specific",
+    ":common:permission",
 )
 include(
     ":features:splash:splash-component",

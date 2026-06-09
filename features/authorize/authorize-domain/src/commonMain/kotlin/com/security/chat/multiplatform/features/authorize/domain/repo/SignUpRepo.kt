@@ -4,4 +4,5 @@ import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpRe
 
 public interface SignUpRepo {
     public suspend fun signUp(username: String, password: String): SignUpResult
+    public suspend fun isOnboardingPassed(): Boolean
 }

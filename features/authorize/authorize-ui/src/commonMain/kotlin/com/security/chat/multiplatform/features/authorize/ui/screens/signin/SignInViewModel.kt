@@ -11,8 +11,8 @@ import com.security.chat.multiplatform.common.core.ui.entity.isLoading
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
-import com.security.chat.multiplatform.features.authorize.ui.screens.signin.entity.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.authorize.ui.screens.signin.mapper.signInErrorMapper
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -109,6 +109,7 @@ internal class SignInViewModel(
             isLoading = false,
             isSignInEnabled = false,
             alertDialogDescriptor = null,
+            isOnboardingPassed = false,
         )
     }
 

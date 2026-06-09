@@ -33,7 +33,7 @@ kotlin {
 
     cocoapods {
         name = modulePackage
-        ios.deploymentTarget = "14.0"
+        ios.deploymentTarget = libs.versions.deploymentTarget.get()
         version = "1.0.0"
 
         pod(

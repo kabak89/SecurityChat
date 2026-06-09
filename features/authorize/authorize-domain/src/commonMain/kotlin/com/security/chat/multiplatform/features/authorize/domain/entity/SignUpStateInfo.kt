@@ -5,4 +5,5 @@ public data class SignUpStateInfo(
     val password: String,
     val passwordRepeat: String,
     val formFilled: Boolean,
+    val isOnboardingPassed: Boolean,
 )

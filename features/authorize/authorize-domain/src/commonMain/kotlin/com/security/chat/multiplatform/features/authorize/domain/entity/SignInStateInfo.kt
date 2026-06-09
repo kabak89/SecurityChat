@@ -4,4 +4,5 @@ public data class SignInStateInfo(
     val username: String,
     val password: String,
     val isSignInEnabled: Boolean,
+    val isOnboardingPassed: Boolean,
 )

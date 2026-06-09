@@ -43,4 +43,10 @@
     <string name="sign_in_user_not_found_error_description">Пользователь с таким именем не найден</string>
     <string name="sign_in_wrong_password_error_title">Неверный пароль</string>
     <string name="sign_in_wrong_password_error_description">Введен неверный пароль для этого имени</string>
+
+    <string name="notification_permission_description">Уведомления помогают оставаться на связи. С ними вы:\n\n•  сразу узнаёте о новых сообщениях;\n•  не пропускаете сообщения;\n•  вовремя реагируете на сообщения.\n\nВы в любой момент сможете изменить это в настройках</string>
+    <string name="notification_permission_grant">Разрешить</string>
+    <string name="notification_permission_do_not_grant">Использовать приложение без уведомлений</string>
+    <string name="notification_permission_restricted_permission_dialog_title">Показ уведомлений запрещен</string>
+    <string name="notification_permission_restricted_permission_dialog_message">Вы можете изменить это в настройках</string>
 </resources>

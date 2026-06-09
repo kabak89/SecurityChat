@@ -13,12 +13,18 @@ conventionBasePlugin {
 }
 
 kotlin {
+    val iosDeploymentTarget = libs.versions.deploymentTarget.get()
     targets.withType<KotlinNativeTarget>().configureEach {
         binaries.framework {
             baseName = "shared"
             isStatic = true
             export(libs.decompose)
             export(libs.essenty.lifecycle)
+            freeCompilerArgs += listOf(
+                "-Xoverride-konan-properties=" +
+                        "osVersionMin.ios_arm64=$iosDeploymentTarget;" +
+                        "osVersionMin.ios_simulator_arm64=$iosDeploymentTarget",
+            )
         }
     }
 
@@ -52,18 +58,18 @@ kotlin {
             implementation(projects.common.uiKit)
             implementation(projects.common.appLifecycle)
             implementation(projects.common.deviceInfo)
+            implementation(projects.common.permission)
+            implementation(projects.common.platformSpecific)
 
             implementation(projects.features.root.rootComponent)
             implementation(projects.features.root.rootUi)
 
             implementation(projects.features.chat.chatDataCommon)
-
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.users.usersDataStorage)
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.chats.chatsDataStorage)
             implementation(projects.features.chat.chatDataStorage)
-
             implementation(projects.features.chat.chatDataNetwork)
 
             implementation(projects.features.push.pushDomain)

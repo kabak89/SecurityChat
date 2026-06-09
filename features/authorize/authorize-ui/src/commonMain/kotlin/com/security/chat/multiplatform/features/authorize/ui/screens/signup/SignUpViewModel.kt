@@ -61,6 +61,7 @@ internal class SignUpViewModel(
             passwordRepeat = "",
             isLoading = false,
             nextButtonEnabled = false,
+            isOnboardingPassed = false,
         )
     }
 

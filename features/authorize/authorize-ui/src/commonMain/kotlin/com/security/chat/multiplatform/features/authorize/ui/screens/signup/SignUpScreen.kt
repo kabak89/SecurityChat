@@ -24,6 +24,7 @@ import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignUpComponent
+import com.security.chat.multiplatform.features.authorize.component.api.UserState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -42,7 +43,13 @@ internal fun SignUpScreen(
             onPasswordTextChanged = vm::onPasswordTextChanged,
             onPasswordRepeatTextChanged = vm::onPasswordRepeatTextChanged,
             onSignUpClicked = vm::onSignUpClicked,
-            onSuccessfulSignUp = component::onSuccessfulSignUp,
+            onSuccessfulSignUp = {
+                component.onSuccessfulSignUp(
+                    userState = UserState(
+                        isOnboardingPassed = state.isOnboardingPassed,
+                    ),
+                )
+            },
         )
     }
 }
@@ -157,6 +164,7 @@ internal fun SignUpContentPreview() {
                 passwordRepeat = "password",
                 isLoading = false,
                 nextButtonEnabled = true,
+                isOnboardingPassed = false,
             ),
             events = emptyFlow(),
             onSignInClicked = {},
@@ -181,6 +189,7 @@ internal fun SignUpContentPreviewDisabled() {
                 passwordRepeat = "pass",
                 isLoading = false,
                 nextButtonEnabled = false,
+                isOnboardingPassed = false,
             ),
             events = emptyFlow(),
             onSignInClicked = {},
@@ -205,6 +214,7 @@ internal fun SignUpContentPreviewLoading() {
                 passwordRepeat = "password",
                 isLoading = true,
                 nextButtonEnabled = true,
+                isOnboardingPassed = false,
             ),
             events = emptyFlow(),
             onSignInClicked = {},

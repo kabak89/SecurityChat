@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.network.di.networkEngineModul
 import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
 import com.security.chat.multiplatform.common.core.time.di.coreTimeModule
 import com.security.chat.multiplatform.common.device.info.di.deviceInfoModule
+import com.security.chat.multiplatform.common.permission.di.permissionModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
 import com.security.chat.multiplatform.features.chat.data.common.di.chatDataCommonModule
 import com.security.chat.multiplatform.features.chat.data.network.di.chatDataNetworkModule
@@ -29,6 +30,7 @@ internal val commonAppDiModules: List<Module> =
         coreNetworkModule,
         networkEngineModule,
         deviceInfoModule,
+        permissionModule,
 
         chatDataCommonModule,
 

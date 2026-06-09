@@ -35,6 +35,10 @@ internal class SignInRepoImpl(
         userStorage.saveUserId(userId = response.userId)
     }
 
+    override suspend fun isOnboardingPassed(): Boolean {
+        return userStorage.getIsOnboardingPassed()
+    }
+
     private fun sha256Hash(input: String): String {
         return SHA256().digest(input.encodeToByteArray()).decodeToString()
     }

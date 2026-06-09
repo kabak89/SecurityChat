@@ -43,4 +43,10 @@
     <string name="sign_in_user_not_found_error_description">No user with this name was found</string>
     <string name="sign_in_wrong_password_error_title">Wrong password</string>
     <string name="sign_in_wrong_password_error_description">The password entered for this username is incorrect</string>
+
+    <string name="notification_permission_description">Notifications help you stay connected. With them you:\n\n•  instantly learn about new messages;\n•  never miss a message;\n•  respond to messages on time.\n\nYou can change this anytime in settings</string>
+    <string name="notification_permission_grant">Allow</string>
+    <string name="notification_permission_do_not_grant">Use app without notifications</string>
+    <string name="notification_permission_restricted_permission_dialog_title">Notifications restricted</string>
+    <string name="notification_permission_restricted_permission_dialog_message">You can change it in settings</string>
 </resources>

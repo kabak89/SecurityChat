@@ -19,7 +19,6 @@ kotlin {
             implementation(libs.multiplatform.settings)
 
             implementation(projects.features.splash.splashDomain)
-
             implementation(projects.features.user.userDataStorage)
         }
     }
