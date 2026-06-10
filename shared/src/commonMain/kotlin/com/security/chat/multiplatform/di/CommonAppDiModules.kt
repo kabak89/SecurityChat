@@ -15,6 +15,7 @@ import com.security.chat.multiplatform.features.chats.data.storage.di.chatsDataS
 import com.security.chat.multiplatform.features.push.data.di.pushDataModule
 import com.security.chat.multiplatform.features.push.domain.di.pushDomainModule
 import com.security.chat.multiplatform.features.push.navigation.impl.di.pushNavigationModule
+import com.security.chat.multiplatform.features.settings.data.common.di.settingsDataCommonModule
 import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
 import com.security.chat.multiplatform.features.user.data.storage.di.userDataStorageModule
 import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
@@ -36,7 +37,6 @@ internal val commonAppDiModules: List<Module> =
 
         userDataStorageModule,
         usersDataStorageModule,
-        settingsDataStorageModule,
         chatsDataStorageModule,
         chatDataStorageModule,
 
@@ -45,4 +45,7 @@ internal val commonAppDiModules: List<Module> =
         pushDataModule,
         pushDomainModule,
         pushNavigationModule,
+
+        settingsDataStorageModule,
+        settingsDataCommonModule,
     )

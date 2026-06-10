@@ -5,6 +5,9 @@ import com.security.chat.multiplatform.common.core.network.BuildKonfig
 import com.security.chat.multiplatform.common.core.network.HttpClientFactory
 import com.security.chat.multiplatform.common.core.network.HttpClientFactoryImpl
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
+import com.security.chat.multiplatform.common.core.network.LogoutErrorAlerter
+import com.security.chat.multiplatform.common.core.network.LogoutErrorBroadcaster
+import com.security.chat.multiplatform.common.core.network.LogoutErrorBroadcasterImpl
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactoryImpl
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
@@ -14,6 +17,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 public val coreNetworkModule: Module =
@@ -56,4 +60,9 @@ public val coreNetworkModule: Module =
                 port = 80,
             )
         }
+
+        singleOf(::LogoutErrorBroadcasterImpl) binds arrayOf(
+            LogoutErrorBroadcaster::class,
+            LogoutErrorAlerter::class,
+        )
     }

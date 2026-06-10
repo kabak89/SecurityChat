@@ -11,6 +11,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -21,6 +22,7 @@ public interface HttpClientFactory {
 internal class HttpClientFactoryImpl(
     private val json: Json,
     private val engine: HttpClientEngine,
+    private val logoutErrorAlerter: LogoutErrorAlerter,
 ) : HttpClientFactory {
 
     override fun build(): HttpClient {
@@ -46,6 +48,11 @@ internal class HttpClientFactoryImpl(
                         is ClientRequestException -> {
                             val exceptionResponse = exception.response
                             val status = exceptionResponse.status
+
+                            if (status == HttpStatusCode.Unauthorized) {
+                                logoutErrorAlerter.logout()
+                            }
+
                             throw NetworkError(statusCode = status.value)
                         }
 

@@ -1,7 +1,7 @@
 package com.security.chat.multiplatform.common.core.domain
 
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
@@ -19,13 +19,9 @@ public fun <T> JobFlow<T>.asLceState(replayLastResult: Boolean = false): Flow<Lc
         launch {
             this@asLceState.results(replayLast = replayLastResult)
                 .collect {
-                    when (it) {
-                        is Ok -> {
-                            send(LceState.Content(Unit))
-                        }
-
-                        is Err -> send(LceState.Error(it.error))
-                    }
+                    it
+                        .onOk { send(LceState.Content(Unit)) }
+                        .onErr { error -> send(LceState.Error(error)) }
                 }
         }
         launch {

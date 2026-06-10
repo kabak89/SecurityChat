@@ -9,7 +9,10 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_UI
+import com.security.chat.multiplatform.common.core.network.LogoutErrorBroadcaster
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
@@ -20,6 +23,7 @@ import com.security.chat.multiplatform.features.onboarding.component.OnboardingC
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent
 import com.security.chat.multiplatform.features.push.domain.PushModel
 import com.security.chat.multiplatform.features.root.component.api.RootComponent
+import com.security.chat.multiplatform.features.settings.data.common.SettingsDataHelper
 import com.security.chat.multiplatform.features.splash.component.SplashComponent
 import com.security.chat.multiplatform.features.splash.component.SplashComponentImpl
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -27,7 +31,10 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.koin.core.context.loadKoinModules
 import org.koin.core.qualifier.named
@@ -56,13 +63,14 @@ public class RootComponentImpl(
 
         Log.d { "scope $SCOPE_ID_UI created" }
 
+        val dispatcherProvider: DispatcherProviderInterface = getKoin().get()
+
         val coroutineScopeModule = module {
             single(named(SCOPE_ID_UI)) {
                 val errorHandler = CoroutineExceptionHandler { _, e ->
                     Log.e(e, "error in coroutine scope in $SCOPE_ID_UI DI scope")
                 }
 
-                val dispatcherProvider: DispatcherProviderInterface = get()
                 CoroutineScope(
                     dispatcherProvider.IO +
                             SupervisorJob() +
@@ -86,6 +94,37 @@ public class RootComponentImpl(
             rootCoroutineScope.launch {
                 pushModel.registerCurrentToken()
             }
+
+            val logoutErrorBroadcaster: LogoutErrorBroadcaster = getKoin().get()
+            logoutErrorBroadcaster.getLogoutFlow()
+                .onEach {
+                    val currentChild =
+                        withContext(dispatcherProvider.Main) { childStack.value.active.instance }
+
+                    val needNavigate = when (currentChild) {
+                        is RootComponent.Child.Main,
+                        is RootComponent.Child.Onboarding,
+                            -> true
+
+                        is RootComponent.Child.Splash,
+                        is RootComponent.Child.Authorize,
+                            -> false
+                    }
+
+                    val settingsDataHelper: SettingsDataHelper = getKoin().get()
+
+                    runSuspendCatching {
+                        settingsDataHelper.clearLocalStorages()
+                    }
+                        .onErr { Log.e(it) }
+
+                    if (needNavigate) {
+                        withContext(dispatcherProvider.Main) {
+                            navigation.replaceAll(Params.Authorize)
+                        }
+                    }
+                }
+                .launchIn(rootCoroutineScope)
         }
 
         lifecycle.doOnDestroy {

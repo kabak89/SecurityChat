@@ -93,6 +93,7 @@ include(
     ":features:settings:settings-ui",
     ":features:settings:settings-domain",
     ":features:settings:settings-data",
+    ":features:settings:settings-data-common",
     ":features:settings:settings-data-storage",
 )
 include(

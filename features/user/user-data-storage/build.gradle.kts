@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
 
             implementation(projects.common.settings)
+            implementation(projects.common.coreThreading)
         }
     }
 }

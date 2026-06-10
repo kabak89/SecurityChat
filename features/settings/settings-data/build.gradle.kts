@@ -11,10 +11,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.features.settings.settingsDomain)
+            implementation(projects.features.settings.settingsDataCommon)
             implementation(projects.features.settings.settingsDataStorage)
-            implementation(projects.features.user.userDataStorage)
-            implementation(projects.features.chats.chatsDataStorage)
-            implementation(projects.features.chat.chatDataStorage)
         }
     }
 }

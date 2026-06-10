@@ -1,7 +1,9 @@
 package com.security.chat.multiplatform.features.user.data.storage
 
+import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
+import kotlinx.coroutines.withContext
 
 public interface UserStorage {
     public suspend fun isUserAuthorized(): Boolean
@@ -17,93 +19,114 @@ public interface UserStorage {
 }
 
 internal class UserStorageImpl(
+    private val dispatcherProvider: DispatcherProviderInterface,
     private val encryptedSettings: EncryptedSettings,
 ) : UserStorage {
 
     override suspend fun isUserAuthorized(): Boolean {
-        return encryptedSettings.getString(KEY_USER_ID) != null
+        return withContext(dispatcherProvider.IO) {
+            encryptedSettings.getString(KEY_USER_ID) != null
+        }
     }
 
     override suspend fun saveUserId(userId: String) {
-        encryptedSettings.putString(
-            key = KEY_USER_ID,
-            value = userId,
-        )
+        withContext(dispatcherProvider.IO) {
+            encryptedSettings.putString(
+                key = KEY_USER_ID,
+                value = userId,
+            )
+        }
     }
 
     override suspend fun getUserId(): String? {
-        return encryptedSettings.getString(key = KEY_USER_ID)
+        return withContext(dispatcherProvider.IO) {
+            encryptedSettings.getString(key = KEY_USER_ID)
+        }
     }
 
     override suspend fun saveKeys(cryptoKeys: CryptoKeys) {
-        encryptedSettings.putString(
-            key = KEY_PUBLIC_KEY,
-            value = cryptoKeys.publicKey,
-        )
-        encryptedSettings.putString(
-            key = KEY_PRIVATE_KEY,
-            value = cryptoKeys.privateKey,
-        )
+        withContext(dispatcherProvider.IO) {
+            encryptedSettings.putString(
+                key = KEY_PUBLIC_KEY,
+                value = cryptoKeys.publicKey,
+            )
+            encryptedSettings.putString(
+                key = KEY_PRIVATE_KEY,
+                value = cryptoKeys.privateKey,
+            )
+        }
     }
 
     override suspend fun getKeys(): CryptoKeys? {
-        val publicKey = encryptedSettings.getString(
-            key = KEY_PUBLIC_KEY,
-        ) ?: return null
+        return withContext(dispatcherProvider.IO) {
+            val publicKey = encryptedSettings.getString(
+                key = KEY_PUBLIC_KEY,
+            ) ?: return@withContext null
 
-        val privateKey = encryptedSettings.getString(
-            key = KEY_PRIVATE_KEY,
-        ) ?: return null
+            val privateKey = encryptedSettings.getString(
+                key = KEY_PRIVATE_KEY,
+            ) ?: return@withContext null
 
-        return CryptoKeys(
-            publicKey = publicKey,
-            privateKey = privateKey,
-        )
+            CryptoKeys(
+                publicKey = publicKey,
+                privateKey = privateKey,
+            )
+        }
     }
 
     override suspend fun saveUserName(name: String) {
-        encryptedSettings.putString(
-            key = KEY_USER_NAME,
-            value = name,
-        )
+        withContext(dispatcherProvider.IO) {
+            encryptedSettings.putString(
+                key = KEY_USER_NAME,
+                value = name,
+            )
+        }
     }
 
     override suspend fun getUserName(): String? {
-        return encryptedSettings.getString(key = KEY_USER_NAME)
+        return withContext(dispatcherProvider.IO) {
+            encryptedSettings.getString(key = KEY_USER_NAME)
+        }
     }
 
     override suspend fun saveOnboardingPassed() {
-        encryptedSettings.putBoolean(
-            key = KEY_IS_ONBOARDING_PASSED,
-            value = true,
-        )
+        withContext(dispatcherProvider.IO) {
+            encryptedSettings.putBoolean(
+                key = KEY_IS_ONBOARDING_PASSED,
+                value = true,
+            )
+        }
     }
 
     override suspend fun getIsOnboardingPassed(): Boolean {
-        return encryptedSettings.getBoolean(KEY_IS_ONBOARDING_PASSED) ?: false
+        return withContext(dispatcherProvider.IO) {
+            encryptedSettings.getBoolean(KEY_IS_ONBOARDING_PASSED) ?: false
+        }
     }
 
     override suspend fun clearAll() {
-        encryptedSettings.putString(
-            key = KEY_USER_ID,
-            value = null,
-        )
-        encryptedSettings.putString(
-            key = KEY_PUBLIC_KEY,
-            value = null,
-        )
-        encryptedSettings.putString(
-            key = KEY_PRIVATE_KEY,
-            value = null,
-        )
-        encryptedSettings.putString(
-            key = KEY_USER_NAME,
-            value = null,
-        )
-        encryptedSettings.putBoolean(
-            key = KEY_IS_ONBOARDING_PASSED,
-            value = null,
-        )
+        withContext(dispatcherProvider.IO) {
+            encryptedSettings.putString(
+                key = KEY_USER_ID,
+                value = null,
+            )
+            encryptedSettings.putString(
+                key = KEY_PUBLIC_KEY,
+                value = null,
+            )
+            encryptedSettings.putString(
+                key = KEY_PRIVATE_KEY,
+                value = null,
+            )
+            encryptedSettings.putString(
+                key = KEY_USER_NAME,
+                value = null,
+            )
+            encryptedSettings.putBoolean(
+                key = KEY_IS_ONBOARDING_PASSED,
+                value = null,
+            )
+        }
     }
 }
 

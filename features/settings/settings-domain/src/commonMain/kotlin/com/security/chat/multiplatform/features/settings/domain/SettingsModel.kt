@@ -15,7 +15,6 @@ public interface SettingsModel : ScopedModel {
     public val enableTheme: Task1<Theme, Unit>
 
     public fun getTheme(): Flow<Theme>
-
 }
 
 internal class SettingsModelImpl(
