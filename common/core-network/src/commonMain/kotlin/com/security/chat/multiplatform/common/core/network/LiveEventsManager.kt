@@ -43,7 +43,7 @@ public class LiveEventsManager(
     httpClientFactory: HttpClientFactory,
 ) {
 
-    private val httpClient: HttpClient = httpClientFactory.build()
+    private val httpClient: HttpClient = httpClientFactory.build(needAuthorization = false)
     private val loopMutex = Mutex()
     private var reconnectJob: Job? = null
 

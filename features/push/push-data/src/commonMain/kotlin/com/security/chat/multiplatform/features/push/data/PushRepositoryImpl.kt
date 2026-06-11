@@ -33,7 +33,10 @@ public class PushRepositoryImpl(
 ) : PushRepository {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
+        networkManagerFactory.build(
+            baseUrl = "${networkConfig.host}:${networkConfig.port}",
+            needAuthorization = true,
+        )
     }
 
     override suspend fun registerCurrentToken() {

@@ -43,9 +43,12 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.websockets)
+            implementation(libs.ktor.client.auth)
 
             implementation(projects.common.coreComponent)
             implementation(projects.common.error)
+            implementation(projects.common.settings)
+            implementation(projects.common.coreThreading)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

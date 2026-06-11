@@ -2,7 +2,11 @@ package com.security.chat.multiplatform.features.authorize.data.repoimpl
 
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
+import com.security.chat.multiplatform.common.core.network.TokenManager
+import com.security.chat.multiplatform.common.core.network.entity.AccessToken
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
+import com.security.chat.multiplatform.common.core.network.entity.RefreshToken
+import com.security.chat.multiplatform.common.core.network.entity.Tokens
 import com.security.chat.multiplatform.features.authorize.data.entity.AuthRequest
 import com.security.chat.multiplatform.features.authorize.data.entity.AuthResponse
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpResult
@@ -16,10 +20,14 @@ internal class SignUpRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
     private val userStorage: UserStorage,
     private val networkConfig: NetworkConfig,
+    private val tokenManager: TokenManager,
 ) : SignUpRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
+        networkManagerFactory.build(
+            baseUrl = "${networkConfig.host}:${networkConfig.port}",
+            needAuthorization = false,
+        )
     }
 
     override suspend fun signUp(username: String, password: String): SignUpResult {
@@ -37,6 +45,12 @@ internal class SignUpRepoImpl(
             )
 
             userStorage.saveUserId(userId = response.userId)
+            tokenManager.saveTokens(
+                tokens = Tokens(
+                    accessToken = AccessToken(response.accessToken),
+                    refreshToken = RefreshToken(response.refreshToken),
+                ),
+            )
 
             SignUpResult.Success
         } catch (e: Exception) {

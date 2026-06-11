@@ -6,26 +6,29 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 public interface HttpClientFactory {
-    public fun build(): HttpClient
+    public fun build(needAuthorization: Boolean): HttpClient
 }
 
 internal class HttpClientFactoryImpl(
     private val json: Json,
     private val engine: HttpClientEngine,
-    private val logoutErrorAlerter: LogoutErrorAlerter,
-) : HttpClientFactory {
+) : HttpClientFactory, KoinComponent {
 
-    override fun build(): HttpClient {
+    override fun build(needAuthorization: Boolean): HttpClient {
         val networkLogger: Logger = object : Logger {
             override fun log(message: String) {
                 Log.d { message }
@@ -48,15 +51,33 @@ internal class HttpClientFactoryImpl(
                         is ClientRequestException -> {
                             val exceptionResponse = exception.response
                             val status = exceptionResponse.status
-
-                            if (status == HttpStatusCode.Unauthorized) {
-                                logoutErrorAlerter.logout()
-                            }
-
                             throw NetworkError(statusCode = status.value)
                         }
 
                         else -> throw resolveError(exception)
+                    }
+                }
+            }
+            if (needAuthorization) {
+                val tokenManager: TokenManager = get()
+
+                install(Auth) {
+                    bearer {
+                        loadTokens {
+                            val tokens = tokenManager.getTokens() ?: return@loadTokens null
+                            BearerTokens(
+                                accessToken = tokens.accessToken.value,
+                                refreshToken = tokens.refreshToken.value,
+                            )
+                        }
+                        refreshTokens {
+                            val tokens = tokenManager.refreshTokens() ?: return@refreshTokens null
+
+                            BearerTokens(
+                                accessToken = tokens.accessToken.value,
+                                refreshToken = tokens.refreshToken.value,
+                            )
+                        }
                     }
                 }
             }

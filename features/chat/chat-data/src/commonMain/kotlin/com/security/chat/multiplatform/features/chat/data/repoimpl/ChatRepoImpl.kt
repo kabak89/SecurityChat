@@ -58,7 +58,10 @@ internal class ChatRepoImpl(
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
+        networkManagerFactory.build(
+            baseUrl = "${networkConfig.host}:${networkConfig.port}",
+            needAuthorization = true,
+        )
     }
 
     @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)

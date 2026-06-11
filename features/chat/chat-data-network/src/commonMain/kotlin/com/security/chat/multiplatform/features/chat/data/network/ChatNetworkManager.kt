@@ -33,7 +33,10 @@ internal class ChatNetworkManagerImpl(
 ) : ChatNetworkManager {
 
     private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(baseUrl = "${networkConfig.host}:${networkConfig.port}")
+        networkManagerFactory.build(
+            baseUrl = "${networkConfig.host}:${networkConfig.port}",
+            needAuthorization = true,
+        )
     }
 
     override suspend fun getMessages(chatId: String): List<ChatMessageNM> {

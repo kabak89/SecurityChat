@@ -10,6 +10,8 @@ import com.security.chat.multiplatform.common.core.network.LogoutErrorBroadcaste
 import com.security.chat.multiplatform.common.core.network.LogoutErrorBroadcasterImpl
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactoryImpl
+import com.security.chat.multiplatform.common.core.network.TokenManager
+import com.security.chat.multiplatform.common.core.network.TokenManagerImpl
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
 import kotlinx.serialization.json.Json
@@ -65,4 +67,6 @@ public val coreNetworkModule: Module =
             LogoutErrorBroadcaster::class,
             LogoutErrorAlerter::class,
         )
+
+        singleOf(::TokenManagerImpl) bind TokenManager::class
     }
