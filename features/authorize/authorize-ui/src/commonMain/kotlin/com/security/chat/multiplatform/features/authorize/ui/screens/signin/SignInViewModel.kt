@@ -32,8 +32,7 @@ internal class SignInViewModel(
             .onEach { domainState ->
                 updateState { oldState ->
                     oldState.copy(
-                        username = domainState.username,
-                        password = domainState.password,
+                        privateKey = domainState.privateKey,
                         isSignInEnabled = domainState.isSignInEnabled,
                     )
                 }
@@ -104,8 +103,7 @@ internal class SignInViewModel(
 
     override fun createInitialState(): SignInState {
         return SignInState(
-            username = "",
-            password = "",
+            privateKey = "",
             isLoading = false,
             isSignInEnabled = false,
             alertDialogDescriptor = null,
@@ -113,12 +111,8 @@ internal class SignInViewModel(
         )
     }
 
-    fun onUsernameTextChanged(newUsername: String) {
-        signInModel.setUsername(newUsername)
-    }
-
-    fun onPasswordTextChanged(newPassword: String) {
-        signInModel.setPassword(newPassword)
+    fun onPrivateKeyTextChanged(newPrivateKey: String) {
+        signInModel.setPrivateKey(newPrivateKey)
     }
 
     fun onSignInClicked() {

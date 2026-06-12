@@ -15,7 +15,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.ui.Screen
@@ -40,8 +39,6 @@ internal fun SignUpScreen(
             events = vm.viewEvent,
             onSignInClicked = component::onSignInClicked,
             onUsernameTextChanged = vm::onUsernameTextChanged,
-            onPasswordTextChanged = vm::onPasswordTextChanged,
-            onPasswordRepeatTextChanged = vm::onPasswordRepeatTextChanged,
             onSignUpClicked = vm::onSignUpClicked,
             onSuccessfulSignUp = {
                 component.onSuccessfulSignUp(
@@ -61,8 +58,6 @@ private fun SignUpContent(
     events: Flow<SignUpEvent>,
     onSignInClicked: () -> Unit,
     onUsernameTextChanged: (String) -> Unit,
-    onPasswordTextChanged: (String) -> Unit,
-    onPasswordRepeatTextChanged: (String) -> Unit,
     onSignUpClicked: () -> Unit,
     onSuccessfulSignUp: () -> Unit,
 ) {
@@ -107,33 +102,6 @@ private fun SignUpContent(
             enabled = !state.isLoading,
         )
         Spacer(Modifier.height(16.dp))
-        val passwordVisualTransformation = PasswordVisualTransformation()
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            value = state.password,
-            onValueChange = onPasswordTextChanged,
-            placeholder = {
-                Text("Password")
-            },
-            enabled = !state.isLoading,
-            visualTransformation = passwordVisualTransformation,
-        )
-        Spacer(Modifier.height(16.dp))
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            value = state.passwordRepeat,
-            onValueChange = onPasswordRepeatTextChanged,
-            placeholder = {
-                Text("Repeat password")
-            },
-            enabled = !state.isLoading,
-            visualTransformation = passwordVisualTransformation,
-        )
-        Spacer(Modifier.height(16.dp))
         if (state.isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
@@ -160,8 +128,6 @@ internal fun SignUpContentPreview() {
             modifier = Modifier.fillMaxSize(),
             state = SignUpState(
                 username = "john.doe",
-                password = "password",
-                passwordRepeat = "password",
                 isLoading = false,
                 nextButtonEnabled = true,
                 isOnboardingPassed = false,
@@ -169,8 +135,6 @@ internal fun SignUpContentPreview() {
             events = emptyFlow(),
             onSignInClicked = {},
             onUsernameTextChanged = {},
-            onPasswordTextChanged = {},
-            onPasswordRepeatTextChanged = {},
             onSignUpClicked = {},
             onSuccessfulSignUp = {},
         )
@@ -185,8 +149,6 @@ internal fun SignUpContentPreviewDisabled() {
             modifier = Modifier.fillMaxSize(),
             state = SignUpState(
                 username = "john.doe",
-                password = "password",
-                passwordRepeat = "pass",
                 isLoading = false,
                 nextButtonEnabled = false,
                 isOnboardingPassed = false,
@@ -194,8 +156,6 @@ internal fun SignUpContentPreviewDisabled() {
             events = emptyFlow(),
             onSignInClicked = {},
             onUsernameTextChanged = {},
-            onPasswordTextChanged = {},
-            onPasswordRepeatTextChanged = {},
             onSignUpClicked = {},
             onSuccessfulSignUp = {},
         )
@@ -210,8 +170,6 @@ internal fun SignUpContentPreviewLoading() {
             modifier = Modifier.fillMaxSize(),
             state = SignUpState(
                 username = "john.doe",
-                password = "password",
-                passwordRepeat = "password",
                 isLoading = true,
                 nextButtonEnabled = true,
                 isOnboardingPassed = false,
@@ -219,8 +177,6 @@ internal fun SignUpContentPreviewLoading() {
             events = emptyFlow(),
             onSignInClicked = {},
             onUsernameTextChanged = {},
-            onPasswordTextChanged = {},
-            onPasswordRepeatTextChanged = {},
             onSignUpClicked = {},
             onSuccessfulSignUp = {},
         )

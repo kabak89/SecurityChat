@@ -48,11 +48,13 @@ internal class TokenManagerImpl(
         return withContext(dispatcherProviderInterface.IO) {
             val accessToken = encryptedSettings.getString(KEY_ACCESS_TOKEN) ?: run {
                 Log.e("no access token in storage")
+                logoutErrorAlerter.logout()
                 return@withContext null
             }
 
             val refreshToken = encryptedSettings.getString(KEY_REFRESH_TOKEN) ?: run {
                 Log.e("no refresh token in storage")
+                logoutErrorAlerter.logout()
                 return@withContext null
             }
 

@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class AuthRequest(
+internal data class SignUpRequest(
     @SerialName("login") val login: String,
-    @SerialName("passwordHash") val passwordHash: String,
     @SerialName("publicKey") val publicKey: String,
+    @SerialName("privateKeyHash") val privateKeyHash: String,
 )

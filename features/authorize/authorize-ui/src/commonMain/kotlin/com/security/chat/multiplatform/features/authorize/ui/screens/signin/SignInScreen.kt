@@ -16,9 +16,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.ui.Screen
@@ -42,8 +39,7 @@ internal fun SignInScreen(
                 .fillMaxSize(),
             state = state,
             events = vm.viewEvent,
-            onUsernameTextChanged = vm::onUsernameTextChanged,
-            onPasswordTextChanged = vm::onPasswordTextChanged,
+            onPrivateKeyTextChanged = vm::onPrivateKeyTextChanged,
             onSignInClicked = vm::onSignInClicked,
             onSignUpClicked = component::onSignUpClicked,
             onAuthorized = {
@@ -60,8 +56,7 @@ private fun SignInContent(
     modifier: Modifier = Modifier,
     state: SignInState,
     events: Flow<SignInEvent>,
-    onUsernameTextChanged: (String) -> Unit,
-    onPasswordTextChanged: (String) -> Unit,
+    onPrivateKeyTextChanged: (String) -> Unit,
     onSignInClicked: () -> Unit,
     onSignUpClicked: () -> Unit,
     onAuthorized: () -> Unit,
@@ -97,27 +92,14 @@ private fun SignInContent(
         TextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .semantics { contentType = ContentType.Username },
-            value = state.username,
-            onValueChange = onUsernameTextChanged,
+                .padding(horizontal = 16.dp),
+            value = state.privateKey,
+            onValueChange = onPrivateKeyTextChanged,
             placeholder = {
-                Text("Username")
+                Text("Private key")
             },
             enabled = !state.isLoading,
-        )
-        Spacer(Modifier.height(16.dp))
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .semantics { contentType = ContentType.Password },
-            value = state.password,
-            onValueChange = onPasswordTextChanged,
-            placeholder = {
-                Text("Password")
-            },
-            enabled = !state.isLoading,
+            maxLines = 3,
         )
         Spacer(Modifier.height(16.dp))
         if (state.isLoading) {
@@ -153,16 +135,14 @@ internal fun SignInContentPreview() {
         SignInContent(
             modifier = Modifier.fillMaxSize(),
             state = SignInState(
-                username = "john.doe",
-                password = "password",
+                privateKey = "john.doe",
                 isLoading = false,
                 isSignInEnabled = false,
                 alertDialogDescriptor = null,
                 isOnboardingPassed = false,
             ),
             events = emptyFlow(),
-            onUsernameTextChanged = {},
-            onPasswordTextChanged = {},
+            onPrivateKeyTextChanged = {},
             onSignInClicked = {},
             onSignUpClicked = {},
             onAuthorized = {},
@@ -177,16 +157,14 @@ internal fun SignInContentPreviewLoading() {
         SignInContent(
             modifier = Modifier.fillMaxSize(),
             state = SignInState(
-                username = "john.doe",
-                password = "password",
+                privateKey = "PRIVATE KEY",
                 isLoading = true,
                 isSignInEnabled = false,
                 alertDialogDescriptor = null,
                 isOnboardingPassed = false,
             ),
             events = emptyFlow(),
-            onUsernameTextChanged = {},
-            onPasswordTextChanged = {},
+            onPrivateKeyTextChanged = {},
             onSignInClicked = {},
             onSignUpClicked = {},
             onAuthorized = {},

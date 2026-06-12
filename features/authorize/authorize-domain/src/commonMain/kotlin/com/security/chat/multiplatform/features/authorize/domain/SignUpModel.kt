@@ -18,8 +18,6 @@ public interface SignUpModel : ScopedModel {
     public val signUp: Task0<Unit>
 
     public fun setUsername(userName: String)
-    public fun setPassword(password: String)
-    public fun setPasswordRepeat(passwordRepeat: String)
     public fun getStateFlow(): Flow<SignUpStateInfo>
     public fun getResultFlow(): Flow<SignUpResult?>
 }
@@ -40,7 +38,6 @@ internal class SignUpModelImpl(
 
             val result = signUpRepo.signUp(
                 username = stateFlow.value.username.trim(),
-                password = stateFlow.value.password,
             )
 
             stateFlow.update { it.copy(result = result) }
@@ -59,21 +56,11 @@ internal class SignUpModelImpl(
         stateFlow.update { it.copy(username = userName) }
     }
 
-    override fun setPassword(password: String) {
-        stateFlow.update { it.copy(password = password) }
-    }
-
-    override fun setPasswordRepeat(passwordRepeat: String) {
-        stateFlow.update { it.copy(passwordRepeat = passwordRepeat) }
-    }
-
     override fun getStateFlow(): Flow<SignUpStateInfo> {
         return stateFlow
             .map { state ->
                 SignUpStateInfo(
                     username = state.username,
-                    password = state.password,
-                    passwordRepeat = state.passwordRepeat,
                     formFilled = state.formFilled,
                     isOnboardingPassed = state.isOnboardingPassed,
                 )
@@ -89,16 +76,10 @@ internal class SignUpModelImpl(
 
     private data class State(
         val username: String = "",
-        val password: String = "",
-        val passwordRepeat: String = "",
         val result: SignUpResult? = null,
         val isOnboardingPassed: Boolean = false,
     ) {
-        val formFilled: Boolean =
-            username.isNotBlank() &&
-                    password.isNotBlank() &&
-                    passwordRepeat.isNotBlank() &&
-                    (password == passwordRepeat)
+        val formFilled: Boolean = username.isNotBlank()
     }
 
 }

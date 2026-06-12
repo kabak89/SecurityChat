@@ -73,6 +73,7 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                     return
                 }
 
+                //TODO hande absence of interlocutor info on device
                 val interlocutorName = requireNotNull(pushRepository.getInterlocutorName(chatId))
                 val serializedMessages = requireNotNull(data["messages"])
 

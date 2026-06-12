@@ -5,10 +5,11 @@ import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.DelicateCryptographyApi
 import dev.whyoleg.cryptography.algorithms.RSA
 import dev.whyoleg.cryptography.operations.KeyGenerator
+import org.kotlincrypto.hash.sha2.SHA256
 import kotlin.io.encoding.Base64
 
 @OptIn(DelicateCryptographyApi::class)
-internal suspend fun getKeysPair(): CryptoKeys {
+internal suspend fun generateKeysPair(): CryptoKeys {
     val provider = CryptographyProvider.Default
     val rsa = provider.get(RSA.RAW)
     val keyPairGenerator: KeyGenerator<RSA.RAW.KeyPair> = rsa.keyPairGenerator()
@@ -22,4 +23,8 @@ internal suspend fun getKeysPair(): CryptoKeys {
         publicKey = publicString,
         privateKey = privateKey,
     )
+}
+
+internal fun sha256Hash(input: String): String {
+    return SHA256().digest(input.encodeToByteArray()).toHexString()
 }

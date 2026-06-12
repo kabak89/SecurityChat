@@ -7,14 +7,13 @@ import com.security.chat.multiplatform.common.core.network.entity.AccessToken
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.RefreshToken
 import com.security.chat.multiplatform.common.core.network.entity.Tokens
-import com.security.chat.multiplatform.features.authorize.data.entity.AuthRequest
-import com.security.chat.multiplatform.features.authorize.data.entity.AuthResponse
+import com.security.chat.multiplatform.features.authorize.data.entity.SignUpRequest
+import com.security.chat.multiplatform.features.authorize.data.entity.SignUpResponse
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpResult
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignUpRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
-import org.kotlincrypto.hash.sha2.SHA256
 
 internal class SignUpRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -30,20 +29,20 @@ internal class SignUpRepoImpl(
         )
     }
 
-    override suspend fun signUp(username: String, password: String): SignUpResult {
+    override suspend fun signUp(username: String): SignUpResult {
         return try {
-            val cryptoKeys = getKeysPair()
-            userStorage.saveKeys(cryptoKeys)
+            val cryptoKeys = generateKeysPair()
 
-            val response: AuthResponse = networkManager.runPost(
+            val response: SignUpResponse = networkManager.runPost(
                 relativePath = "/sign-up",
-                request = AuthRequest(
+                request = SignUpRequest(
                     login = username,
-                    passwordHash = sha256Hash(password),
                     publicKey = cryptoKeys.publicKey,
+                    privateKeyHash = sha256Hash(cryptoKeys.privateKey),
                 ),
             )
 
+            userStorage.saveKeys(cryptoKeys)
             userStorage.saveUserId(userId = response.userId)
             tokenManager.saveTokens(
                 tokens = Tokens(
@@ -69,9 +68,5 @@ internal class SignUpRepoImpl(
 
     override suspend fun isOnboardingPassed(): Boolean {
         return userStorage.getIsOnboardingPassed()
-    }
-
-    private fun sha256Hash(input: String): String {
-        return SHA256().digest(input.encodeToByteArray()).decodeToString()
     }
 }

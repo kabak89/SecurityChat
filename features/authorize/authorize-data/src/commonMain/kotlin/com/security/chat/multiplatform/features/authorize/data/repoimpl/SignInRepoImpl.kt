@@ -7,11 +7,11 @@ import com.security.chat.multiplatform.common.core.network.entity.AccessToken
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.RefreshToken
 import com.security.chat.multiplatform.common.core.network.entity.Tokens
-import com.security.chat.multiplatform.features.authorize.data.entity.AuthRequest
-import com.security.chat.multiplatform.features.authorize.data.entity.AuthResponse
+import com.security.chat.multiplatform.features.authorize.data.entity.SignInRequest
+import com.security.chat.multiplatform.features.authorize.data.entity.SignInResponse
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignInRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
-import org.kotlincrypto.hash.sha2.SHA256
+import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
 
 internal class SignInRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -27,19 +27,19 @@ internal class SignInRepoImpl(
         )
     }
 
-    override suspend fun signIn(username: String, password: String) {
-        val cryptoKeys = getKeysPair()
-        userStorage.saveKeys(cryptoKeys)
-
-        val response: AuthResponse = networkManager.runPost(
+    override suspend fun signIn(privateKey: String) {
+        val response: SignInResponse = networkManager.runPost(
             relativePath = "/sign-in",
-            request = AuthRequest(
-                login = username,
-                passwordHash = sha256Hash(password),
-                publicKey = cryptoKeys.publicKey,
+            request = SignInRequest(
+                privateKeyHash = sha256Hash(privateKey),
             ),
         )
 
+        val cryptoKeys = CryptoKeys(
+            publicKey = response.publicKey,
+            privateKey = privateKey,
+        )
+        userStorage.saveKeys(cryptoKeys)
         userStorage.saveUserId(userId = response.userId)
         tokenManager.saveTokens(
             tokens = Tokens(
@@ -51,9 +51,5 @@ internal class SignInRepoImpl(
 
     override suspend fun isOnboardingPassed(): Boolean {
         return userStorage.getIsOnboardingPassed()
-    }
-
-    private fun sha256Hash(input: String): String {
-        return SHA256().digest(input.encodeToByteArray()).decodeToString()
     }
 }

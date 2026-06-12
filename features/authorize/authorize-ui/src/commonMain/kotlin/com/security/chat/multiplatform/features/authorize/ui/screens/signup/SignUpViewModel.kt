@@ -23,8 +23,6 @@ internal class SignUpViewModel(
                 updateState {
                     it.copy(
                         username = newState.username,
-                        password = newState.password,
-                        passwordRepeat = newState.passwordRepeat,
                         nextButtonEnabled = newState.formFilled,
                     )
                 }
@@ -57,8 +55,6 @@ internal class SignUpViewModel(
     override fun createInitialState(): SignUpState {
         return SignUpState(
             username = "",
-            password = "",
-            passwordRepeat = "",
             isLoading = false,
             nextButtonEnabled = false,
             isOnboardingPassed = false,
@@ -69,16 +65,7 @@ internal class SignUpViewModel(
         signUpModel.setUsername(newUsername)
     }
 
-    fun onPasswordTextChanged(newPassword: String) {
-        signUpModel.setPassword(newPassword)
-    }
-
-    fun onPasswordRepeatTextChanged(newPasswordRepeat: String) {
-        signUpModel.setPasswordRepeat(newPasswordRepeat)
-    }
-
     fun onSignUpClicked() {
         signUpModel.signUp.startOnSubscribe()
     }
-
 }

@@ -17,8 +17,7 @@ public interface SignInModel : ScopedModel {
 
     public val signIn: Task0<Unit>
 
-    public fun setUsername(userName: String)
-    public fun setPassword(password: String)
+    public fun setPrivateKey(privateKey: String)
     public fun getStateFlow(): Flow<SignInStateInfo>
 }
 
@@ -34,13 +33,8 @@ internal class SignInModelImpl(
 
     override val signIn: Task0<Unit> =
         task { ->
-            val username = stateFlow.value.username
-            val password = stateFlow.value.password
-
-            signInRepo.signIn(
-                username = username,
-                password = password,
-            )
+            val privateKey = stateFlow.value.privateKey
+            signInRepo.signIn(privateKey = privateKey)
         }
 
     override fun onPostStart() {
@@ -52,24 +46,18 @@ internal class SignInModelImpl(
         }
     }
 
-    override fun setUsername(userName: String) {
-        stateFlow.update { it.copy(username = userName) }
-    }
-
-    override fun setPassword(password: String) {
-        stateFlow.update { it.copy(password = password) }
+    override fun setPrivateKey(privateKey: String) {
+        stateFlow.update { it.copy(privateKey = privateKey) }
     }
 
     override fun getStateFlow(): Flow<SignInStateInfo> {
         return stateFlow
             .map {
-                val username = it.username
-                val password = it.password
+                val privateKey = it.privateKey
 
                 SignInStateInfo(
-                    username = username,
-                    password = password,
-                    isSignInEnabled = username.isNotBlank() && password.isNotBlank(),
+                    privateKey = privateKey,
+                    isSignInEnabled = privateKey.isNotBlank(),
                     isOnboardingPassed = it.isOnboardingPassed,
                 )
             }
@@ -77,8 +65,7 @@ internal class SignInModelImpl(
     }
 
     private data class State(
-        val username: String = "",
-        val password: String = "",
+        val privateKey: String = "",
         val isOnboardingPassed: Boolean = false,
     )
 }
