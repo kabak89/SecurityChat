@@ -135,7 +135,7 @@ internal fun SignInContentPreview() {
         SignInContent(
             modifier = Modifier.fillMaxSize(),
             state = SignInState(
-                privateKey = "john.doe",
+                privateKey = "PRIVATE KEY",
                 isLoading = false,
                 isSignInEnabled = false,
                 alertDialogDescriptor = null,

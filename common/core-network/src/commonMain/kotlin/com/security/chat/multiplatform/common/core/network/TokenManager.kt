@@ -13,6 +13,8 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 public interface TokenManager {
@@ -37,6 +39,8 @@ internal class TokenManagerImpl(
         )
     }
 
+    private val refreshMutex = Mutex()
+
     override suspend fun saveTokens(tokens: Tokens) {
         withContext(dispatcherProviderInterface.IO) {
             encryptedSettings.putString(KEY_ACCESS_TOKEN, tokens.accessToken.value)
@@ -45,31 +49,34 @@ internal class TokenManagerImpl(
     }
 
     override suspend fun getTokens(): Tokens? {
-        return withContext(dispatcherProviderInterface.IO) {
-            val accessToken = encryptedSettings.getString(KEY_ACCESS_TOKEN) ?: run {
-                Log.e("no access token in storage")
-                logoutErrorAlerter.logout()
-                return@withContext null
-            }
-
-            val refreshToken = encryptedSettings.getString(KEY_REFRESH_TOKEN) ?: run {
-                Log.e("no refresh token in storage")
-                logoutErrorAlerter.logout()
-                return@withContext null
-            }
-
-            Tokens(
-                accessToken = AccessToken(accessToken),
-                refreshToken = RefreshToken(refreshToken),
-            )
-        }
+        return getTokensInternal()
     }
 
     override suspend fun refreshTokens(): Tokens? {
-        val refreshToken = withContext(dispatcherProviderInterface.IO) {
+        val oldRefreshToken = withContext(dispatcherProviderInterface.IO) {
             encryptedSettings.getString(KEY_REFRESH_TOKEN)
         } ?: return null
 
+        return refreshMutex.withLock {
+            val currentRefreshToken = withContext(dispatcherProviderInterface.IO) {
+                encryptedSettings.getString(KEY_REFRESH_TOKEN)
+            }
+            if (currentRefreshToken != null && currentRefreshToken != oldRefreshToken) {
+                return@withLock getTokens()
+            }
+
+            performRefresh(oldRefreshToken)
+        }
+    }
+
+    override suspend fun clearTokens() {
+        withContext(dispatcherProviderInterface.IO) {
+            encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
+            encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
+        }
+    }
+
+    private suspend fun performRefresh(refreshToken: String): Tokens? {
         return runSuspendCatching {
             networkManager.runPost<RefreshRequest, RefreshResponse>(
                 relativePath = "/refresh",
@@ -107,10 +114,24 @@ internal class TokenManagerImpl(
             )
     }
 
-    override suspend fun clearTokens() {
-        withContext(dispatcherProviderInterface.IO) {
-            encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
-            encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
+    private suspend fun getTokensInternal(): Tokens? {
+        return withContext(dispatcherProviderInterface.IO) {
+            val accessToken = encryptedSettings.getString(KEY_ACCESS_TOKEN) ?: run {
+                Log.e("no access token in storage")
+                logoutErrorAlerter.logout()
+                return@withContext null
+            }
+
+            val refreshToken = encryptedSettings.getString(KEY_REFRESH_TOKEN) ?: run {
+                Log.e("no refresh token in storage")
+                logoutErrorAlerter.logout()
+                return@withContext null
+            }
+
+            Tokens(
+                accessToken = AccessToken(accessToken),
+                refreshToken = RefreshToken(refreshToken),
+            )
         }
     }
 }
