@@ -3,7 +3,7 @@ package com.security.chat.multiplatform.features.authorize.domain
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpResult
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.authorize.domain.entity.SignUpStateInfo
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignUpRepo
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +19,6 @@ public interface SignUpModel : ScopedModel {
 
     public fun setUsername(userName: String)
     public fun getStateFlow(): Flow<SignUpStateInfo>
-    public fun getResultFlow(): Flow<SignUpResult?>
 }
 
 internal class SignUpModelImpl(
@@ -34,13 +33,14 @@ internal class SignUpModelImpl(
 
     override val signUp: Task0<Unit> =
         task { ->
-            if (!stateFlow.value.formFilled) return@task
+            if (!stateFlow.value.formFilled) {
+                Log.e("form is not filled")
+                return@task
+            }
 
-            val result = signUpRepo.signUp(
+            signUpRepo.signUp(
                 username = stateFlow.value.username.trim(),
             )
-
-            stateFlow.update { it.copy(result = result) }
         }
 
     override fun onPostStart() {
@@ -68,15 +68,8 @@ internal class SignUpModelImpl(
             .distinctUntilChanged()
     }
 
-    override fun getResultFlow(): Flow<SignUpResult?> {
-        return stateFlow
-            .map { it.result }
-            .distinctUntilChanged()
-    }
-
     private data class State(
         val username: String = "",
-        val result: SignUpResult? = null,
         val isOnboardingPassed: Boolean = false,
     ) {
         val formFilled: Boolean = username.isNotBlank()

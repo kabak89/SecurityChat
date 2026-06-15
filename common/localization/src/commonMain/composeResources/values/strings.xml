@@ -49,4 +49,10 @@
     <string name="notification_permission_do_not_grant">Use app without notifications</string>
     <string name="notification_permission_restricted_permission_dialog_title">Notifications restricted</string>
     <string name="notification_permission_restricted_permission_dialog_message">You can change it in settings</string>
+
+    <string name="sign_up_username_already_exists_error_title">Username is taken</string>
+    <string name="sign_up_username_already_exists_error_description">This username is already in use by another user. Please create a new one</string>
+    <string name="sign_up_sign_in_label">Sign in</string>
+    <string name="sign_up_sign_up_label">Sign up</string>
+    <string name="sign_up_username_placeholder">Username</string>
 </resources>

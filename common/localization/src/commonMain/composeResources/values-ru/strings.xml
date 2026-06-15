@@ -49,4 +49,10 @@
     <string name="notification_permission_do_not_grant">Использовать приложение без уведомлений</string>
     <string name="notification_permission_restricted_permission_dialog_title">Показ уведомлений запрещен</string>
     <string name="notification_permission_restricted_permission_dialog_message">Вы можете изменить это в настройках</string>
+
+    <string name="sign_up_username_already_exists_error_title">Имя занято</string>
+    <string name="sign_up_username_already_exists_error_description">Это имя уже используется другим пользователем. Придумайте другое</string>
+    <string name="sign_up_sign_in_label">Авторизация</string>
+    <string name="sign_up_sign_up_label">Зарегистрироваться</string>
+    <string name="sign_up_username_placeholder">Имя</string>
 </resources>

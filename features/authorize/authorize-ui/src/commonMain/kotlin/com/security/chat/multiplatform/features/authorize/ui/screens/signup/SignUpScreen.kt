@@ -17,15 +17,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignUpComponent
 import com.security.chat.multiplatform.features.authorize.component.api.UserState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import org.jetbrains.compose.resources.stringResource
+import securitychat.common.localization.generated.resources.sign_up_sign_in_label
+import securitychat.common.localization.generated.resources.sign_up_sign_up_label
+import securitychat.common.localization.generated.resources.sign_up_username_placeholder
 
 @Composable
 internal fun SignUpScreen(
@@ -65,9 +71,7 @@ private fun SignUpContent(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                SignUpEvent.SuccessSignUp -> {
-                    onSuccessfulSignUp()
-                }
+                SignUpEvent.SuccessSignUp -> onSuccessfulSignUp()
             }
         },
     )
@@ -86,7 +90,7 @@ private fun SignUpContent(
                 modifier = Modifier
                     .padding(horizontal = 16.dp),
                 onClicked = onSignInClicked,
-                content = ButtonContent.Text("Sign In"),
+                content = ButtonContent.Text(stringResource(StringRes.sign_up_sign_in_label)),
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -96,9 +100,7 @@ private fun SignUpContent(
                 .padding(horizontal = 16.dp),
             value = state.username,
             onValueChange = onUsernameTextChanged,
-            placeholder = {
-                Text("Username")
-            },
+            placeholder = { Text(stringResource(StringRes.sign_up_username_placeholder)) },
             enabled = !state.isLoading,
         )
         Spacer(Modifier.height(16.dp))
@@ -114,9 +116,17 @@ private fun SignUpContent(
                     .padding(horizontal = 16.dp),
                 onClicked = onSignUpClicked,
                 enabled = state.nextButtonEnabled,
-                content = ButtonContent.Text("Sign Up"),
+                content = ButtonContent.Text(stringResource(StringRes.sign_up_sign_up_label)),
             )
         }
+    }
+    if (state.alertDialogDescriptor != null) {
+        AlertDialogComponent(
+            content = state.alertDialogDescriptor.content,
+            onDismissRequest = state.alertDialogDescriptor.dismissAction,
+            onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
+            onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+        )
     }
 }
 
@@ -131,6 +141,7 @@ internal fun SignUpContentPreview() {
                 isLoading = false,
                 nextButtonEnabled = true,
                 isOnboardingPassed = false,
+                alertDialogDescriptor = null,
             ),
             events = emptyFlow(),
             onSignInClicked = {},
@@ -152,6 +163,7 @@ internal fun SignUpContentPreviewDisabled() {
                 isLoading = false,
                 nextButtonEnabled = false,
                 isOnboardingPassed = false,
+                alertDialogDescriptor = null,
             ),
             events = emptyFlow(),
             onSignInClicked = {},
@@ -173,6 +185,7 @@ internal fun SignUpContentPreviewLoading() {
                 isLoading = true,
                 nextButtonEnabled = true,
                 isOnboardingPassed = false,
+                alertDialogDescriptor = null,
             ),
             events = emptyFlow(),
             onSignInClicked = {},

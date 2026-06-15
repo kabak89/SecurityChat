@@ -41,9 +41,7 @@ internal class SignInViewModel(
 
         signInModel.signIn.jobFlow.asLceState().map { it.toUiLceState(::signInErrorMapper) }
             .onEach { state ->
-                val isLoading = state.isLoading
-
-                updateState { it.copy(isLoading = isLoading) }
+                updateState { it.copy(isLoading = state.isLoading) }
 
                 if (state is UiLceState.Error) {
                     val cause = state.error.cause
