@@ -10,10 +10,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
+import sh.calvin.autolinktext.rememberAutoLinkText
 
 @Composable
 internal fun OutgoingMessageComponent(
@@ -28,7 +30,7 @@ internal fun OutgoingMessageComponent(
         Text(
             modifier = Modifier
                 .padding(start = 40.dp),
-            text = message.text,
+            text = AnnotatedString.rememberAutoLinkText(text = message.text),
             color = AppTheme.colors.textPrimary,
             style = AppTheme.typography.body,
         )

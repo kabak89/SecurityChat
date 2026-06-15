@@ -48,6 +48,7 @@ kmp-clipboard = "0.1.0"
 kmp-toast = "0.1.0"
 navigationeventCompose = "1.1.0"
 kotlinResult = "2.3.1"
+autolinktext = "2.0.2"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -135,6 +136,8 @@ navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:nav
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 
 kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "kotlinResult" }
+
+autolinktext = { module = "sh.calvin.autolinktext:autolinktext", version.ref = "autolinktext" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

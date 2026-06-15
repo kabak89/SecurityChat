@@ -15,6 +15,7 @@ kotlin {
             implementation(libs.haze)
             implementation(libs.paging.compose)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.autolinktext)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)
