@@ -33,6 +33,7 @@
     <string name="profile_copy_private_key">Скопировать</string>
     <string name="profile_copied">Скопировано</string>
     <string name="profile_section_private_key">Приватный ключ</string>
+    <string name="profile_delete_profile">Удалить профиль</string>
     <string name="profile_update_conflict_error_title">Ошибка обновления профиля</string>
     <string name="profile_update_conflict_error_description">Пользователь с таким логином уже существует</string>
 
@@ -55,4 +56,7 @@
     <string name="sign_up_sign_in_label">Авторизация</string>
     <string name="sign_up_sign_up_label">Зарегистрироваться</string>
     <string name="sign_up_username_placeholder">Имя</string>
+
+    <string name="delete_profile_title">Удаление профиля</string>
+    <string name="delete_profile_description">Удаление профиля необратимо. Все ваши данные будут удалены, это действие нельзя отменить.</string>
 </resources>

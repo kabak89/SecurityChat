@@ -7,6 +7,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.profile.component.api.ProfileComponent
+import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.DeleteProfileScreen
 import com.security.chat.multiplatform.features.profile.ui.screens.main.ProfileMainScreen
 
 @OptIn(ExperimentalDecomposeApi::class)
@@ -25,6 +26,12 @@ public fun ProfileRootScreen(
             when (val child = it.instance) {
                 is ProfileComponent.Child.ProfileMain -> {
                     ProfileMainScreen(
+                        component = child.component,
+                    )
+                }
+
+                is ProfileComponent.Child.DeleteProfile -> {
+                    DeleteProfileScreen(
                         component = child.component,
                     )
                 }

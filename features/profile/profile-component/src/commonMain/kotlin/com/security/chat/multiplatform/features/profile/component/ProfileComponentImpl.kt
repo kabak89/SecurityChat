@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
@@ -62,6 +63,16 @@ public class ProfileComponentImpl(
                     component = ProfileMainComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
+                        onDeleteProfile = { navigation.push(Params.DeleteProfile) },
+                    ),
+                )
+            }
+
+            Params.DeleteProfile -> {
+                ProfileComponent.Child.DeleteProfile(
+                    component = DeleteProfileComponentImpl(
+                        componentContext = componentContext,
+                        onExit = { navigation.pop() },
                     ),
                 )
             }
@@ -73,6 +84,9 @@ public class ProfileComponentImpl(
 
         @Serializable
         data object ProfileMain : Params()
+
+        @Serializable
+        data object DeleteProfile : Params()
     }
 }
 

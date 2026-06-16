@@ -33,6 +33,7 @@
     <string name="profile_copy_private_key">Copy</string>
     <string name="profile_copied">Copied</string>
     <string name="profile_section_private_key">Private key</string>
+    <string name="profile_delete_profile">Delete profile</string>
     <string name="profile_update_conflict_error_title">Error of profile update</string>
     <string name="profile_update_conflict_error_description">User with such login already exists</string>
 
@@ -55,4 +56,7 @@
     <string name="sign_up_sign_in_label">Sign in</string>
     <string name="sign_up_sign_up_label">Sign up</string>
     <string name="sign_up_username_placeholder">Username</string>
+
+    <string name="delete_profile_title">Delete profile</string>
+    <string name="delete_profile_description">Deleting your profile is permanent. All your data will be removed and this action cannot be undone.</string>
 </resources>

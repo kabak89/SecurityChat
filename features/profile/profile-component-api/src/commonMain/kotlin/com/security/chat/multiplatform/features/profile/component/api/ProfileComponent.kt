@@ -15,5 +15,6 @@ public interface ProfileComponent : BaseComponent, DiScopeHolder, BackHandlerOwn
     public sealed interface Child {
 
         public class ProfileMain(public val component: ProfileMainComponent) : Child
+        public class DeleteProfile(public val component: DeleteProfileComponent) : Child
     }
 }

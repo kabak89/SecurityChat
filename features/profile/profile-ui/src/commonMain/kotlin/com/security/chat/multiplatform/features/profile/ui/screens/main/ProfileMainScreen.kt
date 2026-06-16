@@ -19,11 +19,16 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -56,7 +61,9 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
+import securitychat.common.icons_kit.generated.resources.ic_more
 import securitychat.common.localization.generated.resources.profile_copy_private_key
+import securitychat.common.localization.generated.resources.profile_delete_profile
 import securitychat.common.localization.generated.resources.profile_hide_private_key
 import securitychat.common.localization.generated.resources.profile_login_label
 import securitychat.common.localization.generated.resources.profile_login_placeholder
@@ -81,6 +88,7 @@ internal fun ProfileMainScreen(
             onUpdateUsernameClicked = vm::onUpdateUsernameClicked,
             onTogglePrivateKeyVisibilityClicked = vm::onTogglePrivateKeyVisibilityClicked,
             onCopyPrivateKeyClicked = vm::onCopyPrivateKeyClicked,
+            onDeleteProfileClicked = component::onDeleteProfileClicked,
         )
     }
 }
@@ -95,6 +103,7 @@ private fun ProfileMainScreenContent(
     onUpdateUsernameClicked: () -> Unit,
     onTogglePrivateKeyVisibilityClicked: () -> Unit,
     onCopyPrivateKeyClicked: () -> Unit,
+    onDeleteProfileClicked: () -> Unit,
 ) {
     val toastState = rememberToastHostState()
     val scope = rememberCoroutineScope()
@@ -122,6 +131,7 @@ private fun ProfileMainScreenContent(
             modifier = Modifier
                 .fillMaxSize(),
         ) {
+            var isMenuOpened by remember { mutableStateOf(false) }
             ToolbarComponent(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -132,7 +142,34 @@ private fun ProfileMainScreenContent(
                 centerContent = CenterContent.Title(
                     text = stringResource(StringRes.profile_title),
                 ),
-                endContent = null,
+                endContent = SideContent.Custom(
+                    content = {
+                        Box {
+                            ButtonContent(
+                                icon = DrawableRes.ic_more,
+                                onClicked = { isMenuOpened = !isMenuOpened },
+                            )
+                            DropdownMenu(
+                                expanded = isMenuOpened,
+                                onDismissRequest = { isMenuOpened = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(StringRes.profile_delete_profile),
+                                            color = AppTheme.colors.textPrimary,
+                                            style = AppTheme.typography.body,
+                                        )
+                                    },
+                                    onClick = {
+                                        isMenuOpened = false
+                                        onDeleteProfileClicked()
+                                    },
+                                )
+                            }
+                        }
+                    },
+                ),
             )
             ProfileContent(
                 modifier = Modifier
@@ -297,6 +334,7 @@ internal fun ProfileMainScreenPreview() {
             onUpdateUsernameClicked = {},
             onTogglePrivateKeyVisibilityClicked = {},
             onCopyPrivateKeyClicked = {},
+            onDeleteProfileClicked = {},
         )
     }
 }
@@ -322,6 +360,7 @@ internal fun ProfileMainScreenPreviewUpdateDisabled() {
             onUpdateUsernameClicked = {},
             onTogglePrivateKeyVisibilityClicked = {},
             onCopyPrivateKeyClicked = {},
+            onDeleteProfileClicked = {},
         )
     }
 }
@@ -347,6 +386,7 @@ internal fun ProfileMainScreenPreviewLoading() {
             onUpdateUsernameClicked = {},
             onTogglePrivateKeyVisibilityClicked = {},
             onCopyPrivateKeyClicked = {},
+            onDeleteProfileClicked = {},
         )
     }
 }

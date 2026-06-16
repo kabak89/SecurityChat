@@ -11,6 +11,7 @@ import org.koin.core.qualifier.named
 
 internal class ProfileMainComponentImpl(
     private val onExit: () -> Unit,
+    private val onDeleteProfile: () -> Unit,
     componentContext: ComponentContext,
 ) : ProfileMainComponent,
     BaseComponentImpl(
@@ -35,6 +36,10 @@ internal class ProfileMainComponentImpl(
 
     override fun onBackClicked() {
         onExit()
+    }
+
+    override fun onDeleteProfileClicked() {
+        onDeleteProfile()
     }
 }
 

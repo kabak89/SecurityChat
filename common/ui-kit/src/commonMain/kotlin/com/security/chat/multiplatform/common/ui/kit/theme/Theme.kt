@@ -106,9 +106,6 @@ internal val LocalAppShapes: ProvidableCompositionLocal<Shapes> =
 
 @Immutable
 public class AppTypography internal constructor(
-    public val default: TextStyle = TextStyle(
-        fontSize = 16.sp,
-    ),
     public val title: TextStyle = TextStyle(
         fontSize = 18.sp,
         fontWeight = W600,
