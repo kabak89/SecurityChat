@@ -59,4 +59,6 @@
 
     <string name="delete_profile_title">Delete profile</string>
     <string name="delete_profile_description">Deleting your profile is permanent. All your data will be removed and this action cannot be undone.</string>
+    <string name="delete_profile_drag_hint">To confirm deletion, drag the profile to the trash</string>
+    <string name="delete_profile_drag_text">Profile</string>
 </resources>

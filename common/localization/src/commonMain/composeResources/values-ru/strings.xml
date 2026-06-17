@@ -59,4 +59,6 @@
 
     <string name="delete_profile_title">Удаление профиля</string>
     <string name="delete_profile_description">Удаление профиля необратимо. Все ваши данные будут удалены, это действие нельзя отменить.</string>
+    <string name="delete_profile_drag_hint">Для подтверждения удаления перетащите профиль в корзину</string>
+    <string name="delete_profile_drag_text">Профиль</string>
 </resources>

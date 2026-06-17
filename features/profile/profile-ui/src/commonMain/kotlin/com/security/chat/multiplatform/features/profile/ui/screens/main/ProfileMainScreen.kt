@@ -150,6 +150,7 @@ private fun ProfileMainScreenContent(
                                 onClicked = { isMenuOpened = !isMenuOpened },
                             )
                             DropdownMenu(
+                                containerColor = AppTheme.colors.backgroundSecondary,
                                 expanded = isMenuOpened,
                                 onDismissRequest = { isMenuOpened = false },
                             ) {
@@ -157,7 +158,7 @@ private fun ProfileMainScreenContent(
                                     text = {
                                         Text(
                                             text = stringResource(StringRes.profile_delete_profile),
-                                            color = AppTheme.colors.textPrimary,
+                                            color = AppTheme.colors.textSecondary,
                                             style = AppTheme.typography.body,
                                         )
                                     },
