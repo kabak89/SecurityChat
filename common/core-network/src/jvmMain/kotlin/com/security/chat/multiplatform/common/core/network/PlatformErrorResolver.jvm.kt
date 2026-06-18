@@ -8,6 +8,6 @@ import java.net.ConnectException
 public actual fun resolveError(throwable: Throwable): AppError {
     return when (throwable) {
         is ConnectException -> ConnectionError()
-        else -> UnknownError()
+        else -> UnknownError(originalError = throwable)
     }
 }

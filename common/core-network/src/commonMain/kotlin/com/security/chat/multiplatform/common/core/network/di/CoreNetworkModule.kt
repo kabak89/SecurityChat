@@ -57,10 +57,17 @@ public val coreNetworkModule: Module =
         }
 
         single {
-            NetworkConfig(
-                host = "http://$host",
-                port = 80,
-            )
+            if (BuildKonfig.IS_DEBUG) {
+                NetworkConfig(
+                    host = "http://$host",
+                    port = 80,
+                )
+            } else {
+                NetworkConfig(
+                    host = "https://$host",
+                    port = 443,
+                )
+            }
         }
 
         singleOf(::LogoutErrorBroadcasterImpl) binds arrayOf(

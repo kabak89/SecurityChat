@@ -1,4 +1,7 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import com.securitychat.gradle.ConventionBasePluginExtension.Companion.IS_DEBUG_KEY
+import com.securitychat.gradle.ConventionBasePluginExtension.Companion.isDebug
 import com.securitychat.gradle.ConventionBasePluginExtension.Companion.serverEnv
 import java.util.Properties
 
@@ -24,6 +27,11 @@ buildkonfig {
             type = STRING,
             name = "baseHost",
             value = resolveBaseHostByEnv(project = project, env = env),
+        )
+        buildConfigField(
+            type = BOOLEAN,
+            name = IS_DEBUG_KEY,
+            value = isDebug(project).toString(),
         )
     }
 }
