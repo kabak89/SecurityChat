@@ -87,6 +87,7 @@ public class SettingsComponentImpl(
                     ProfileComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
+                        onProfileDeletion = onLogout,
                     ),
                 )
             }

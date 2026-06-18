@@ -14,10 +14,12 @@ import com.security.chat.multiplatform.features.profile.data.di.profileDataModul
 import com.security.chat.multiplatform.features.profile.data.storage.di.profileDataStorageModule
 import com.security.chat.multiplatform.features.profile.domain.di.profileDomainModule
 import com.security.chat.multiplatform.features.profile.ui.di.profileUiModule
+import com.security.chat.multiplatform.features.user.data.network.di.userDataNetworkModule
 import kotlinx.serialization.Serializable
 
 public class ProfileComponentImpl(
     private val onExit: () -> Unit,
+    private val onProfileDeletion: () -> Unit,
     componentContext: ComponentContext,
 ) : ProfileComponent,
     BaseComponentImpl(
@@ -33,6 +35,8 @@ public class ProfileComponentImpl(
             profileDomainModule,
             profileDataModule,
             profileDataStorageModule,
+
+            userDataNetworkModule,
         )
         getKoin().loadModules(featureModules)
         doOnDestroy {
@@ -73,6 +77,7 @@ public class ProfileComponentImpl(
                     component = DeleteProfileComponentImpl(
                         componentContext = componentContext,
                         onExit = { navigation.pop() },
+                        onProfileDeletion = onProfileDeletion,
                     ),
                 )
             }

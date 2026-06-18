@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.common.core.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -40,4 +41,11 @@ public class NetworkManager(
             .body()
     }
 
+    public suspend inline fun runDelete(
+        relativePath: String,
+    ) {
+        httpClient.delete(urlString = baseUrl + relativePath) {
+            contentType(ContentType.Application.Json)
+        }
+    }
 }

@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.features.profile.profileDataStorage)
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.user.userDataNetwork)
+            implementation(projects.features.settings.settingsDataCommon)
         }
     }
 }

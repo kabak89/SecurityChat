@@ -12,6 +12,7 @@ import com.security.chat.multiplatform.features.user.data.network.mapper.toNM
 public interface UserNetworkManager {
     public suspend fun getProfile(id: String): ProfileNM
     public suspend fun updateProfile(params: UpdateProfileNM): ProfileNM
+    public suspend fun deleteProfile()
 }
 
 internal class UserNetworkManagerImpl(
@@ -43,5 +44,9 @@ internal class UserNetworkManagerImpl(
             ),
         )
             .toNM()
+    }
+
+    override suspend fun deleteProfile() {
+        networkManager.runDelete("/profile")
     }
 }

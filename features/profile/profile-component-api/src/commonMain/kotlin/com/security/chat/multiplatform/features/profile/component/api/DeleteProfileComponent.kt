@@ -6,4 +6,5 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 public interface DeleteProfileComponent : BaseComponent, DiScopeHolder {
 
     public fun onBackClicked()
+    public fun onProfileDeleted()
 }

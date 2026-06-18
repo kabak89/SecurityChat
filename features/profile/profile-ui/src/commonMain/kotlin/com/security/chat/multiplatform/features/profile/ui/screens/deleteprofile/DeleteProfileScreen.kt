@@ -49,17 +49,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
+import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.MAX_CONTENT_WIDTH_DP
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.profile.component.api.DeleteProfileComponent
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleDirection
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleDirection.Left
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleDirection.Right
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleSpec
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.ic_back
@@ -81,8 +85,10 @@ internal fun DeleteProfileScreen(
                 .fillMaxSize()
                 .imePadding(),
             state = state,
+            events = vm.viewEvent,
             onBackClicked = component::onBackClicked,
             onConfirmDeleteClicked = vm::onConfirmDeleteClicked,
+            onProfileDeleted = component::onProfileDeleted,
         )
     }
 }
@@ -91,9 +97,19 @@ internal fun DeleteProfileScreen(
 private fun DeleteProfileScreenContent(
     modifier: Modifier,
     state: DeleteProfileState,
+    events: Flow<DeleteProfileEvent>,
     onBackClicked: () -> Unit,
     onConfirmDeleteClicked: () -> Unit,
+    onProfileDeleted: () -> Unit,
 ) {
+    SingleEventEffect(
+        sideEffectFlow = events,
+        collector = { event ->
+            when (event) {
+                DeleteProfileEvent.ProfileDeleted -> onProfileDeleted()
+            }
+        },
+    )
     Box(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
@@ -150,6 +166,14 @@ private fun DeleteProfileScreenContent(
                 Spacer(Modifier.height(16.dp))
             }
         }
+    }
+    if (state.alertDialogDescriptor != null) {
+        AlertDialogComponent(
+            content = state.alertDialogDescriptor.content,
+            onDismissRequest = state.alertDialogDescriptor.dismissAction,
+            onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
+            onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+        )
     }
 }
 
@@ -412,9 +436,12 @@ internal fun DeleteProfileScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             state = DeleteProfileState(
                 showLoading = false,
+                alertDialogDescriptor = null,
             ),
+            events = emptyFlow(),
             onBackClicked = {},
             onConfirmDeleteClicked = {},
+            onProfileDeleted = {},
         )
     }
 }

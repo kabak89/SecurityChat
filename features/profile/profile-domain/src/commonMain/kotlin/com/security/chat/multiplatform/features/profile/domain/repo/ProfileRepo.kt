@@ -7,4 +7,5 @@ public interface ProfileRepo {
     public suspend fun fetchUserInfo()
     public suspend fun getProfile(): Profile?
     public suspend fun updateProfile(params: UpdateProfileParams)
+    public suspend fun deleteProfile()
 }

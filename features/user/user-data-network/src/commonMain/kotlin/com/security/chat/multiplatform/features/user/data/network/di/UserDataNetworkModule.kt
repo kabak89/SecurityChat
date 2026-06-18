@@ -7,7 +7,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-public val userNetworkManager: Module =
+public val userDataNetworkModule: Module =
     module {
         singleOf(::UserNetworkManagerImpl) bind UserNetworkManager::class
     }
