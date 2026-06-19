@@ -14,6 +14,7 @@ kotlin {
             implementation(libs.compose.resources)
             implementation(libs.kmp.clipboard)
             implementation(libs.kmp.toast)
+            implementation(libs.haze)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)

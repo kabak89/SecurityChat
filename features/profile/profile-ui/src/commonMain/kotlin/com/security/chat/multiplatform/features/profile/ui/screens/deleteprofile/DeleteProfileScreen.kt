@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -62,6 +63,11 @@ import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleDirection.Left
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleDirection.Right
 import com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile.entity.ObstacleSpec
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
@@ -243,6 +249,8 @@ private fun ConfirmComponent(
         var offsetX by remember { mutableFloatStateOf(0f) }
         var offsetY by remember { mutableFloatStateOf(0f) }
 
+        val hazeState = rememberHazeState()
+
         Text(
             text = stringResource(StringRes.delete_profile_drag_text),
             color = AppTheme.colors.textSecondary,
@@ -298,12 +306,31 @@ private fun ConfirmComponent(
                 .onGloballyPositioned { layoutCoordinates ->
                     textCoords = layoutCoordinates
                 }
-                .padding(8.dp),
+                .padding(8.dp)
+                .hazeSource(state = hazeState),
         )
+        val backgroundColor = AppTheme.colors.backgroundSecondary
+        val hazeStyle = remember {
+            HazeStyle(
+                backgroundColor = backgroundColor,
+                tint = HazeTint(
+                    color = backgroundColor.copy(alpha = 0.05f),
+                ),
+                blurRadius = 4.dp,
+                fallbackTint = HazeTint(
+                    color = backgroundColor.copy(alpha = 0.6f),
+                ),
+            )
+        }
         TrashIcon(
             modifier = Modifier
                 .align(alignment = Alignment.BottomCenter)
-                .onGloballyPositioned { layoutCoordinates -> trashCoords = layoutCoordinates },
+                .clip(AppTheme.shapes.roundedRectangle16)
+                .onGloballyPositioned { layoutCoordinates -> trashCoords = layoutCoordinates }
+                .hazeEffect(
+                    state = hazeState,
+                    style = hazeStyle,
+                ),
             isLoading = isLoading,
             trashActivated = trashActivated,
         )
