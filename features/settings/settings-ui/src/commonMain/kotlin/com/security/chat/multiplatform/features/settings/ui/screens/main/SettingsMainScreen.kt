@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +27,8 @@ import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.settings.component.api.SettingsMainComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.DialogData
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import securitychat.common.icons_kit.generated.resources.ic_back
@@ -78,12 +78,13 @@ private fun SettingsMainScreenContent(
             }
         },
     )
-
+    val hazeState = rememberHazeState()
     Box(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .hazeSource(hazeState),
     ) {
         Column(
             modifier = Modifier
@@ -117,28 +118,22 @@ private fun SettingsMainScreenContent(
                 },
             )
         }
-        if (state.dialogData != null) {
-            AlertDialogComponent(
-                title = state.dialogData.title,
-                message = state.dialogData.message,
-                positiveButtonText = state.dialogData.positiveButtonTitle,
-                negativeButtonText = state.dialogData.negativeButtonTitle,
-                onDismissRequest = onDismissDialog,
-                onPositiveButtonClicked = {
-                    onDialogActionClicked(state.dialogData.positiveButtonAction)
-                },
-                onNegativeButtonClicked = {
-                    onDialogActionClicked(state.dialogData.negativeButtonAction)
-                },
-            )
-        }
-        if (state.requestInProgress) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.Center),
-                color = AppTheme.colors.element,
-            )
-        }
+    }
+    if (state.dialogData != null) {
+        AlertDialogComponent(
+            title = state.dialogData.title,
+            message = state.dialogData.message,
+            positiveButtonText = state.dialogData.positiveButtonTitle,
+            negativeButtonText = state.dialogData.negativeButtonTitle,
+            onDismissRequest = onDismissDialog,
+            onPositiveButtonClicked = {
+                onDialogActionClicked(state.dialogData.positiveButtonAction)
+            },
+            onNegativeButtonClicked = {
+                onDialogActionClicked(state.dialogData.negativeButtonAction)
+            },
+            hazeState = hazeState,
+        )
     }
 }
 

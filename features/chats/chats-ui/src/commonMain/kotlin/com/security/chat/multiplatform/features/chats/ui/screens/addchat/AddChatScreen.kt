@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.chats.ui.screens.addchat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,8 @@ import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import securitychat.common.icons_kit.generated.resources.ic_back
@@ -71,13 +74,19 @@ private fun AddChatContent(
         },
     )
 
-    Column(
+    val hazeState = rememberHazeState()
+    Box(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding()
-            .imePadding(),
+            .hazeSource(state = hazeState),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .imePadding(),
+        ) {
         ToolbarComponent(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -120,17 +129,16 @@ private fun AddChatContent(
             )
         }
         Spacer(Modifier.height(16.dp))
-    }
-    if (state.showNotFoundDialog) {
-        AlertDialogComponent(
-            title = "User not found",
-            message = null,
-            positiveButtonText = "OK",
-            negativeButtonText = null,
-            onDismissRequest = onCloseDialogClicked,
-            onPositiveButtonClicked = onCloseDialogClicked,
-            onNegativeButtonClicked = null,
-        )
+        }
+        if (state.showNotFoundDialog) {
+            AlertDialogComponent(
+                title = "User not found",
+                hazeState = hazeState,
+                onDismissRequest = onCloseDialogClicked,
+                positiveButtonText = "OK",
+                onPositiveButtonClicked = onCloseDialogClicked,
+            )
+        }
     }
 }
 

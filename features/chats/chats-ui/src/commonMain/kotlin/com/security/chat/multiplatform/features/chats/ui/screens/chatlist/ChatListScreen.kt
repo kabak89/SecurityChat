@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
-import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.isLoading
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
@@ -38,6 +37,8 @@ import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chats.component.api.ChatListComponent
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.ChatItem
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.entity.Chats
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
@@ -78,18 +79,13 @@ private fun ChatListContent(
     onCloseErrorDialogClicked: () -> Unit,
     onReloadChatsClicked: () -> Unit,
 ) {
-    SingleEventEffect(
-        sideEffectFlow = events,
-        collector = { event ->
-            //TODO
-        },
-    )
-
+    val hazeState = rememberHazeState()
     Column(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .hazeSource(hazeState),
     ) {
         val titleStringRes = if (state.isConnectedToInternet) {
             StringRes.chat_list_title
@@ -146,6 +142,7 @@ private fun ChatListContent(
     if (errorDialogContent != null) {
         AlertDialogComponent(
             content = errorDialogContent,
+            hazeState = hazeState,
             onDismissRequest = onCloseErrorDialogClicked,
             onPositiveButtonClicked = onReloadChatsClicked,
             onNegativeButtonClicked = onCloseErrorDialogClicked,

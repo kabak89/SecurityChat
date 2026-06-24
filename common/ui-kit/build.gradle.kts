@@ -15,8 +15,10 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.resources)
+            implementation(libs.navigationevent.compose)
 
             api(libs.ui.tooling.preview)
+            api(libs.haze)
 
             api(projects.common.coreUi)
         }
@@ -25,8 +27,4 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
     }
-}
-
-compose.resources {
-    publicResClass = true
 }

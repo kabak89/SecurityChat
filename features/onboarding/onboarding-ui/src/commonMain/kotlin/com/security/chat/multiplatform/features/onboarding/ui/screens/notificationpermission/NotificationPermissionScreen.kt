@@ -36,6 +36,8 @@ import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingMainComponent
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
@@ -84,11 +86,13 @@ private fun NotificationPermissionScreenContent(
             }
         },
     )
+    val hazeState = rememberHazeState()
     Box(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .hazeSource(hazeState),
     ) {
         Column(
             modifier = Modifier
@@ -147,6 +151,7 @@ private fun NotificationPermissionScreenContent(
             onDismissRequest = alertDialogDescriptor.dismissAction,
             onPositiveButtonClicked = alertDialogDescriptor.positiveAction,
             onNegativeButtonClicked = alertDialogDescriptor.negativeAction,
+            hazeState = hazeState,
         )
     }
 }

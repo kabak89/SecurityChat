@@ -26,6 +26,8 @@ import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.Aler
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignUpComponent
 import com.security.chat.multiplatform.features.authorize.component.api.UserState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
@@ -75,11 +77,13 @@ private fun SignUpContent(
             }
         },
     )
+    val hazeState = rememberHazeState()
     Column(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .statusBarsPadding(),
+            .statusBarsPadding()
+            .hazeSource(hazeState),
     ) {
         Spacer(Modifier.height(16.dp))
         Row(
@@ -123,6 +127,7 @@ private fun SignUpContent(
     if (state.alertDialogDescriptor != null) {
         AlertDialogComponent(
             content = state.alertDialogDescriptor.content,
+            hazeState = hazeState,
             onDismissRequest = state.alertDialogDescriptor.dismissAction,
             onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
             onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,

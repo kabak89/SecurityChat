@@ -116,11 +116,13 @@ private fun DeleteProfileScreenContent(
             }
         },
     )
+    val hazeState = rememberHazeState()
     Box(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .hazeSource(hazeState),
     ) {
         Column(
             modifier = Modifier
@@ -179,6 +181,7 @@ private fun DeleteProfileScreenContent(
             onDismissRequest = state.alertDialogDescriptor.dismissAction,
             onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
             onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+            hazeState = hazeState,
         )
     }
 }

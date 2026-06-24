@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mobilebytelabs.kmptoolkit.toast.ToastHost
 import com.mobilebytelabs.kmptoolkit.toast.rememberToastHostState
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
@@ -56,6 +55,8 @@ import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.profile.component.api.ProfileMainComponent
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
@@ -121,11 +122,13 @@ private fun ProfileMainScreenContent(
         },
     )
 
+    val hazeState = rememberHazeState()
     Box(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .hazeSource(state = hazeState),
     ) {
         Column(
             modifier = Modifier
@@ -187,12 +190,12 @@ private fun ProfileMainScreenContent(
         if (state.dialogContent != null) {
             AlertDialogComponent(
                 content = state.dialogContent.errorDialogContent,
+                hazeState = hazeState,
                 onDismissRequest = state.dialogContent.dismissAction,
                 onPositiveButtonClicked = state.dialogContent.positiveAction,
                 onNegativeButtonClicked = state.dialogContent.negativeAction,
             )
         }
-        ToastHost(hostState = toastState)
     }
 }
 
