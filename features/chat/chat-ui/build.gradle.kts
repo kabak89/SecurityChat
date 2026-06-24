@@ -12,7 +12,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.resources)
-            implementation(libs.haze)
             implementation(libs.paging.compose)
             implementation(libs.kotlinx.datetime)
             implementation(libs.autolinktext)

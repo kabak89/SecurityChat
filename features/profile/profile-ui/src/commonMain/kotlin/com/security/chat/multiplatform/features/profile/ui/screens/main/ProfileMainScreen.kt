@@ -187,15 +187,15 @@ private fun ProfileMainScreenContent(
                 onCopyPrivateKeyClicked = onCopyPrivateKeyClicked,
             )
         }
-        if (state.dialogContent != null) {
-            AlertDialogComponent(
-                content = state.dialogContent.errorDialogContent,
-                hazeState = hazeState,
-                onDismissRequest = state.dialogContent.dismissAction,
-                onPositiveButtonClicked = state.dialogContent.positiveAction,
-                onNegativeButtonClicked = state.dialogContent.negativeAction,
-            )
-        }
+    }
+    if (state.dialogContent != null) {
+        AlertDialogComponent(
+            content = state.dialogContent.errorDialogContent,
+            hazeState = hazeState,
+            onDismissRequest = state.dialogContent.dismissAction,
+            onPositiveButtonClicked = state.dialogContent.positiveAction,
+            onNegativeButtonClicked = state.dialogContent.negativeAction,
+        )
     }
 }
 

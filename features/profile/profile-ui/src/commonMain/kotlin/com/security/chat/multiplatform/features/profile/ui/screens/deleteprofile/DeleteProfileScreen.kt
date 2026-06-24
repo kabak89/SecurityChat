@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import com.security.chat.multiplatform.common.core.localization.StringRes
@@ -78,7 +77,6 @@ import securitychat.common.localization.generated.resources.delete_profile_descr
 import securitychat.common.localization.generated.resources.delete_profile_drag_hint
 import securitychat.common.localization.generated.resources.delete_profile_drag_text
 import securitychat.common.localization.generated.resources.delete_profile_title
-import kotlin.math.roundToInt
 import kotlin.random.Random
 
 @Composable
@@ -259,7 +257,10 @@ private fun ConfirmComponent(
             color = AppTheme.colors.textSecondary,
             style = AppTheme.typography.title,
             modifier = Modifier
-                .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+                .offset(
+                    x = with(density) { offsetX.toDp() },
+                    y = with(density) { offsetY.toDp() },
+                )
                 .align(alignment = Alignment.TopCenter)
                 .background(
                     color = AppTheme.colors.backgroundPrimary,
