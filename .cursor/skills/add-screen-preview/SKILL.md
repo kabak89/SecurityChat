@@ -8,30 +8,32 @@ description: >-
   Compose preview for a screen, or to mirror preview setup from settings/chats-ui.
 ---
 
-# Превью экрана (Compose, KMP)
+# Screen preview (Compose, KMP)
 
-## Когда применять
+## When to use
 
-- Новый или существующий экран / `*Content` в `features/*/*-ui`, нужно показать в **Android Studio
+- A new or existing screen / `*Content` in `features/*/*-ui` that needs to be shown in **Android
+  Studio
   Interactive Preview**.
-- Аналог эталона: превью
-  в [SettingsMainScreen.kt](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/main/SettingsMainScreen.kt)
-  или [ChatListScreen.kt](features/chats/chats-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/chats/ui/screens/chatlist/ChatListScreen.kt).
+- Reference analog: the preview
+  in [SettingsMainScreen.kt](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/main/SettingsMainScreen.kt)
+  or [ChatListScreen.kt](features/chats/chats-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/chats/ui/screens/chatlist/ChatListScreen.kt).
 
-## 1. Зависимости в `build.gradle.kts` модуля `*-ui`
+## 1. Dependencies in the `*-ui` module `build.gradle.kts`
 
-Превью в **commonMain** использует аннотацию `@Preview`; рендер в панели превью на Android тянет *
-*полный tooling** только на `androidMain`.
+A preview in **commonMain** uses the `@Preview` annotation; rendering in the preview panel on
+Android
+pulls in the **full tooling** only on `androidMain`.
 
-**Проверить / добавить:**
+**Check / add:**
 
-| Source set    | Назначение                                          | Зависимость                                                                                                                                                           |
-|---------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `commonMain`  | `@Preview`, `PreviewParameterProvider` (если нужно) | Обычно уже есть транзитивно через `api(projects.common.uiKit)` → `libs.ui.tooling.preview`. Если модуля нет в графе — явно: `implementation(libs.ui.tooling.preview)` |
-| `androidMain` | Рендер превью в Android Studio                      | **Обязательно добавить**, если превью не подхватывается: `implementation(libs.androidx.ui.tooling)`                                                                   |
+| Source set    | Purpose                                            | Dependency                                                                                                                                                                                   |
+|---------------|----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `commonMain`  | `@Preview`, `PreviewParameterProvider` (if needed) | Usually already present transitively via `api(projects.common.uiKit)` → `libs.ui.tooling.preview`. If the module is not in the graph — explicitly: `implementation(libs.ui.tooling.preview)` |
+| `androidMain` | Preview rendering in Android Studio                | **Must be added** if the preview is not picked up: `implementation(libs.androidx.ui.tooling)`                                                                                                |
 
-Пример блока для `androidMain` (как
-в [chats-ui/build.gradle.kts](features/chats/chats-ui/build.gradle.kts)):
+Example block for `androidMain` (as
+in [chats-ui/build.gradle.kts](features/chats/chats-ui/build.gradle.kts)):
 
 ```kotlin
 kotlin {
@@ -43,23 +45,25 @@ kotlin {
 }
 ```
 
-Каталог версий: [gradle/libs.versions.toml](gradle/libs.versions.toml) — алиасы `ui-tooling-preview`
-и `androidx-ui-tooling` (в коде: `libs.ui.tooling.preview`, `libs.androidx.ui.tooling`).
+Version catalog: [gradle/libs.versions.toml](gradle/libs.versions.toml) — aliases
+`ui-tooling-preview`
+and `androidx-ui-tooling` (in code: `libs.ui.tooling.preview`, `libs.androidx.ui.tooling`).
 
-## 2. Код превью
+## 2. Preview code
 
-1. **Превью вызывает тот же composable, что и экран** (часто приватный `*ScreenContent` / `*Content`
-   в том же файле — тогда не нужно менять `private` / `internal`).
-2. Обернуть в **`AppTheme { ... }`** (см. [
+1. **The preview calls the same composable as the screen** (often a private `*ScreenContent` /
+   `*Content` in the same file — then there is no need to change `private` / `internal`).
+2. Wrap in **`AppTheme { ... }`** (see [
    `Theme.kt`](common/ui-kit/src/commonMain/kotlin/com/security/chat/multiplatform/common/ui/kit/theme/Theme.kt),
    `common.ui.kit`).
-3. **Состояние** — мок-данные из реальных типов state/feature entities (как в проде).
-4. **Для `Flow` событий** — `events = emptyFlow()` и импорт `kotlinx.coroutines.flow.emptyFlow` (см.
+3. **State** — mock data from the real state/feature entity types (as in production).
+4. **For `Flow` events** — `events = emptyFlow()` and import `kotlinx.coroutines.flow.emptyFlow` (
+   see
    Settings).
-5. **Колбэки** — пустые лямбды `{}` или `{ _ -> }` для параметров.
-6. Сигнатура превью: `@Preview` + `@Composable` + `internal fun XxxPreview()` (как в проекте).
+5. **Callbacks** — empty lambdas `{}` or `{ _ -> }` for parameters.
+6. Preview signature: `@Preview` + `@Composable` + `internal fun XxxPreview()` (as in the project).
 
-Минимальный шаблон:
+Minimal template:
 
 ```kotlin
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,17 +83,19 @@ internal fun MyScreenContentPreview() {
 }
 ```
 
-## 3. Чеклист
+## 3. Checklist
 
-- [ ] В `*-ui/build.gradle.kts`: при необходимости `commonMain` → `libs.ui.tooling.preview`; для
+- [ ] In `*-ui/build.gradle.kts`: if needed, `commonMain` → `libs.ui.tooling.preview`; for
   Android — `androidMain` → `libs.androidx.ui.tooling` (`implementation`).
-- [ ] Превью в том же файле, что и приватный контент, либо контент сделан `internal` и доступен из
-  `androidMain` preview-only файла (в проекте предпочтительно **один файл**).
-- [ ] `AppTheme`, мок state, `emptyFlow()` для side-effect flows.
-- [ ] Сборка `:features:<feature>:<feature>-ui:compileKotlinIosArm64` (или целевой таргет) без
-  ошибок.
+- [ ] The preview is in the same file as the private content, or the content is made `internal` and
+  reachable from an `androidMain` preview-only file (one file is preferred in this project).
+- [ ] `AppTheme`, mock state, `emptyFlow()` for side-effect flows.
+- [ ] Build `:features:<feature>:<feature>-ui:compileKotlinIosArm64` (or the target you need)
+  without
+  errors.
 
-## 4. Не делать
+## 4. Do not
 
-- Не подключать `libs.androidx.ui.tooling` в `commonMain` — это AndroidX-артефакт для JVM/Android.
-- Не дублировать тяжёлую логику ViewModel/Koin в превью — только UI-слой с моками.
+- Do not add `libs.androidx.ui.tooling` to `commonMain` — it is an AndroidX artifact for
+  JVM/Android.
+- Do not duplicate heavy ViewModel/Koin logic in the preview — only the UI layer with mocks.

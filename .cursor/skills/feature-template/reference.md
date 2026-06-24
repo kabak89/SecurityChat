@@ -1,6 +1,6 @@
-# Эталонное дерево features/settings
+# Reference tree of features/settings
 
-Исходники и Gradle (без `build/`). Используйте как ориентир для копирования структуры каталогов.
+Sources and Gradle (without `build/`). Use as a guide for replicating the directory structure.
 
 ```
 features/settings/
@@ -40,4 +40,4 @@ features/settings/
             └── theme/
 ```
 
-Пакет для Kotlin: `com.security.chat.multiplatform.features.settings.<...>`.
+Kotlin package: `com.security.chat.multiplatform.features.settings.<...>`.

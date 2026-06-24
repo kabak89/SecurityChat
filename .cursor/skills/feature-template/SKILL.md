@@ -10,48 +10,51 @@ description: >-
   settings.gradle.kts includes.
 ---
 
-# Скелет KMP-фичи (SecurityChat)
+# KMP feature skeleton (SecurityChat)
 
-Эталонная реализация: [features/settings](features/settings). Скилл не генерирует бизнес-логику и
-UI — только структуру, зависимости и минимальные заготовки.
+Reference implementation: [features/settings](features/settings). The skill does not generate
+business
+logic or UI — only the structure, dependencies, and minimal stubs.
 
-## Объём скелета (важно)
+## Skeleton scope (important)
 
-- **Делать:** шесть модулей фичи, `include` в [settings.gradle.kts](settings.gradle.kts), внутренняя
-  структура слоёв, корневой компонент/экран внутри фичи по образцу `settings`.
-- **Не делать:** не подключать навигацию в новую фичу из старых модулей — не трогать
-  `MainComponent`, `ChatsComponent`, `MainScreen`, `RootComponent`, `shared` и т.п. ради входа в
-  фичу. Связка приложения с фичей — отдельная задача, вне этого скелета.
+- **Do:** the six feature modules, the `include` in [settings.gradle.kts](settings.gradle.kts), the
+  internal layer structure, and the feature's root component/screen modeled after `settings`.
+- **Do not:** do not wire navigation into the new feature from existing modules — do not touch
+  `MainComponent`, `ChatsComponent`, `MainScreen`, `RootComponent`, `shared`, etc. just to add an
+  entry
+  point into the feature. Connecting the app to the feature is a separate task, outside this
+  skeleton.
 
-## Именование
+## Naming
 
-| Что                   | Формат                                                       | Пример                                      |
-|-----------------------|--------------------------------------------------------------|---------------------------------------------|
-| Путь Gradle / каталог | kebab-case                                                   | `features/settings/`                        |
-| Type-safe accessor    | camelCase сегментов                                          | `projects.features.settings.settingsDomain` |
-| `namespace` и пакеты  | `com.security.chat.multiplatform.features.<feature>.<layer>` | `...features.settings.domain`               |
+| What                     | Format                                                       | Example                                     |
+|--------------------------|--------------------------------------------------------------|---------------------------------------------|
+| Gradle path / folder     | kebab-case                                                   | `features/settings/`                        |
+| Type-safe accessor       | camelCase segments                                           | `projects.features.settings.settingsDomain` |
+| `namespace` and packages | `com.security.chat.multiplatform.features.<feature>.<layer>` | `...features.settings.domain`               |
 
-Подфича в Gradle: `:features:<featureName>:<featureName>-<layer>` (например
+Gradle subfeature: `:features:<featureName>:<featureName>-<layer>` (e.g.
 `:features:settings:settings-ui`).
 
-## Шесть модулей
+## Six modules
 
-| Модуль                 | Назначение                                                      | Типовые зависимости                                               |
-|------------------------|-----------------------------------------------------------------|-------------------------------------------------------------------|
-| `{name}-domain`        | Репозитории (интерфейсы), доменные сущности, `ScopedModel`      | `projects.common.coreDomain`                                      |
-| `{name}-data`          | `RepoImpl`, мапперы data                                        | domain, data-storage, при необходимости другие фичи               |
-| `{name}-data-storage`  | Хранилище, entity `*SM`, мапперы storage                        | `common.settings`, `core-component`, Koin, coroutines — по задаче |
-| `{name}-ui`            | Compose, экраны, ViewModel, `viewModelOf`                       | `common.coreUi`, `component-api` (api), domain                    |
-| `{name}-component-api` | Контракт корня Decompose + дочерние компоненты (`Child` sealed) | `common.coreComponent`                                            |
-| `{name}-component`     | `SettingsComponentImpl`: стек, Koin load/unload                 | api, ui, domain, data, data-storage                               |
+| Module                 | Purpose                                                     | Typical dependencies                                              |
+|------------------------|-------------------------------------------------------------|-------------------------------------------------------------------|
+| `{name}-domain`        | Repositories (interfaces), domain entities, `ScopedModel`   | `projects.common.coreDomain`                                      |
+| `{name}-data`          | `RepoImpl`, data mappers                                    | domain, data-storage, other features when needed                  |
+| `{name}-data-storage`  | Storage, `*SM` entities, storage mappers                    | `common.settings`, `core-component`, Koin, coroutines — as needed |
+| `{name}-ui`            | Compose, screens, ViewModel, `viewModelOf`                  | `common.coreUi`, `component-api` (api), domain                    |
+| `{name}-component-api` | Decompose root contract + child components (`Child` sealed) | `common.coreComponent`                                            |
+| `{name}-component`     | `SettingsComponentImpl`: stack, Koin load/unload            | api, ui, domain, data, data-storage                               |
 
-Эталонные
+Reference
 `build.gradle.kts`: [settings-domain](features/settings/settings-domain/build.gradle.kts), [settings-data](features/settings/settings-data/build.gradle.kts), [settings-data-storage](features/settings/settings-data-storage/build.gradle.kts), [settings-ui](features/settings/settings-ui/build.gradle.kts), [settings-component-api](features/settings/settings-component-api/build.gradle.kts), [settings-component](features/settings/settings-component/build.gradle.kts).
 
-Плагин везде: `id("securitychat.convention.base")` и блок
-`conventionBasePlugin { namespace = "..." }`.
+Plugin everywhere: `id("securitychat.convention.base")` and the
+`conventionBasePlugin { namespace = "..." }` block.
 
-## Граф зависимостей (логический)
+## Dependency graph (logical)
 
 ```mermaid
 flowchart LR
@@ -78,56 +81,60 @@ flowchart LR
   api --> comp
 ```
 
-## Конвенции для новых фич
+## Conventions for new features
 
-- Интерфейсы дочерних Decompose-компонентов размещать в пакете **`...component.api`** (
-  как [ThemeComponent.kt](features/settings/settings-component-api/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/api/ThemeComponent.kt)),
-  а не смешивать с пакетом `ui.component` — в `settings` исторически встречаются оба варианта; для
-  новых фич — единообразно `component.api`.
-- **`kotlinxSerialization`**: подключать только в модулях, где нужна сериализация конфигурации
-  навигации или payload (как
-  в [settings-component/build.gradle.kts](features/settings/settings-component/build.gradle.kts) и
-  при необходимости в data).
-- Корневой компонент: константа `SCOPE_ID_<FEATURE>`, в `init` — `loadModules`, в `doOnDestroy` —
-  `unloadModules` —
-  см. [SettingsComponent.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponent.kt).
+- Place child Decompose component interfaces in the **`...component.api`** package (like
+  [ThemeComponent.kt](features/settings/settings-component-api/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/api/ThemeComponent.kt)),
+  do not mix them with the `ui.component` package — in `settings` both variants appear historically;
+  for
+  new features, use `component.api` consistently.
+- **`kotlinxSerialization`**: apply only in modules that need serialization of navigation config or
+  payload (like
+  in [settings-component/build.gradle.kts](features/settings/settings-component/build.gradle.kts)
+  and
+  in data when needed).
+- Root component: a `SCOPE_ID_<FEATURE>` constant, `loadModules` in `init`, `unloadModules` in
+  `doOnDestroy` —
+  see [SettingsComponent.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponent.kt).
 
-## Чеклист скелета
+## Skeleton checklist
 
-1. Создать `features/<name>/` с шестью подпроектами; в каждом `build.gradle.kts` с корректным
+1. Create `features/<name>/` with six subprojects; each `build.gradle.kts` with the correct
    `namespace`.
-2. Добавить `include(...)` в [settings.gradle.kts](settings.gradle.kts) (блок для
-   `features:settings` — образец).
-3. **domain**: интерфейс репозитория в `domain/repo/`, сущности в `domain/entity/`, `XxxModel` /
+2. Add `include(...)` to [settings.gradle.kts](settings.gradle.kts) (the block for
+   `features:settings` is the template).
+3. **domain**: repository interface in `domain/repo/`, entities in `domain/entity/`, `XxxModel` /
    `XxxModelImpl`,
    DI — [SettingsModel.kt](features/settings/settings-domain/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/domain/SettingsModel.kt), [SettingsDomainModule.kt](features/settings/settings-domain/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/domain/di/SettingsDomainModule.kt).
-4. **data**: `RepoImpl`, при необходимости
-   mapper, [SettingsDataModule.kt](features/settings/settings-data/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/data/di/SettingsDataModule.kt).
-5. **data-storage** (если слой нужен): интерфейс +
+4. **data**: `RepoImpl`, a mapper when needed,
+   [SettingsDataModule.kt](features/settings/settings-data/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/data/di/SettingsDataModule.kt).
+5. **data-storage** (if the layer is needed): interface +
    impl, [SettingsDataStorageModule.kt](features/settings/settings-data-storage/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/data/storage/di/SettingsDataStorageModule.kt).
 6. **ui
    **: [SettingsUiModule.kt](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/di/SettingsUiModule.kt);
-   корневой экран со
-   стеком — [SettingsRootScreen.kt](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/root/SettingsRootScreen.kt);
-   для первого экрана — паттерн `State` / `Event` / `ViewModel` / `Screen` —
-   каталог [screens/main/](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/main/).
-7. **component-api**: корневой интерфейс с
+   root screen with the
+   stack — [SettingsRootScreen.kt](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/root/SettingsRootScreen.kt);
+   for the first screen — the `State` / `Event` / `ViewModel` / `Screen` pattern —
+   directory [screens/main/](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/main/).
+7. **component-api**: root interface with
    `Child` — [SettingsComponent.kt](features/settings/settings-component-api/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/api/SettingsComponent.kt).
-8. **component**: реализация с `childStack`, `@Serializable` sealed `Params`, фабрика
-   детей — [SettingsComponent.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponent.kt) (
+8. **component**: implementation with `childStack`, `@Serializable` sealed `Params`, child
+   factory — [SettingsComponent.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponent.kt) (
    implementation class).
 
-На этом скелет **заканчивается**. Шаги вроде `implementation` в `main-component`, `RootComponent`,
-переходы из чатов — **не входят** в задачу «создать фичу по шаблону».
+This is where the skeleton **ends**. Steps such as `implementation` in `main-component`,
+`RootComponent`, transitions from chats — are **not part** of the "create a feature from the
+template"
+task.
 
-## Интеграция в приложение (вне скелета)
+## App integration (outside the skeleton)
 
-Когда понадобится реально открывать фичу из приложения, отдельно подключают зависимости и
-навигацию (
-например [shared/build.gradle.kts](shared/build.gradle.kts), [main-component](features/main/main-component/build.gradle.kts), [main-ui](features/main/main-ui/build.gradle.kts) —
-по аналогии с settings). Для поиска мест: `rg "features\.<имя>"` в `*.gradle.kts` и Kotlin.
+When you actually need to open the feature from the app, the dependencies and navigation are wired
+separately (for
+example [shared/build.gradle.kts](shared/build.gradle.kts), [main-component](features/main/main-component/build.gradle.kts), [main-ui](features/main/main-ui/build.gradle.kts) —
+by analogy with settings). To find the places: `rg "features\.<name>"` in `*.gradle.kts` and Kotlin.
 
-## Дополнительно
+## Additional
 
-Полное дерево исходников эталона `features/settings` (только `.kt` /
+Full source tree of the `features/settings` reference (only `.kt` /
 `.kts`): [reference.md](reference.md).
