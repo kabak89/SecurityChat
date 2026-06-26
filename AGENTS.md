@@ -81,7 +81,34 @@ Build behavior is controlled by Gradle properties (defaults from
 ./gradlew :androidApp:assembleDebug -PserverEnv=dev -PenableLogs=true -PisDebug=true
 ```
 
-iOS targets are built from `iosApp` via Xcode.
+iOS targets are built from `iosApp` via Xcode. For fast Kotlin-side feedback without Xcode (catches
+interop/compile errors), use:
+
+```bash
+# Compile the shared framework for the iOS simulator target
+./gradlew :shared:compileKotlinIosSimulatorArm64
+```
+
+## iOS specifics
+
+- **Entry point flow:** `iosApp/iosApp/iOSApp.swift` (`@main`, SwiftUI `WindowGroup`) →
+  `ContentView.swift` (a `UIViewControllerRepresentable`) → `shared` `RootViewController.kt`
+  `rootViewController()`, which returns the `ComposeUIViewController` hosting `RootContent`.
+- **Edge-to-edge / safe area:** SwiftUI lays a `UIViewControllerRepresentable` *inside* the safe
+  area by default, which crops the Compose content under the status bar / home indicator.
+  `ContentView`
+  must use `.ignoresSafeArea()` so Compose draws full-screen; insets are then handled inside Compose
+  via `WindowInsets` (e.g. `Modifier.systemBarsPadding()`). New top-level screens must apply that
+  padding themselves.
+- **System bars:** per-platform appearance lives in `common/ui-kit` `theme/SystemBarsEffect.*.kt`
+  (`expect`/`actual`, driven by the app theme from `AppTheme`). On Android it uses
+  `enableEdgeToEdge`;
+  on iOS the status bar style is set globally via `UIApplication.setStatusBarStyle`, which requires
+  `UIViewControllerBasedStatusBarAppearance = false` in `iosApp/iosApp/Info.plist`.
+- **Kotlin/Native UIKit gotchas:** many `UIViewController` members (e.g. `preferredStatusBarStyle`)
+  are `final` in the bindings and cannot be overridden by subclassing — prefer the global
+  `UIApplication`/`UIWindow` APIs. Read-only Obj-C properties map to Kotlin `val`s; CGRect/struct
+  interop needs `@OptIn(ExperimentalForeignApi::class)`.
 
 ## Do not
 
