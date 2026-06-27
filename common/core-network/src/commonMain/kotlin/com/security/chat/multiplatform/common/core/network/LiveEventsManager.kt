@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -122,7 +123,7 @@ public class LiveEventsManager(
                 val delayMs = reconnectBackoffMs(attempt)
                 attempt++
                 Log.d { "reconnect loop: backoff ${delayMs}ms before retry" }
-                delay(delayMs)
+                delay(delayMs.milliseconds)
             }
         }
     }
@@ -134,6 +135,7 @@ public class LiveEventsManager(
             path = socketConfig.path,
             block = {
                 val sent: MutableSet<String> = mutableSetOf()
+
                 val syncJob = activeSubscriptions
                     .onEach { current ->
                         for (newId in current.keys - sent) {
@@ -142,6 +144,7 @@ public class LiveEventsManager(
                             send(Frame.Text(message))
                             sent.add(newId)
                         }
+
                         for (goneId in sent - current.keys) {
                             val unsubscribe = SocketSubscribeMessage(
                                 id = goneId,

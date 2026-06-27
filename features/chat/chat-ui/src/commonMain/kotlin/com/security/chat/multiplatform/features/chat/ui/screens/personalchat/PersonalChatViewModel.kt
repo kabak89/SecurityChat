@@ -72,9 +72,9 @@ internal class PersonalChatViewModel(
 
         chatModel.getInterlocutorInfoFlow()
             .filterNotNull()
+            .collectWhenViewActive()
             .onEach { interlocutor ->
-                val interlocutorUM = interlocutor.toUi()
-                updateState { it.copy(interlocutor = interlocutorUM) }
+                updateState { it.copy(interlocutor = interlocutor.toUi()) }
             }
             .launchIn(viewModelScope)
 
