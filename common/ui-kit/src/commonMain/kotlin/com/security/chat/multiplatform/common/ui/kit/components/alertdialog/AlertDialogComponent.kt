@@ -120,17 +120,19 @@ public fun AlertDialogComponent(
     val backProgressEased = (backProgress * BACK_PROGRESS_SPEED).coerceAtMost(1f)
     val visibility = appear.value * (1f - backProgressEased)
 
-    val backgroundPrimary = AppTheme.colors.backgroundPrimary
+    val backgroundPrimary = AppTheme.colors.backgroundSecondary
 
-    val hazeStyle = HazeStyle(
-        backgroundColor = backgroundPrimary,
-        tint = HazeTint(color = backgroundPrimary.copy(alpha = TINT_ALPHA * visibility)),
-        blurRadius = (MAX_BLUR_RADIUS_DP * visibility).dp,
-        fallbackTint = HazeTint(
-            color = backgroundPrimary.copy(alpha = FALLBACK_TINT_ALPHA * visibility),
-        ),
-        noiseFactor = 0f,
-    )
+    val hazeStyle = remember(visibility) {
+        HazeStyle(
+            backgroundColor = backgroundPrimary,
+            tint = HazeTint(color = backgroundPrimary.copy(alpha = TINT_ALPHA * visibility)),
+            blurRadius = (MAX_BLUR_RADIUS_DP * visibility).dp,
+            fallbackTint = HazeTint(
+                color = backgroundPrimary.copy(alpha = FALLBACK_TINT_ALPHA * visibility),
+            ),
+            noiseFactor = 0f,
+        )
+    }
 
     BoxWithConstraints(
         modifier = Modifier

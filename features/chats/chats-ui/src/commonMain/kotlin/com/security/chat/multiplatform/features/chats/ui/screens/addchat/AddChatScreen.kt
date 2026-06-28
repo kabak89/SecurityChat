@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.MAX_CONTENT_WIDTH_DP
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
@@ -87,58 +89,65 @@ private fun AddChatContent(
                 .systemBarsPadding()
                 .imePadding(),
         ) {
-        ToolbarComponent(
-            modifier = Modifier
-                .fillMaxWidth(),
-            startContent = SideContent.Button(
-                icon = DrawableRes.ic_back,
-                onClicked = onBackClicked,
-            ),
-            centerContent = CenterContent.Title(
-                text = "Find user",
-            ),
-            endContent = null,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            value = state.username,
-            onValueChange = onUsernameTextChanged,
-            placeholder = {
-                Text("Username")
-            },
-            enabled = !state.isLoading,
-        )
-        Spacer(Modifier.weight(1f))
-        if (state.isLoading) {
-            CircularProgressIndicator(
+            ToolbarComponent(
                 modifier = Modifier
-                    .align(alignment = Alignment.CenterHorizontally),
-            )
-        } else {
-            ButtonPrimary(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                content = ButtonContent.Text(
-                    text = "Find",
+                    .fillMaxWidth(),
+                startContent = SideContent.Button(
+                    icon = DrawableRes.ic_back,
+                    onClicked = onBackClicked,
                 ),
-                onClicked = onFindClicked,
+                centerContent = CenterContent.Title(
+                    text = "Find user",
+                ),
+                endContent = null,
             )
+            Column(
+                modifier = Modifier
+                    .widthIn(max = MAX_CONTENT_WIDTH_DP.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally),
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    value = state.username,
+                    onValueChange = onUsernameTextChanged,
+                    placeholder = {
+                        Text("Username")
+                    },
+                    enabled = !state.isLoading,
+                )
+                Spacer(Modifier.weight(1f))
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(alignment = Alignment.CenterHorizontally),
+                    )
+                } else {
+                    ButtonPrimary(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        content = ButtonContent.Text(
+                            text = "Find",
+                        ),
+                        onClicked = onFindClicked,
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            }
         }
-        Spacer(Modifier.height(16.dp))
-        }
-        if (state.showNotFoundDialog) {
-            AlertDialogComponent(
-                title = "User not found",
-                hazeState = hazeState,
-                onDismissRequest = onCloseDialogClicked,
-                positiveButtonText = "OK",
-                onPositiveButtonClicked = onCloseDialogClicked,
-            )
-        }
+    }
+    if (state.showNotFoundDialog) {
+        AlertDialogComponent(
+            title = "User not found",
+            hazeState = hazeState,
+            onDismissRequest = onCloseDialogClicked,
+            positiveButtonText = "OK",
+            onPositiveButtonClicked = onCloseDialogClicked,
+        )
     }
 }
 
