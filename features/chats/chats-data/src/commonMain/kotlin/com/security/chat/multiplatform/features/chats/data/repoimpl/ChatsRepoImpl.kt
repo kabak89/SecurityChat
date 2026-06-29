@@ -104,7 +104,7 @@ internal class ChatsRepoImpl(
             ),
         )
 
-        val chats = response.chats
+        val chats = response.personalChats
             .map { chatResponse ->
                 val companionId = if (chatResponse.firstUserId == userId) {
                     chatResponse.secondUserId

@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.features.chats.data.mapper
 
-import com.security.chat.multiplatform.features.chats.data.entity.ChatResponse
+import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
 
@@ -21,7 +21,7 @@ internal fun ChatSM.toDomain(
     )
 }
 
-internal fun ChatResponse.toDomain(
+internal fun UserChatsResponse.PersonalChat.toDomain(
     companionName: String,
     companionId: String,
 ): ChatDescription {
