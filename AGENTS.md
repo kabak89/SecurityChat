@@ -49,6 +49,11 @@ checklist, see `.cursor/skills/feature-template/SKILL.md` (and `reference.md` ne
 - Decompose child-component contracts live in the `...component.api` package.
 - Apply `kotlinxSerialization` only where navigation config / payload serialization is needed.
 - Do not cross layer boundaries (e.g. `ui` must not depend on `data`; `domain` depends on neither).
+- **UI state stability:** in `{name}-ui` modules the screen `State` and every class it references
+  (nested entities, list element types) must be annotated with `@Immutable`
+  (`androidx.compose.runtime.Immutable`) so Compose can skip recompositions. Such entities live in
+  the screen's `entity` package. Use `@Stable` instead only when the class exposes observable
+  mutable state.
 
 ## Code style
 
