@@ -60,6 +60,7 @@ internal class PersonalChatViewModel(
         viewActivable.activeFlow
             .onEach { active ->
                 if (active) {
+                    pushModel.clearNotificationsForChat(chatId = params.chatId)
                     chatModel.syncMessages.startOnSubscribe()
                     chatModel.onViewActive()
                     pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
@@ -77,8 +78,6 @@ internal class PersonalChatViewModel(
                 updateState { it.copy(interlocutor = interlocutor.toUi()) }
             }
             .launchIn(viewModelScope)
-
-        pushModel.clearNotificationsForChat(chatId = params.chatId)
     }
 
     override fun createInitialState(): PersonalChatState {
