@@ -22,7 +22,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +43,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
-import kotlinx.coroutines.launch
 
 @Composable
 public fun AlertDialogComponent(
@@ -87,25 +85,30 @@ public fun AlertDialogComponent(
             ?: 0f
 
     val appear = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        appear.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = ENTER_DURATION_MS),
-        )
+    var exiting by remember { mutableStateOf(false) }
+    var pendingDismiss by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    LaunchedEffect(exiting) {
+        if (!exiting) {
+            appear.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = ENTER_DURATION_MS),
+            )
+        } else {
+            appear.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = EXIT_DURATION_MS),
+            )
+            pendingDismiss?.invoke()
+            pendingDismiss = null
+            exiting = false
+        }
     }
 
-    val scope = rememberCoroutineScope()
-    var isDismissing by remember { mutableStateOf(false) }
     val dismiss: (() -> Unit) -> Unit = { onAnimationEnd ->
-        if (!isDismissing) {
-            isDismissing = true
-            scope.launch {
-                appear.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(durationMillis = EXIT_DURATION_MS),
-                )
-                onAnimationEnd()
-            }
+        if (!exiting) {
+            pendingDismiss = onAnimationEnd
+            exiting = true
         }
     }
 
