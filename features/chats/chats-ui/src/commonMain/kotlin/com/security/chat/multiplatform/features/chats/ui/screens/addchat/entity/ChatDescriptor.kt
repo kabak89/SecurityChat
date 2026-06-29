@@ -13,6 +13,7 @@ internal sealed interface ChatDescriptor {
         val isLoading: Boolean,
     ) : ChatDescriptor {
         override val type: ChatType = ChatType.Personal
+        val isFindButtonEnabled = username.isNotBlank()
     }
 
     @Immutable

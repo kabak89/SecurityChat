@@ -242,6 +242,7 @@ private fun PersonalChat(
                     text = stringResource(StringRes.create_chat_find_button),
                 ),
                 onClicked = onFindClicked,
+                enabled = state.isFindButtonEnabled,
             )
         }
     }

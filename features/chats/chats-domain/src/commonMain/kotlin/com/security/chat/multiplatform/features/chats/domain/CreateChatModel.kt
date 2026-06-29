@@ -35,7 +35,7 @@ internal class CreateChatModelImpl(
 
     override val createPersonalChat: Task0<CreateChatResult> =
         task { ->
-            val username = stateFlow.value.personalChatUsername
+            val username = stateFlow.value.personalChatUsername.trim()
             val result = chatsRepo.findUser(username = username)
 
             return@task when (result) {
