@@ -3,6 +3,8 @@ package com.security.chat.multiplatform.features.chats.component
 import com.arkivanov.decompose.ComponentContext
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.chats.component.api.AddChatComponent
+import com.security.chat.multiplatform.features.chats.domain.CreateChatModel
+import org.koin.core.qualifier.named
 
 public class AddChatComponentImpl(
     private val onBack: () -> Unit,
@@ -13,6 +15,11 @@ public class AddChatComponentImpl(
         componentContext = componentContext,
         scopeId = SCOPE_ID_ADD_CHAT,
     ) {
+
+    init {
+        val createChatModel: CreateChatModel = getKoin().get()
+        createChatModel.start(parentScope = getKoin().get(named(SCOPE_ID_CHATS)))
+    }
 
     override fun onBackClicked() {
         onBack()

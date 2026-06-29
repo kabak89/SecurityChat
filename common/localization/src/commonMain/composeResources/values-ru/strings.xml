@@ -61,4 +61,12 @@
     <string name="delete_profile_description">Удаление профиля необратимо. Все ваши данные будут удалены, это действие нельзя отменить.</string>
     <string name="delete_profile_drag_hint">Для подтверждения удаления перетащите профиль в корзину</string>
     <string name="delete_profile_drag_text">Профиль</string>
+
+    <string name="create_chat_title">Новый чат</string>
+    <string name="create_chat_username_placeholder">Имя пользователя</string>
+    <string name="create_chat_find_button">Найти</string>
+    <string name="create_chat_error_user_not_found_title">Пользователь не найден</string>
+    <string name="create_chat_error_user_not_found_description">Пользователь с таким именем не найден</string>
+    <string name="create_chat_type_personal">Личный</string>
+    <string name="create_chat_type_group">Групповой</string>
 </resources>

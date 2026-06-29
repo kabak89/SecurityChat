@@ -9,6 +9,7 @@ public data class AppColors(
     val backgroundSecondary: Color,
     val textPrimary: Color,
     val textSecondary: Color,
+    val textSuppressed: Color,
     val iconPrimary: Color,
     val element: Color,
     val accent: Color,

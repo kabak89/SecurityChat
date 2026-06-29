@@ -1,6 +1,5 @@
 package com.security.chat.multiplatform.features.chats.data.repoimpl
 
-import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
@@ -44,25 +43,18 @@ internal class ChatsRepoImpl(
     }
 
     override suspend fun findUser(username: String): FindUserResult {
-        return try {
-            val response: FindUserResponse = networkManager.runGet(
-                relativePath = "/users/find",
-                request = mapOf(
-                    "login" to username,
-                ),
-            )
+        val response: FindUserResponse = networkManager.runGet(
+            relativePath = "/users/find",
+            request = mapOf(
+                "login" to username,
+            ),
+        )
 
-            FindUserResult.UserFound(
-                userId = response.userId,
-                login = response.login,
-                publicKey = response.publicKey,
-            )
-        } catch (e: NetworkError) {
-            when (e.statusCode) {
-                404 -> FindUserResult.NotFound
-                else -> throw e
-            }
-        }
+        return FindUserResult.UserFound(
+            userId = response.userId,
+            login = response.login,
+            publicKey = response.publicKey,
+        )
     }
 
     override suspend fun createChat(secondUserId: String): CreateChatResult {

@@ -79,7 +79,7 @@ public class ChatsComponentImpl(
                         },
                         onChatCreate = { chatId ->
                             navigation.pop()
-                            //TODO got to chat
+                            onChatClicked(chatId)
                         },
                     ),
                 )

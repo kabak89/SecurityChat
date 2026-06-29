@@ -61,4 +61,12 @@
     <string name="delete_profile_description">Deleting your profile is permanent. All your data will be removed and this action cannot be undone.</string>
     <string name="delete_profile_drag_hint">To confirm deletion, drag the profile to the trash</string>
     <string name="delete_profile_drag_text">Profile</string>
+
+    <string name="create_chat_title">New chat</string>
+    <string name="create_chat_username_placeholder">Username</string>
+    <string name="create_chat_find_button">Find</string>
+    <string name="create_chat_error_user_not_found_title">User not found</string>
+    <string name="create_chat_error_user_not_found_description">No user with this name was found</string>
+    <string name="create_chat_type_personal">Personal</string>
+    <string name="create_chat_type_group">Group</string>
 </resources>

@@ -85,11 +85,7 @@ internal class ProfileMainViewModel(
             .launchIn(viewModelScope)
 
         profileModel.updateUserInfo.jobFlow.asLceState()
-            .map {
-                it.toUiLceState(
-                    errorMapper = ::updateProfileErrorMapper,
-                )
-            }
+            .map { it.toUiLceState(errorMapper = ::updateProfileErrorMapper) }
             .onEach { changeNameState ->
                 val dialogContent = when (changeNameState) {
                     is UiLceState.Loading,
