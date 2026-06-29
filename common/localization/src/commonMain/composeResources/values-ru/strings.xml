@@ -14,15 +14,14 @@
 
     <string name="error_server_internal_error_title">Внутренняя ошибка сервера</string>
     <string name="error_server_internal_error_description">Сервер столкнулся с непредвиденной ситуацией, препятствующей выполнению запроса</string>
-
     <string name="error_server_unknown_error_title">Неизвестная ошибка сервера</string>
     <string name="error_server_unknown_error_description">Что то пошло не так</string>
-
     <string name="error_connection_title">Проблемы с доступом в сеть</string>
     <string name="error_connection_description">Проверьте подключение к интернету</string>
-
     <string name="error_unknown_title">Неизвестная ошибка</string>
     <string name="error_unknown_description">Что то пошло не так</string>
+    <string name="error_wrong_answer_title">Ошибка сервера</string>
+    <string name="error_wrong_answer_description">Неверный ответ от сервера</string>
 
     <string name="profile_title">Профиль</string>
     <string name="profile_login_label">Имя пользователя</string>

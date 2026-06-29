@@ -54,7 +54,7 @@ internal class HttpClientFactoryImpl(
                             throw NetworkError(statusCode = status.value)
                         }
 
-                        else -> throw resolveError(exception)
+                        else -> throw resolvePlatformError(exception) ?: resolveError(exception)
                     }
                 }
             }
