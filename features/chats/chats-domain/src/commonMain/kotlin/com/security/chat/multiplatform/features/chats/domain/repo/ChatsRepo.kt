@@ -7,8 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 public interface ChatsRepo {
     public suspend fun findUser(username: String): FindUserResult
-    public suspend fun createChat(secondUserId: String): CreateChatResult
+    public suspend fun createPersonalChat(secondUserId: String): CreateChatResult.PersonalChatCreated
     public fun getChatsListFlow(): Flow<List<ChatDescription>>
     public suspend fun fetchChatsList()
     public fun isConnectedToInternetFlow(): Flow<Boolean>
+    public suspend fun getUserId(): String
+    public suspend fun createGroupChat(members: List<String>): CreateChatResult.GroupChatCreated
 }

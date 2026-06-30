@@ -12,11 +12,12 @@ import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.chats.domain.CreateChatModel
-import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
+import com.security.chat.multiplatform.features.chats.ui.screens.addchat.entity.AddedUser
 import com.security.chat.multiplatform.features.chats.ui.screens.addchat.entity.ChatDescriptor
 import com.security.chat.multiplatform.features.chats.ui.screens.addchat.entity.ChatType
 import com.security.chat.multiplatform.features.chats.ui.screens.addchat.mapper.createChatErrorMapper
 import com.security.chat.multiplatform.features.chats.ui.screens.addchat.mapper.isNotFoundError
+import com.security.chat.multiplatform.features.chats.ui.screens.addchat.mapper.isSameUserError
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -33,10 +34,18 @@ internal class AddChatViewModel(
 
         createChatModel.getAddChatStateFlow()
             .onEach { state ->
+                val addedUsers = state.chatMembers.map {
+                    AddedUser(id = it.id, username = it.username)
+                }
+
                 updateState { oldState ->
                     oldState.copy(
                         personalChat = oldState.personalChat.copy(
                             username = state.personalChatUsername,
+                        ),
+                        groupChat = oldState.groupChat.copy(
+                            username = state.groupChatUsername,
+                            addedUsers = addedUsers,
                         ),
                     )
                 }
@@ -97,11 +106,129 @@ internal class AddChatViewModel(
 
         createChatModel.createPersonalChat.jobFlow.successResults()
             .onEach { result ->
-                when (result) {
-                    is CreateChatResult.ChatCreated -> {
-                        sendEvent(AddChatEvent.ChatCreated(id = result.id))
+                sendEvent(AddChatEvent.PersonalChatCreated(id = result.id))
+            }
+            .launchIn(viewModelScope)
+
+        createChatModel.findUserForGroupChat.jobFlow.asLceState()
+            .map { it.toUiLceState(::createChatErrorMapper) }
+            .onEach { state ->
+                val alertDialogDescriptor = when (state) {
+                    is UiLceState.Loading,
+                    is UiLceState.NotStarted,
+                    is UiLceState.Ready,
+                        -> null
+
+                    is UiLceState.Error -> {
+                        when {
+                            state.error.cause.isNotFoundError() -> {
+                                val alertDialogContent = AlertDialogContent(
+                                    title = state.error.title,
+                                    message = state.error.description,
+                                    positiveButtonText = resPrintableText(StringRes.common_close),
+                                )
+
+                                AlertDialogDescriptor(
+                                    content = alertDialogContent,
+                                    positiveAction = { updateState { it.copy(dialogDescriptor = null) } },
+                                    dismissAction = { updateState { it.copy(dialogDescriptor = null) } },
+                                )
+                            }
+
+                            state.error.cause.isSameUserError() -> {
+                                val alertDialogContent = AlertDialogContent(
+                                    title = state.error.title,
+                                    message = state.error.description,
+                                    positiveButtonText = resPrintableText(StringRes.common_close),
+                                )
+
+                                AlertDialogDescriptor(
+                                    content = alertDialogContent,
+                                    positiveAction = { updateState { it.copy(dialogDescriptor = null) } },
+                                    dismissAction = { updateState { it.copy(dialogDescriptor = null) } },
+                                )
+                            }
+
+                            else -> {
+                                val alertDialogContent = AlertDialogContent(
+                                    title = state.error.title,
+                                    message = state.error.description,
+                                    positiveButtonText = resPrintableText(StringRes.common_retry),
+                                    negativeButtonText = resPrintableText(StringRes.common_close),
+                                )
+
+                                AlertDialogDescriptor(
+                                    content = alertDialogContent,
+                                    positiveAction = { createChatModel.findUserForGroupChat.startOnSubscribe() },
+                                    negativeAction = { updateState { it.copy(dialogDescriptor = null) } },
+                                    dismissAction = { updateState { it.copy(dialogDescriptor = null) } },
+                                )
+                            }
+                        }
                     }
                 }
+
+                updateState { it.copy(dialogDescriptor = alertDialogDescriptor) }
+            }
+            .launchIn(viewModelScope)
+
+        createChatModel.findUserForGroupChat.jobFlow.asLceState()
+            .onEach { state ->
+                updateState { oldState ->
+                    oldState.copy(
+                        groupChat = oldState.groupChat.copy(
+                            searchInProgress = state.isLoading,
+                        ),
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+
+        createChatModel.createGroupChat.jobFlow.asLceState()
+            .onEach { state ->
+                updateState { oldState ->
+                    oldState.copy(
+                        groupChat = oldState.groupChat.copy(
+                            creationInProgress = state.isLoading,
+                        ),
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+
+        createChatModel.createGroupChat.jobFlow.asLceState()
+            .map { it.toUiLceState(::createChatErrorMapper) }
+            .onEach { state ->
+                val alertDialogDescriptor = when (state) {
+                    is UiLceState.Loading,
+                    is UiLceState.NotStarted,
+                    is UiLceState.Ready,
+                        -> null
+
+                    is UiLceState.Error -> {
+                        val alertDialogContent = AlertDialogContent(
+                            title = state.error.title,
+                            message = state.error.description,
+                            positiveButtonText = resPrintableText(StringRes.common_retry),
+                            negativeButtonText = resPrintableText(StringRes.common_close),
+                        )
+
+                        AlertDialogDescriptor(
+                            content = alertDialogContent,
+                            positiveAction = { createChatModel.createGroupChat.startOnSubscribe() },
+                            negativeAction = { updateState { it.copy(dialogDescriptor = null) } },
+                            dismissAction = { updateState { it.copy(dialogDescriptor = null) } },
+                        )
+                    }
+                }
+
+                updateState { it.copy(dialogDescriptor = alertDialogDescriptor) }
+            }
+            .launchIn(viewModelScope)
+
+        createChatModel.createGroupChat.jobFlow.successResults()
+            .onEach { result ->
+                sendEvent(AddChatEvent.GroupChatCreated(id = result.id))
             }
             .launchIn(viewModelScope)
     }
@@ -114,23 +241,34 @@ internal class AddChatViewModel(
             ),
             groupChat = ChatDescriptor.Group(
                 username = "",
-                isLoading = false,
                 addedUsers = emptyList(),
+                searchInProgress = false,
+                creationInProgress = false,
             ),
             activeType = ChatType.Personal,
             dialogDescriptor = null,
         )
     }
 
-    fun onPersonalChatUsernameChanged(newUsernameText: String) {
-        createChatModel.setPersonalChatUsername(newUsernameText)
+    fun onUsernameChanged(newUsernameText: String) {
+        when (currentViewState.activeType) {
+            ChatType.Personal -> createChatModel.setPersonalChatUsername(newUsernameText)
+            ChatType.Group -> createChatModel.setGroupChatUsername(newUsernameText)
+        }
     }
 
-    fun onPersonalChatFindClicked() {
-        createChatModel.createPersonalChat.startOnSubscribe()
+    fun onFindClicked() {
+        when (currentViewState.activeType) {
+            ChatType.Personal -> createChatModel.createPersonalChat.startOnSubscribe()
+            ChatType.Group -> createChatModel.findUserForGroupChat.startOnSubscribe()
+        }
     }
 
     fun onTypeSelected(chatType: ChatType) {
         updateState { it.copy(activeType = chatType) }
+    }
+
+    fun onCreateGroupChatClicked() {
+        createChatModel.createGroupChat.startOnSubscribe()
     }
 }

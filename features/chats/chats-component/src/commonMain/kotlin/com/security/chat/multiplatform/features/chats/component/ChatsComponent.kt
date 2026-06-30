@@ -77,9 +77,13 @@ public class ChatsComponentImpl(
                         onBack = {
                             navigation.pop()
                         },
-                        onChatCreate = { chatId ->
+                        onPersonalChatCreate = { chatId ->
                             navigation.pop()
                             onChatClicked(chatId)
+                        },
+                        onGroupChatCreate = {
+                            navigation.pop()
+                            //TODO add navigation after screen realization
                         },
                     ),
                 )

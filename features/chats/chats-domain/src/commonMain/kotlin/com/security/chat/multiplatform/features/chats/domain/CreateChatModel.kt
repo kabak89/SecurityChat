@@ -4,8 +4,10 @@ import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chats.domain.entity.AddChatsState
+import com.security.chat.multiplatform.features.chats.domain.entity.ChatMember
 import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
+import com.security.chat.multiplatform.features.chats.domain.entity.SameUserError
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,8 +17,9 @@ import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
 
 public interface CreateChatModel : ScopedModel {
-    public val createPersonalChat: Task0<CreateChatResult>
-    public val createGroupChat: Task0<CreateChatResult>
+    public val createPersonalChat: Task0<CreateChatResult.PersonalChatCreated>
+    public val findUserForGroupChat: Task0<Unit>
+    public val createGroupChat: Task0<CreateChatResult.GroupChatCreated>
 
     public fun setPersonalChatUsername(username: String)
     public fun setGroupChatUsername(username: String)
@@ -33,23 +36,39 @@ internal class CreateChatModelImpl(
 
     private val stateFlow = MutableStateFlow(State())
 
-    override val createPersonalChat: Task0<CreateChatResult> =
+    override val createPersonalChat: Task0<CreateChatResult.PersonalChatCreated> =
         task { ->
             val username = stateFlow.value.personalChatUsername.trim()
             val result = chatsRepo.findUser(username = username)
+            val createChatResult = chatsRepo.createPersonalChat(secondUserId = result.userId)
+            stateFlow.update { it.copy(personalChatUsername = "") }
+            chatsRepo.fetchChatsList()
+            createChatResult
+        }
 
-            return@task when (result) {
-                is FindUserResult.UserFound -> {
-                    val createChatResult = chatsRepo.createChat(secondUserId = result.userId)
-                    stateFlow.update { it.copy(personalChatUsername = "") }
-                    chatsRepo.fetchChatsList()
-                    createChatResult
-                }
+    override val findUserForGroupChat: Task0<Unit> =
+        task { ->
+            val username = stateFlow.value.groupChatUsername.trim()
+            val findUserResult = chatsRepo.findUser(username = username)
+
+            if (findUserResult.userId == chatsRepo.getUserId()) {
+                throw SameUserError()
+            }
+
+            stateFlow.update {
+                val groupChatMembers = (it.groupChatMembers + findUserResult).distinct()
+                it.copy(
+                    groupChatMembers = groupChatMembers,
+                    groupChatUsername = "",
+                )
             }
         }
 
-    override val createGroupChat: Task0<CreateChatResult>
-        get() = TODO("Not yet implemented")
+    override val createGroupChat: Task0<CreateChatResult.GroupChatCreated> =
+        task { ->
+            val members = stateFlow.value.groupChatMembers.map { it.userId }
+            chatsRepo.createGroupChat(members)
+        }
 
     override fun setPersonalChatUsername(username: String) {
         stateFlow.update { it.copy(personalChatUsername = username) }
@@ -62,9 +81,18 @@ internal class CreateChatModelImpl(
     override fun getAddChatStateFlow(): Flow<AddChatsState> {
         return stateFlow
             .map {
+                val chatMembers = it.groupChatMembers
+                    .map { member ->
+                        ChatMember(
+                            id = member.userId,
+                            username = member.login,
+                        )
+                    }
+
                 AddChatsState(
                     personalChatUsername = it.personalChatUsername,
                     groupChatUsername = it.groupChatUsername,
+                    chatMembers = chatMembers,
                 )
             }
             .distinctUntilChanged()
@@ -73,5 +101,6 @@ internal class CreateChatModelImpl(
     private data class State(
         val personalChatUsername: String = "",
         val groupChatUsername: String = "",
+        val groupChatMembers: List<FindUserResult> = emptyList(),
     )
 }

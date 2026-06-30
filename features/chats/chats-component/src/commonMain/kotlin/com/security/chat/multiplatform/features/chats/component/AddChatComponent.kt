@@ -8,7 +8,8 @@ import org.koin.core.qualifier.named
 
 public class AddChatComponentImpl(
     private val onBack: () -> Unit,
-    private val onChatCreate: (chatId: String) -> Unit,
+    private val onPersonalChatCreate: (chatId: String) -> Unit,
+    private val onGroupChatCreate: (chatId: String) -> Unit,
     componentContext: ComponentContext,
 ) : AddChatComponent,
     BaseComponentImpl(
@@ -18,17 +19,20 @@ public class AddChatComponentImpl(
 
     init {
         val createChatModel: CreateChatModel = getKoin().get()
-        createChatModel.start(parentScope = getKoin().get(named(SCOPE_ID_CHATS)))
+        createChatModel.start(parentScope = getKoin().get(named(SCOPE_ID_ADD_CHAT)))
     }
 
     override fun onBackClicked() {
         onBack()
     }
 
-    override fun onChatCreated(chatId: String) {
-        onChatCreate(chatId)
+    override fun onPersonalChatCreated(chatId: String) {
+        onPersonalChatCreate(chatId)
     }
 
+    override fun onGroupChatCreated(chatId: String) {
+        onGroupChatCreate(chatId)
+    }
 }
 
 public const val SCOPE_ID_ADD_CHAT: String = "SCOPE_ID_ADD_CHAT"

@@ -10,6 +10,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.coreDomain)
+
+            implementation(projects.common.error)
         }
     }
 }

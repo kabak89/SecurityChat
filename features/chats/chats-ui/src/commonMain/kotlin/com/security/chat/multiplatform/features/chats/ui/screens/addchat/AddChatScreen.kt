@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -51,6 +52,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
+import securitychat.common.localization.generated.resources.create_chat_create_group_chat_button
 import securitychat.common.localization.generated.resources.create_chat_find_button
 import securitychat.common.localization.generated.resources.create_chat_title
 import securitychat.common.localization.generated.resources.create_chat_type_group
@@ -68,10 +70,12 @@ public fun AddChatScreen(
             state = state,
             events = vm.viewEvent,
             onBackClicked = component::onBackClicked,
-            onPersonalChatUsernameChanged = vm::onPersonalChatUsernameChanged,
-            onPersonalChatFindClicked = vm::onPersonalChatFindClicked,
-            onChatCreated = component::onChatCreated,
+            onUsernameChanged = vm::onUsernameChanged,
+            onFindClicked = vm::onFindClicked,
+            onPersonalChatCreated = component::onPersonalChatCreated,
             onTypeSelected = vm::onTypeSelected,
+            onCreateGroupChatClicked = vm::onCreateGroupChatClicked,
+            onGroupChatCreated = component::onGroupChatCreated,
         )
     }
 }
@@ -82,16 +86,19 @@ private fun AddChatContent(
     state: AddChatState,
     events: Flow<AddChatEvent>,
     onBackClicked: () -> Unit,
-    onPersonalChatUsernameChanged: (String) -> Unit,
-    onPersonalChatFindClicked: () -> Unit,
-    onChatCreated: (id: String) -> Unit,
+    onUsernameChanged: (String) -> Unit,
+    onFindClicked: () -> Unit,
+    onPersonalChatCreated: (id: String) -> Unit,
+    onGroupChatCreated: (id: String) -> Unit,
     onTypeSelected: (ChatType) -> Unit,
+    onCreateGroupChatClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                is AddChatEvent.ChatCreated -> onChatCreated(event.id)
+                is AddChatEvent.PersonalChatCreated -> onPersonalChatCreated(event.id)
+                is AddChatEvent.GroupChatCreated -> onGroupChatCreated(event.id)
             }
         },
     )
@@ -135,8 +142,9 @@ private fun AddChatContent(
                     activeType = state.activeType,
                     personalChat = state.personalChat,
                     groupChat = state.groupChat,
-                    onUsernameChanged = onPersonalChatUsernameChanged,
-                    onFindClicked = onPersonalChatFindClicked,
+                    onUsernameChanged = onUsernameChanged,
+                    onFindClicked = onFindClicked,
+                    onCreateGroupChatClicked = onCreateGroupChatClicked,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 ChatTypeSelector(
@@ -168,6 +176,7 @@ private fun ChatCreateComponent(
     groupChat: ChatDescriptor.Group,
     onUsernameChanged: (String) -> Unit,
     onFindClicked: () -> Unit,
+    onCreateGroupChatClicked: () -> Unit,
 ) {
     AnimatedContent(
         modifier = modifier,
@@ -194,7 +203,13 @@ private fun ChatCreateComponent(
                     onFindClicked = onFindClicked,
                 )
             } else {
-                GroupChat()
+                GroupChat(
+                    modifier = Modifier,
+                    state = groupChat,
+                    onUsernameTextChanged = onUsernameChanged,
+                    onFindClicked = onFindClicked,
+                    onCreateClicked = onCreateGroupChatClicked,
+                )
             }
         }
     }
@@ -249,11 +264,87 @@ private fun PersonalChat(
 }
 
 @Composable
-private fun GroupChat() {
-    Text(
-        text = "GroupChat",
-        style = AppTheme.typography.title2,
-    )
+private fun GroupChat(
+    modifier: Modifier = Modifier,
+    state: ChatDescriptor.Group,
+    onUsernameTextChanged: (String) -> Unit,
+    onFindClicked: () -> Unit,
+    onCreateClicked: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth(),
+    ) {
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            value = state.username,
+            onValueChange = onUsernameTextChanged,
+            placeholder = {
+                Text(
+                    text = stringResource(StringRes.create_chat_username_placeholder),
+                    style = AppTheme.typography.body,
+                    color = AppTheme.colors.textSuppressed,
+                )
+            },
+            enabled = !state.smthIsLoading,
+            maxLines = 1,
+            textStyle = AppTheme.typography.body,
+        )
+        Spacer(Modifier.height(16.dp))
+        if (state.searchInProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterHorizontally),
+            )
+        } else {
+            ButtonPrimary(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                content = ButtonContent.Text(
+                    text = stringResource(StringRes.create_chat_find_button),
+                ),
+                onClicked = onFindClicked,
+                enabled = state.isFindButtonEnabled,
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f),
+        ) {
+            state.addedUsers.forEach { user ->
+                item(key = user.id) {
+                    Text(
+                        modifier = Modifier.padding(16.dp),
+                        text = user.username,
+                        style = AppTheme.typography.body,
+                        color = AppTheme.colors.textPrimary,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (state.creationInProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterHorizontally),
+            )
+        } else {
+            ButtonPrimary(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                content = ButtonContent.Text(
+                    text = stringResource(StringRes.create_chat_create_group_chat_button),
+                ),
+                onClicked = onCreateClicked,
+                enabled = state.isCreateButtonEnabled,
+            )
+        }
+    }
 }
 
 
@@ -332,18 +423,21 @@ internal fun AddChatPreviewPersonal() {
                 ),
                 groupChat = ChatDescriptor.Group(
                     username = "",
-                    isLoading = false,
                     addedUsers = emptyList(),
+                    searchInProgress = false,
+                    creationInProgress = false,
                 ),
                 activeType = ChatType.Personal,
                 dialogDescriptor = null,
             ),
             events = emptyFlow(),
             onBackClicked = {},
-            onChatCreated = {},
-            onPersonalChatUsernameChanged = {},
-            onPersonalChatFindClicked = {},
+            onPersonalChatCreated = {},
+            onUsernameChanged = {},
+            onFindClicked = {},
             onTypeSelected = {},
+            onCreateGroupChatClicked = {},
+            onGroupChatCreated = {},
         )
     }
 }
@@ -361,7 +455,8 @@ internal fun AddChatPreviewGroup() {
                 ),
                 groupChat = ChatDescriptor.Group(
                     username = "",
-                    isLoading = false,
+                    searchInProgress = false,
+                    creationInProgress = false,
                     addedUsers = emptyList(),
                 ),
                 activeType = ChatType.Group,
@@ -369,10 +464,12 @@ internal fun AddChatPreviewGroup() {
             ),
             events = emptyFlow(),
             onBackClicked = {},
-            onChatCreated = {},
-            onPersonalChatUsernameChanged = {},
-            onPersonalChatFindClicked = {},
+            onPersonalChatCreated = {},
+            onUsernameChanged = {},
+            onFindClicked = {},
             onTypeSelected = {},
+            onCreateGroupChatClicked = {},
+            onGroupChatCreated = {},
         )
     }
 }

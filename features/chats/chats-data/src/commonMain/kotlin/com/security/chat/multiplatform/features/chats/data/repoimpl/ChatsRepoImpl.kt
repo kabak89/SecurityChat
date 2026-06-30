@@ -6,6 +6,8 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequest
 import com.security.chat.multiplatform.features.chats.data.entity.CreateChatResponse
+import com.security.chat.multiplatform.features.chats.data.entity.CreateGroupChatRequest
+import com.security.chat.multiplatform.features.chats.data.entity.CreateGroupChatResponse
 import com.security.chat.multiplatform.features.chats.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
 import com.security.chat.multiplatform.features.chats.data.mapper.toDomain
@@ -50,14 +52,14 @@ internal class ChatsRepoImpl(
             ),
         )
 
-        return FindUserResult.UserFound(
+        return FindUserResult(
             userId = response.userId,
             login = response.login,
             publicKey = response.publicKey,
         )
     }
 
-    override suspend fun createChat(secondUserId: String): CreateChatResult {
+    override suspend fun createPersonalChat(secondUserId: String): CreateChatResult.PersonalChatCreated {
         val firstUserId = userStorage.getUserId() ?: error("user id not found")
 
         val result: CreateChatResponse = networkManager.runPost(
@@ -68,7 +70,7 @@ internal class ChatsRepoImpl(
             ),
         )
 
-        return CreateChatResult.ChatCreated(
+        return CreateChatResult.PersonalChatCreated(
             id = result.chatId,
         )
     }
@@ -129,6 +131,23 @@ internal class ChatsRepoImpl(
 
     override fun isConnectedToInternetFlow(): Flow<Boolean> {
         return connectivityObserver.isOnline
+    }
+
+    override suspend fun getUserId(): String {
+        return checkNotNull(userStorage.getUserId())
+    }
+
+    override suspend fun createGroupChat(members: List<String>): CreateChatResult.GroupChatCreated {
+        val response: CreateGroupChatResponse = networkManager.runPost(
+            relativePath = "/group-chats",
+            request = CreateGroupChatRequest(
+                participantIds = members,
+            ),
+        )
+
+        return CreateChatResult.GroupChatCreated(
+            id = response.chatId,
+        )
     }
 
     private suspend fun getAndSaveUser(id: String): UserNM {

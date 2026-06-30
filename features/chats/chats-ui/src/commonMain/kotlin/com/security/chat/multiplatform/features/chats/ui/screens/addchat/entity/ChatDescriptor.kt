@@ -19,10 +19,14 @@ internal sealed interface ChatDescriptor {
     @Immutable
     data class Group(
         val username: String,
-        val isLoading: Boolean,
-        val addedUsers: List<String>,
+        val searchInProgress: Boolean,
+        val creationInProgress: Boolean,
+        val addedUsers: List<AddedUser>,
     ) : ChatDescriptor {
         override val type: ChatType = ChatType.Group
+        val isFindButtonEnabled = username.isNotBlank()
+        val isCreateButtonEnabled = addedUsers.isNotEmpty()
+        val smthIsLoading = searchInProgress || creationInProgress
     }
 }
 

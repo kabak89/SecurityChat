@@ -65,6 +65,9 @@
     <string name="create_chat_find_button">Find</string>
     <string name="create_chat_error_user_not_found_title">User not found</string>
     <string name="create_chat_error_user_not_found_description">No user with this name was found</string>
+    <string name="create_chat_error_same_user_title">You can't do that</string>
+    <string name="create_chat_error_same_user_description">You can't add yourself to a group chat — you'll be there automatically</string>
     <string name="create_chat_type_personal">Personal</string>
     <string name="create_chat_type_group">Group</string>
+    <string name="create_chat_create_group_chat_button">Create</string>
 </resources>

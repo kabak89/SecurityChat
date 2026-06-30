@@ -66,6 +66,9 @@
     <string name="create_chat_find_button">Найти</string>
     <string name="create_chat_error_user_not_found_title">Пользователь не найден</string>
     <string name="create_chat_error_user_not_found_description">Пользователь с таким именем не найден</string>
+    <string name="create_chat_error_same_user_title">Так нельзя</string>
+    <string name="create_chat_error_same_user_description">Нельзя добавить самого себя в групповой чат. Вы там будете автоматически</string>
     <string name="create_chat_type_personal">Личный</string>
     <string name="create_chat_type_group">Групповой</string>
+    <string name="create_chat_create_group_chat_button">Создать</string>
 </resources>
