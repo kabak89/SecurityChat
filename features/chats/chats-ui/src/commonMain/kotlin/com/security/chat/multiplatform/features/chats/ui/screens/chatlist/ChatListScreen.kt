@@ -60,7 +60,7 @@ public fun ChatListScreen(
             onAddClicked = component::onAddClicked,
             onSettingsClicked = component::onSettingsClicked,
             onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
-            onChatClicked = component::onChatClicked,
+            onPersonalChatClicked = component::onChatClicked,
             onCloseErrorDialogClicked = vm::onCloseErrorDialogClicked,
             onReloadChatsClicked = vm::onReloadChatsClicked,
         )
@@ -75,7 +75,7 @@ private fun ChatListContent(
     onAddClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     onRefreshChatsTriggered: () -> Unit,
-    onChatClicked: (chatId: String) -> Unit,
+    onPersonalChatClicked: (chatId: String) -> Unit,
     onCloseErrorDialogClicked: () -> Unit,
     onReloadChatsClicked: () -> Unit,
 ) {
@@ -124,7 +124,14 @@ private fun ChatListContent(
                         ChatComponent(
                             modifier = Modifier.fillMaxWidth(),
                             chat = chat,
-                            onChatClicked = onChatClicked,
+                            onChatClicked = {
+                                when (chat.type) {
+                                    ChatItem.Type.Personal -> onPersonalChatClicked(chat.id)
+                                    ChatItem.Type.Group -> {
+                                        //TODO add click handler
+                                    }
+                                }
+                            },
                         )
                         if (index != lastIndex) {
                             Divider(
@@ -238,7 +245,7 @@ internal fun ChatListContentPreview() {
             onAddClicked = {},
             onSettingsClicked = {},
             onRefreshChatsTriggered = {},
-            onChatClicked = {},
+            onPersonalChatClicked = {},
             onCloseErrorDialogClicked = {},
             onReloadChatsClicked = {},
         )
@@ -261,7 +268,7 @@ internal fun ChatListContentLoadingPreview() {
             onAddClicked = {},
             onSettingsClicked = {},
             onRefreshChatsTriggered = {},
-            onChatClicked = {},
+            onPersonalChatClicked = {},
             onCloseErrorDialogClicked = {},
             onReloadChatsClicked = {},
         )
