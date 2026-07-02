@@ -36,7 +36,7 @@ internal class SignInRepoImpl(
         )
 
         val cryptoKeys = CryptoKeys(
-            publicKey = response.publicKey,
+            publicKey = derivePublicKey(privateKey),
             privateKey = privateKey,
         )
         userStorage.saveKeys(cryptoKeys)
