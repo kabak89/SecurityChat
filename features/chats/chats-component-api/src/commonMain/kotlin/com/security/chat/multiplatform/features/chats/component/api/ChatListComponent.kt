@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
 public interface ChatListComponent : BaseComponent, DiScopeHolder {
     public fun onAddClicked()
-    public fun onChatClicked(chatId: String)
+    public fun onPersonalChatClicked(chatId: String)
+    public fun onGroupChatClicked(chatId: String)
     public fun onSettingsClicked()
 }

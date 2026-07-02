@@ -13,6 +13,9 @@ import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
+import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Chat
+import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Chats
+import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Settings
 import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import kotlinx.serialization.Serializable
@@ -46,7 +49,7 @@ public class MainComponentImpl(
             serializer = Params.serializer(),
             initialStack = {
                 if (initialChatId != null) {
-                    listOf(Params.ChatsParams, Params.ChatParams(chatId = initialChatId))
+                    listOf(Params.ChatsParams, Params.PublicChatParams(chatId = initialChatId))
                 } else {
                     listOf(Params.ChatsParams)
                 }
@@ -62,13 +65,18 @@ public class MainComponentImpl(
     override fun openChat(chatId: String) {
         navigation.navigate { stack ->
             when (val top = stack.last()) {
-                is Params.ChatParams -> when {
+                is Params.PublicChatParams -> when {
                     top.chatId == chatId -> stack
-                    else -> stack.dropLast(1) + Params.ChatParams(chatId = chatId)
+                    else -> stack.dropLast(1) + Params.PublicChatParams(chatId = chatId)
                 }
 
-                is Params.SettingsParams -> stack.dropLast(1) + Params.ChatParams(chatId = chatId)
-                is Params.ChatsParams -> stack + Params.ChatParams(chatId = chatId)
+                is Params.GroupChatParams,
+                is Params.SettingsParams,
+                    -> {
+                    stack.dropLast(1) + Params.PublicChatParams(chatId = chatId)
+                }
+
+                is Params.ChatsParams -> stack + Params.PublicChatParams(chatId = chatId)
             }
         }
     }
@@ -79,11 +87,11 @@ public class MainComponentImpl(
     ): MainComponent.Child {
         return when (params) {
             is Params.ChatsParams -> {
-                MainComponent.Child.Chats(
+                Chats(
                     component = ChatsComponentImpl(
                         componentContext = componentContext,
-                        onChatClicked = { chatId ->
-                            val configuration = Params.ChatParams(
+                        onPublicChatClicked = { chatId ->
+                            val configuration = Params.PublicChatParams(
                                 chatId = chatId,
                             )
                             navigation.push(configuration = configuration)
@@ -91,12 +99,18 @@ public class MainComponentImpl(
                         onSettingsClicked = {
                             navigation.push(configuration = Params.SettingsParams)
                         },
+                        onGroupChatClicked = { chatId ->
+                            val configuration = Params.GroupChatParams(
+                                chatId = chatId,
+                            )
+                            navigation.push(configuration = configuration)
+                        },
                     ),
                 )
             }
 
             is Params.SettingsParams -> {
-                MainComponent.Child.Settings(
+                Settings(
                     component = SettingsComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
@@ -105,12 +119,22 @@ public class MainComponentImpl(
                 )
             }
 
-            is Params.ChatParams -> {
-                MainComponent.Child.Chat(
+            is Params.PublicChatParams -> {
+                Chat(
                     component = ChatComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
-                        chatId = params.chatId,
+                        params = ChatComponent.Params.PersonalChat(params.chatId),
+                    ),
+                )
+            }
+
+            is Params.GroupChatParams -> {
+                Chat(
+                    component = ChatComponentImpl(
+                        componentContext = componentContext,
+                        onExit = navigation::pop,
+                        params = ChatComponent.Params.GroupChatId(params.chatId),
                     ),
                 )
             }
@@ -118,17 +142,22 @@ public class MainComponentImpl(
     }
 
     @Serializable
-    private sealed class Params {
+    private sealed interface Params {
 
         @Serializable
-        data object ChatsParams : Params()
+        data object ChatsParams : Params
 
         @Serializable
-        data object SettingsParams : Params()
+        data object SettingsParams : Params
 
         @Serializable
-        data class ChatParams(
+        data class PublicChatParams(
             val chatId: String,
-        ) : Params()
+        ) : Params
+
+        @Serializable
+        data class GroupChatParams(
+            val chatId: String,
+        ) : Params
     }
 }

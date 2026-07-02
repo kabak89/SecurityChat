@@ -3,24 +3,22 @@ package com.security.chat.multiplatform.features.chat.component
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
-import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
-import com.security.chat.multiplatform.features.chat.domain.ChatModel
-import org.koin.core.qualifier.named
+import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 
-public class PersonalChatComponentImpl(
+public class GroupChatComponentImpl(
     override val chatId: String,
     private val onExit: () -> Unit,
     componentContext: ComponentContext,
-) : PersonalChatComponent,
+) : GroupChatComponent,
     BaseComponentImpl(
         componentContext = componentContext,
-        scopeId = SCOPE_ID_PERSONAL_CHAT,
+        scopeId = SCOPE_ID_GROUP_CHAT,
     ) {
 
     init {
         doOnCreate {
-            val chatModel: ChatModel = getKoin().get()
-            chatModel.start(parentScope = getKoin().get(named(SCOPE_ID_PERSONAL_CHAT)))
+//            val personalChatModel: PersonalChatModel = getKoin().get()
+//            personalChatModel.start(parentScope = getKoin().get(named(SCOPE_ID_GROUP_CHAT)))
         }
     }
 
@@ -29,4 +27,4 @@ public class PersonalChatComponentImpl(
     }
 }
 
-public const val SCOPE_ID_PERSONAL_CHAT: String = "SCOPE_ID_PERSONAL_CHAT"
+private const val SCOPE_ID_GROUP_CHAT: String = "SCOPE_ID_GROUP_CHAT"

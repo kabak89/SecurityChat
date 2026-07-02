@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 
-public interface ChatModel : ScopedModel {
+public interface PersonalChatModel : ScopedModel {
     public val sendMessage: Task0<Unit>
     public val syncMessages: Task0<Unit>
     public val fetchCompanionInfo: Task0<Unit>
@@ -33,10 +33,10 @@ public interface ChatModel : ScopedModel {
     public fun getInterlocutorInfoFlow(): Flow<Interlocutor?>
 }
 
-internal class ChatModelImpl(
+internal class PersonalChatModelImpl(
     private val chatRepo: ChatRepo,
     dispatcherProvider: DispatcherProviderInterface,
-) : ChatModel,
+) : PersonalChatModel,
     BaseModel(
         dispatcher = dispatcherProvider.Default,
     ) {

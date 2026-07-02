@@ -10,7 +10,7 @@ import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
-import com.security.chat.multiplatform.features.chat.domain.ChatModel
+import com.security.chat.multiplatform.features.chat.domain.PersonalChatModel
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.mapper.toUi
 import com.security.chat.multiplatform.features.push.domain.PushModel
@@ -21,37 +21,37 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 internal class PersonalChatViewModel(
-    private val chatModel: ChatModel,
+    private val personalChatModel: PersonalChatModel,
     private val params: PersonalChatComponent,
     private val pushModel: PushModel,
 ) : BaseViewModel<PersonalChatState, PersonalChatEvent>() {
 
     val messages: Flow<PagingData<MessageUM>> =
-        chatModel.getMessagesPager()
+        personalChatModel.getMessagesPager()
             .map { pagingData -> pagingData.map { it.toUi() } }
             .cachedIn(viewModelScope)
 
     override fun onPostStart() {
         super.onPostStart()
 
-        chatModel.setChatId(id = params.chatId)
+        personalChatModel.setChatId(id = params.chatId)
 
-        chatModel.getCurrentMessageFlow()
+        personalChatModel.getCurrentMessageFlow()
             .onEach { currentMessage ->
                 updateState { it.copy(message = currentMessage) }
             }
             .launchIn(viewModelScope)
 
-        chatModel.fetchCompanionInfo.start()
+        personalChatModel.fetchCompanionInfo.start()
 
-        chatModel.sendMessage.jobFlow
+        personalChatModel.sendMessage.jobFlow
             .asLceState()
             .onEach { state ->
                 updateState { it.copy(sendingMessageInProgress = state.isLoading) }
             }
             .launchIn(viewModelScope)
 
-        chatModel.syncMessages.jobFlow.asLceState().map { it.toUiLceState() }
+        personalChatModel.syncMessages.jobFlow.asLceState().map { it.toUiLceState() }
             .onEach { syncState ->
                 updateState { it.copy(syncState = syncState) }
             }
@@ -61,17 +61,17 @@ internal class PersonalChatViewModel(
             .onEach { active ->
                 if (active) {
                     pushModel.clearNotificationsForChat(chatId = params.chatId)
-                    chatModel.syncMessages.startOnSubscribe()
-                    chatModel.onViewActive()
+                    personalChatModel.syncMessages.startOnSubscribe()
+                    personalChatModel.onViewActive()
                     pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
                 } else {
-                    chatModel.onViewInactive()
+                    personalChatModel.onViewInactive()
                     pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
                 }
             }
             .launchIn(viewModelScope)
 
-        chatModel.getInterlocutorInfoFlow()
+        personalChatModel.getInterlocutorInfoFlow()
             .filterNotNull()
             .collectWhenViewActive()
             .onEach { interlocutor ->
@@ -95,14 +95,14 @@ internal class PersonalChatViewModel(
     }
 
     fun onMessageEdited(message: String) {
-        chatModel.setCurrentMessageText(text = message)
+        personalChatModel.setCurrentMessageText(text = message)
     }
 
     fun onSendMessageClicked() {
-        chatModel.sendMessage.startOnSubscribe()
+        personalChatModel.sendMessage.startOnSubscribe()
     }
 
     fun onSyncClicked() {
-        chatModel.syncMessages.startOnSubscribe()
+        personalChatModel.syncMessages.startOnSubscribe()
     }
 }

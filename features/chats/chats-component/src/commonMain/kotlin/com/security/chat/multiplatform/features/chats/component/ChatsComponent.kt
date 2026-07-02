@@ -17,7 +17,8 @@ import com.security.chat.multiplatform.features.users.data.network.di.usersNetwo
 import kotlinx.serialization.Serializable
 
 public class ChatsComponentImpl(
-    private val onChatClicked: (chatId: String) -> Unit,
+    private val onPublicChatClicked: (chatId: String) -> Unit,
+    private val onGroupChatClicked: (chatId: String) -> Unit,
     private val onSettingsClicked: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatsComponent,
@@ -64,7 +65,8 @@ public class ChatsComponentImpl(
                     component = ChatListComponentImpl(
                         componentContext = componentContext,
                         onAdd = { navigation.push(Params.AddChatParams) },
-                        onChatClick = { onChatClicked.invoke(it) },
+                        onPersonalChatClick = onPublicChatClicked,
+                        onGroupChatClick = onGroupChatClicked,
                         onSettingsClick = onSettingsClicked,
                     ),
                 )
@@ -79,7 +81,7 @@ public class ChatsComponentImpl(
                         },
                         onPersonalChatCreate = { chatId ->
                             navigation.pop()
-                            onChatClicked(chatId)
+                            onPublicChatClicked(chatId)
                         },
                         onGroupChatCreate = {
                             navigation.pop()

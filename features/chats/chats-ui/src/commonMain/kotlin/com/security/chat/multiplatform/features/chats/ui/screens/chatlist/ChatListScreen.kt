@@ -60,9 +60,10 @@ public fun ChatListScreen(
             onAddClicked = component::onAddClicked,
             onSettingsClicked = component::onSettingsClicked,
             onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
-            onPersonalChatClicked = component::onChatClicked,
+            onPersonalChatClicked = component::onPersonalChatClicked,
             onCloseErrorDialogClicked = vm::onCloseErrorDialogClicked,
             onReloadChatsClicked = vm::onReloadChatsClicked,
+            onGroupChatClicked = component::onGroupChatClicked,
         )
     }
 }
@@ -76,6 +77,7 @@ private fun ChatListContent(
     onSettingsClicked: () -> Unit,
     onRefreshChatsTriggered: () -> Unit,
     onPersonalChatClicked: (chatId: String) -> Unit,
+    onGroupChatClicked: (chatId: String) -> Unit,
     onCloseErrorDialogClicked: () -> Unit,
     onReloadChatsClicked: () -> Unit,
 ) {
@@ -127,9 +129,7 @@ private fun ChatListContent(
                             onChatClicked = {
                                 when (chat.type) {
                                     ChatItem.Type.Personal -> onPersonalChatClicked(chat.id)
-                                    ChatItem.Type.Group -> {
-                                        //TODO add click handler
-                                    }
+                                    ChatItem.Type.Group -> onGroupChatClicked(chat.id)
                                 }
                             },
                         )
@@ -248,6 +248,7 @@ internal fun ChatListContentPreview() {
             onPersonalChatClicked = {},
             onCloseErrorDialogClicked = {},
             onReloadChatsClicked = {},
+            onGroupChatClicked = {},
         )
     }
 }
@@ -271,6 +272,7 @@ internal fun ChatListContentLoadingPreview() {
             onPersonalChatClicked = {},
             onCloseErrorDialogClicked = {},
             onReloadChatsClicked = {},
+            onGroupChatClicked = {},
         )
     }
 }

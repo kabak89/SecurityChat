@@ -9,7 +9,8 @@ import org.koin.core.qualifier.named
 
 public class ChatListComponentImpl(
     private val onAdd: () -> Unit,
-    private val onChatClick: (chatId: String) -> Unit,
+    private val onPersonalChatClick: (chatId: String) -> Unit,
+    private val onGroupChatClick: (chatId: String) -> Unit,
     private val onSettingsClick: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatListComponent,
@@ -29,8 +30,12 @@ public class ChatListComponentImpl(
         onAdd()
     }
 
-    override fun onChatClicked(chatId: String) {
-        onChatClick(chatId)
+    override fun onPersonalChatClicked(chatId: String) {
+        onPersonalChatClick(chatId)
+    }
+
+    override fun onGroupChatClicked(chatId: String) {
+        onGroupChatClick(chatId)
     }
 
     override fun onSettingsClicked() {

@@ -15,7 +15,7 @@ import com.security.chat.multiplatform.features.chat.ui.di.chatUiModule
 import kotlinx.serialization.Serializable
 
 public class ChatComponentImpl(
-    override val chatId: String,
+    override val params: ChatComponent.Params,
     private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatComponent,
@@ -30,9 +30,21 @@ public class ChatComponentImpl(
         childStack(
             source = navigation,
             serializer = Params.serializer(),
-            initialConfiguration = Params.PersonalChatParams(
-                chatId = chatId,
-            ),
+            initialConfiguration = run {
+                when (params) {
+                    is ChatComponent.Params.GroupChatId -> {
+                        Params.GroupChatParams(
+                            chatId = params.value,
+                        )
+                    }
+
+                    is ChatComponent.Params.PersonalChat -> {
+                        Params.PersonalChatParams(
+                            chatId = params.value,
+                        )
+                    }
+                }
+            },
             handleBackButton = true,
             childFactory = ::createChild,
         )
@@ -67,6 +79,16 @@ public class ChatComponentImpl(
                     ),
                 )
             }
+
+            is Params.GroupChatParams -> {
+                ChatComponent.Child.GroupChat(
+                    component = GroupChatComponentImpl(
+                        componentContext = componentContext,
+                        onExit = onExit,
+                        chatId = params.chatId,
+                    ),
+                )
+            }
         }
     }
 
@@ -75,6 +97,11 @@ public class ChatComponentImpl(
 
         @Serializable
         data class PersonalChatParams(
+            val chatId: String,
+        ) : Params()
+
+        @Serializable
+        data class GroupChatParams(
             val chatId: String,
         ) : Params()
 
