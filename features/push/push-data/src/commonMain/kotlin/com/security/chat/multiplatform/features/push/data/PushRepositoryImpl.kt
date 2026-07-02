@@ -54,7 +54,7 @@ public class PushRepositoryImpl(
     }
 
     override suspend fun getInterlocutorName(chatId: String): String? {
-        val interlocutorId = chatsStorage.getChat(chatId)?.interlocutorId ?: return null
+        val interlocutorId = chatsStorage.getPersonalChat(chatId)?.interlocutorId ?: return null
         return usersStorage.getUser(interlocutorId)?.name
     }
 

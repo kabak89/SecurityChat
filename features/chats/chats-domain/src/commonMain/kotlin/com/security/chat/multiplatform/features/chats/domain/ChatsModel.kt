@@ -3,7 +3,7 @@ package com.security.chat.multiplatform.features.chats.domain
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
+import com.security.chat.multiplatform.features.chats.domain.entity.Chat
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
 import kotlinx.coroutines.flow.Flow
 import ru.kode.remo.Task0
@@ -11,7 +11,7 @@ import ru.kode.remo.Task0
 public interface ChatsModel : ScopedModel {
     public val fetchChatsList: Task0<Unit>
 
-    public fun getChatListFlow(): Flow<List<ChatDescription>>
+    public fun getChatListFlow(): Flow<List<Chat>>
     public fun isConnectedToInternetFlow(): Flow<Boolean>
 }
 
@@ -28,7 +28,7 @@ internal class ChatsModelImpl(
             chatsRepo.fetchChatsList()
         }
 
-    override fun getChatListFlow(): Flow<List<ChatDescription>> {
+    override fun getChatListFlow(): Flow<List<Chat>> {
         return chatsRepo.getChatsListFlow()
     }
 

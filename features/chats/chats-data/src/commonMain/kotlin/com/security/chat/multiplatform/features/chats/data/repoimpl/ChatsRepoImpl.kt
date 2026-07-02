@@ -13,7 +13,9 @@ import com.security.chat.multiplatform.features.chats.data.entity.UserChatsRespo
 import com.security.chat.multiplatform.features.chats.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chats.data.mapper.toSM
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
-import com.security.chat.multiplatform.features.chats.domain.entity.ChatDescription
+import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
+import com.security.chat.multiplatform.features.chats.domain.entity.Chat
+import com.security.chat.multiplatform.features.chats.domain.entity.ChatMember
 import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
@@ -75,22 +77,62 @@ internal class ChatsRepoImpl(
         )
     }
 
-    override fun getChatsListFlow(): Flow<List<ChatDescription>> {
+    override fun getChatsListFlow(): Flow<List<Chat>> {
         return chatsStorage.getChatsFlow()
             .flatMapLatest { chatList ->
-                val userFlows = chatList.map { chat ->
-                    usersStorage.getUserFlow(chat.interlocutorId)
-                }
-                combine(userFlows) { users ->
-                    chatList.map { chatSM ->
-                        val interlocutorId = chatSM.interlocutorId
-                        val interlocutorName =
-                            users.find { it?.id == interlocutorId }?.name ?: run {
-                                val user = getAndSaveUser(interlocutorId)
-                                user.name
+                val userFlows = chatList
+                    .map { chat ->
+                        when (chat) {
+                            is ChatSM.PersonalChat -> {
+                                listOf(usersStorage.getUserFlow(chat.interlocutorId))
                             }
-                        chatSM.toDomain(interlocutorName = interlocutorName)
+
+                            is ChatSM.GroupChat -> {
+                                chat.members.map { memberId ->
+                                    usersStorage.getUserFlow(memberId)
+                                }
+                            }
+                        }
                     }
+                    .flatten()
+
+                combine(userFlows) { users ->
+                    chatList
+                        .map { chatSM ->
+                            when (chatSM) {
+                                is ChatSM.GroupChat -> {
+                                    val members = chatSM.members
+                                        .map { userId ->
+                                            users.find { it?.id == userId } ?: run {
+                                                val userNM = getAndSaveUser(userId)
+                                                UserSM(
+                                                    id = userNM.userId,
+                                                    publicKey = userNM.publicKey,
+                                                    name = userNM.name,
+                                                )
+                                            }
+                                        }
+                                        .map { it ->
+                                            ChatMember(
+                                                id = it.id,
+                                                username = it.name,
+                                            )
+                                        }
+
+                                    chatSM.toDomain(members)
+                                }
+
+                                is ChatSM.PersonalChat -> {
+                                    val interlocutorId = chatSM.interlocutorId
+                                    val interlocutorName =
+                                        users.find { it?.id == interlocutorId }?.name ?: run {
+                                            val user = getAndSaveUser(interlocutorId)
+                                            user.name
+                                        }
+                                    chatSM.toDomain(interlocutorName = interlocutorName)
+                                }
+                            }
+                        }
                 }
             }
             .distinctUntilChanged()
@@ -106,7 +148,7 @@ internal class ChatsRepoImpl(
             ),
         )
 
-        val chats = response.personalChats
+        val personalChats = response.personalChats
             .map { chatResponse ->
                 val companionId = if (chatResponse.firstUserId == userId) {
                     chatResponse.secondUserId
@@ -125,7 +167,32 @@ internal class ChatsRepoImpl(
                 )
             }
 
-        val storageModels = chats.map { it.toSM() }
+        val groupChats = response.groupChats
+            .map { chatResponse ->
+                val members = chatResponse.participantIds
+                    .map { memberId ->
+                        usersStorage.getUser(memberId) ?: run {
+                            val user = getAndSaveUser(memberId)
+                            UserSM(
+                                id = user.userId,
+                                publicKey = user.publicKey,
+                                name = user.name,
+                            )
+                        }
+                    }
+                    .map {
+                        ChatMember(
+                            id = it.id,
+                            username = it.name,
+                        )
+                    }
+
+                chatResponse.toDomain(
+                    members = members,
+                )
+            }
+
+        val storageModels = personalChats.map { it.toSM() } + groupChats.map { it.toSM() }
         chatsStorage.saveChats(chats = storageModels)
     }
 

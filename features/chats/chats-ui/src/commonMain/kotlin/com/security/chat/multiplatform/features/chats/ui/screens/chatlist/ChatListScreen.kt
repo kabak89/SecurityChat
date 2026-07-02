@@ -191,7 +191,7 @@ private fun ChatComponent(
             Text(
                 modifier = Modifier
                     .align(alignment = Alignment.Center),
-                text = chat.nameAbbreviation,
+                text = chat.abbreviation,
                 color = AppTheme.colors.textSecondary,
                 style = AppTheme.typography.title,
                 textAlign = TextAlign.Center,
@@ -200,7 +200,7 @@ private fun ChatComponent(
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             modifier = Modifier,
-            text = chat.companionName,
+            text = chat.text,
             color = AppTheme.colors.textPrimary,
             style = AppTheme.typography.title2,
         )
@@ -219,13 +219,15 @@ internal fun ChatListContentPreview() {
                     items = listOf(
                         ChatItem(
                             id = "id-1",
-                            companionName = "user_1",
-                            nameAbbreviation = "U1",
+                            text = "user_1",
+                            abbreviation = "U1",
+                            type = ChatItem.Type.Personal,
                         ),
                         ChatItem(
                             id = "id-2",
-                            companionName = "user_2",
-                            nameAbbreviation = "U2",
+                            text = "user_2",
+                            abbreviation = "U2",
+                            type = ChatItem.Type.Group,
                         ),
                     ),
                 ),

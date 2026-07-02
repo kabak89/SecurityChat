@@ -5,6 +5,13 @@ import androidx.compose.runtime.Immutable
 @Immutable
 internal data class ChatItem(
     val id: String,
-    val companionName: String,
-    val nameAbbreviation: String,
-)
+    val text: String,
+    val abbreviation: String,
+    val type: Type,
+) {
+
+    enum class Type {
+        Personal,
+        Group,
+    }
+}

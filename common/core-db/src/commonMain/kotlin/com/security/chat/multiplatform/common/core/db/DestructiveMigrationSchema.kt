@@ -7,8 +7,8 @@ import app.cash.sqldelight.db.SqlSchema
 import com.security.chat.multiplatform.common.log.Log
 
 /**
- * Schema for destructive migrations. When new version of schema differs from old version, all data
- * removes from DB
+ * Schema for destructive migrations. If migration failed (for example because of no such
+ * migration), all data removes from DB
  */
 public class DestructiveMigrationSchema(
     private val schema: SqlSchema<QueryResult.AsyncValue<Unit>>,

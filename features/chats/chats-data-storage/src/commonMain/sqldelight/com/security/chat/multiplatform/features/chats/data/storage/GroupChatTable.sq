@@ -1,0 +1,19 @@
+CREATE TABLE GroupChatTable (
+  id TEXT PRIMARY KEY NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO GroupChatTable
+VALUES ?;
+
+getAll:
+SELECT *
+FROM GroupChatTable;
+
+getById:
+SELECT *
+FROM GroupChatTable
+WHERE id = ?;
+
+removeAll:
+DELETE FROM GroupChatTable;

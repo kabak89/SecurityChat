@@ -1,0 +1,9 @@
+CREATE TABLE GroupChatTable (
+  id TEXT PRIMARY KEY NOT NULL
+);
+CREATE TABLE GroupChatMemberTable (
+    groupChatId TEXT NOT NULL,
+    userId TEXT NOT NULL,
+    PRIMARY KEY (groupChatId, userId)
+);
+CREATE INDEX group_chat_member_user_idx ON GroupChatMemberTable(userId);

@@ -84,7 +84,7 @@ internal class ChatRepoImpl(
 
     override suspend fun uploadMessages(chatId: String) {
         val authorId = checkNotNull(userStorage.getUserId())
-        val chat = checkNotNull(chatsStorage.getChat(chatId))
+        val chat = checkNotNull(chatsStorage.getPersonalChat(chatId))
         val companionId = chat.interlocutorId
 
         val publicKey = usersStorage.getUser(companionId)?.publicKey ?: run {
@@ -197,14 +197,14 @@ internal class ChatRepoImpl(
     }
 
     override suspend fun fetchCompanionInfo(chatId: String) {
-        val chat = requireNotNull(chatsStorage.getChat(chatId))
+        val chat = requireNotNull(chatsStorage.getPersonalChat(chatId))
         val companionId = chat.interlocutorId
         val userNM = usersNetworkManager.getUser(companionId)
         usersStorage.saveUser(user = userNM.toSM())
     }
 
     override fun getInterlocutorInfoFlow(chatId: String): Flow<Interlocutor?> {
-        return chatsStorage.getChatFlow(chatId)
+        return chatsStorage.getPersonalChatFlow(chatId)
             .flatMapLatest { chat ->
                 chat ?: return@flatMapLatest flowOf(null)
 
