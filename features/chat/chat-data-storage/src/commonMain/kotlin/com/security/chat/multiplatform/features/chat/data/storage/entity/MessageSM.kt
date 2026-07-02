@@ -14,5 +14,4 @@ public data class MessageSM(
         Sent,
         Received,
     }
-
 }

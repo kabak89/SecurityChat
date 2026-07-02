@@ -26,7 +26,7 @@ internal class PersonalChatViewModel(
     private val pushModel: PushModel,
 ) : BaseViewModel<PersonalChatState, PersonalChatEvent>() {
 
-    val messages: Flow<PagingData<MessageUM>> =
+    internal val messages: Flow<PagingData<MessageUM>> =
         personalChatModel.getMessagesPager()
             .map { pagingData -> pagingData.map { it.toUi() } }
             .cachedIn(viewModelScope)

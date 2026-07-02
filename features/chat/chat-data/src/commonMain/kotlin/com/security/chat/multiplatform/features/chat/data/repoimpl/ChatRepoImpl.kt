@@ -16,6 +16,7 @@ import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceive
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
+import com.security.chat.multiplatform.features.chat.data.entity.RecipientCiphertext
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.mapper.toSM
@@ -38,7 +39,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
-import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -64,7 +64,7 @@ internal class ChatRepoImpl(
         )
     }
 
-    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveMessage(
         message: String,
         chatId: String,
@@ -123,7 +123,12 @@ internal class ChatRepoImpl(
                         id = message.id,
                         authorId = authorId,
                         chatId = chatId,
-                        message = encryptedText,
+                        recipients = listOf(
+                            RecipientCiphertext(
+                                recipientId = companionId,
+                                message = encryptedText,
+                            ),
+                        ),
                     ),
                 )
             }

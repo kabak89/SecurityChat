@@ -1,11 +1,6 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.personalchat
 
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,15 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -55,14 +47,14 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
-import com.security.chat.multiplatform.common.core.ui.entity.isLoading
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
-import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.PersonalChatComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
+import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.component.IncomingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.component.OutgoingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.personalchat.entity.InterlocutorUM
@@ -79,7 +71,6 @@ import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.icons_kit.generated.resources.ic_send
-import securitychat.common.icons_kit.generated.resources.ic_sync
 
 @Composable
 internal fun PersonalChatScreen(
@@ -204,33 +195,6 @@ private fun PersonalChatContent(
 }
 
 @Composable
-private fun StickToNewestMessageEffect(
-    lazyListState: LazyListState,
-    messages: LazyPagingItems<MessageUM>,
-) {
-    var stickToBottom by remember { mutableStateOf(true) }
-
-    LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.isScrollInProgress }
-            .collect { scrolling ->
-                if (!scrolling) {
-                    stickToBottom = lazyListState.firstVisibleItemIndex == 0 &&
-                            lazyListState.firstVisibleItemScrollOffset == 0
-                }
-            }
-    }
-
-    LaunchedEffect(lazyListState, messages) {
-        snapshotFlow { messages.itemSnapshotList.items.firstOrNull()?.id }
-            .collect { newestId ->
-                if (newestId != null && stickToBottom) {
-                    lazyListState.animateScrollToItem(0)
-                }
-            }
-    }
-}
-
-@Composable
 private fun MessagesComponent(
     modifier: Modifier = Modifier,
     state: PersonalChatState,
@@ -297,41 +261,6 @@ private fun Toolbar(
             },
         ),
     )
-}
-
-@Composable
-private fun SyncComponent(
-    modifier: Modifier = Modifier,
-    syncState: UiLceState,
-    onSyncClicked: () -> Unit,
-) {
-    val inProgress = remember(syncState) {
-        syncState.isLoading
-    }
-
-    val rotation = if (inProgress) {
-        val transition = rememberInfiniteTransition(label = "sync-rotation")
-        transition.animateFloat(
-            initialValue = 0f,
-            targetValue = -360f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 800),
-                repeatMode = RepeatMode.Restart,
-            ),
-            label = "sync-rotation-angle",
-        ).value
-    } else {
-        0f
-    }
-
-    Box(
-        modifier = modifier.rotate(rotation),
-    ) {
-        ButtonContent(
-            icon = DrawableRes.ic_sync,
-            onClicked = onSyncClicked,
-        )
-    }
 }
 
 @Composable
