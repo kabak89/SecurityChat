@@ -11,14 +11,17 @@ internal actual class Logger {
     }
 
     actual fun d(message: () -> String) {
+        if (!BuildKonfig.ENABLE_LOGS) return
         Timber.d(message())
     }
 
     actual fun e(error: Throwable, message: String?) {
+        if (!BuildKonfig.ENABLE_LOGS) return
         Timber.e(error, message)
     }
 
     actual fun e(message: String) {
+        if (!BuildKonfig.ENABLE_LOGS) return
         Timber.e(message)
     }
 }

@@ -80,11 +80,11 @@ public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(), ViewModelIn
 
     override fun onViewActive() {
         viewActivable.onActive()
-        Log.d { "onActive" }
+        Log.d { "${this::class.qualifiedName} onActive" }
     }
 
     override fun onViewInactive() {
         viewActivable.onInactive()
-        Log.d { "onViewInactive" }
+        Log.d { "${this::class.qualifiedName} onViewInactive" }
     }
 }
