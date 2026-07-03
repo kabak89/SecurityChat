@@ -2,28 +2,28 @@ package com.security.chat.multiplatform.common.log
 
 public object Log {
 
-    @PublishedApi
-    internal var logger: Logger = Logger()
+    private val logger: Logger = Logger()
 
-    public fun d(
-        message: () -> String,
-    ) {
-        logger.d(message = message)
+    private val enableLogs: Boolean = BuildKonfig.ENABLE_LOGS
+
+    public fun d(message: () -> String) {
+        if (!enableLogs) return
+        logger.d(message())
     }
 
     public fun e(
         error: Throwable,
         message: String? = null,
     ) {
+        if (!enableLogs) return
         logger.e(
             error = error,
             message = message,
         )
     }
 
-    public fun e(
-        message: String,
-    ) {
+    public fun e(message: String) {
+        if (!enableLogs) return
         logger.e(
             message = message,
         )
