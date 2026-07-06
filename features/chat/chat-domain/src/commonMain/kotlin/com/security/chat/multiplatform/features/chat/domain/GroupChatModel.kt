@@ -6,13 +6,17 @@ import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
 
 public interface GroupChatModel : ScopedModel {
@@ -23,6 +27,8 @@ public interface GroupChatModel : ScopedModel {
     public fun setCurrentMessageText(text: String)
     public fun getCurrentMessageFlow(): Flow<String>
     public fun getMessagesPager(): Flow<PagingData<Message>>
+    public fun onViewActive()
+    public fun onViewInactive()
 }
 
 internal class GroupChatModelImpl(
@@ -35,22 +41,24 @@ internal class GroupChatModelImpl(
 
     private val stateFlow: MutableStateFlow<State> = MutableStateFlow(State())
 
+    private var newMessagesJob: Job? = null
+    private var publishOnlineStatusJob: Job? = null
+
     override val sendMessage: Task0<Unit> =
         task { ->
-            //TODO add realization of sending messages for group chat
-//            val currentMessage = stateFlow.value.currentMessage
-//            if (currentMessage.isBlank()) return@task
-//
-//            val chatId = checkNotNull(stateFlow.value.chatId)
-//
-//            chatRepo.saveMessage(
-//                message = currentMessage,
-//                chatId = chatId,
-//            )
-//
-//            stateFlow.update { it.copy(currentMessage = "") }
-//
-//            chatRepo.uploadMessages(chatId = chatId)
+            val currentMessage = stateFlow.value.currentMessage
+            if (currentMessage.isBlank()) return@task
+
+            val chatId = checkNotNull(stateFlow.value.chatId)
+
+            chatRepo.saveMessage(
+                message = currentMessage,
+                chatId = chatId,
+            )
+
+            stateFlow.update { it.copy(currentMessage = "") }
+
+            chatRepo.uploadMessages(chatId = chatId)
         }
 
     override val syncMessages: Task0<Unit> =
@@ -83,6 +91,22 @@ internal class GroupChatModelImpl(
             .distinctUntilChanged()
             .filterNotNull()
             .flatMapLatest { chatId -> chatRepo.getMessagesPager(chatId) }
+    }
+
+    override fun onViewActive() {
+        newMessagesJob = scope.launch {
+            val chatId = stateFlow.mapNotNull { it.chatId }.first()
+            chatRepo.subscribeToNewMessages(chatId)
+        }
+
+        publishOnlineStatusJob = scope.launch {
+            chatRepo.setUserOnline()
+        }
+    }
+
+    override fun onViewInactive() {
+        newMessagesJob?.cancel()
+        publishOnlineStatusJob?.cancel()
     }
 
     private data class State(

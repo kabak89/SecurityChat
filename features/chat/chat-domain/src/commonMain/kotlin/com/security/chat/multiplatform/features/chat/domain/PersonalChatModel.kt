@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.kode.remo.Task0
@@ -103,7 +104,7 @@ internal class PersonalChatModelImpl(
 
     override fun onViewActive() {
         newMessagesJob = scope.launch {
-            val chatId = stateFlow.map { it.chatId }.filterNotNull().first()
+            val chatId = stateFlow.mapNotNull { it.chatId }.first()
             chatRepo.subscribeToNewMessages(chatId)
         }
 

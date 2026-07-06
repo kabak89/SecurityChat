@@ -1,0 +1,16 @@
+CREATE TABLE MessageRecipients (
+  messageId TEXT NOT NULL,
+  userId TEXT NOT NULL,
+  PRIMARY KEY (messageId, userId)
+);
+
+insert:
+INSERT OR REPLACE INTO MessageRecipients
+VALUES ?;
+
+getUserIdsByMessageId:
+SELECT userId FROM MessageRecipients
+WHERE messageId = :messageId;
+
+removeAll:
+DELETE FROM MessageRecipients;

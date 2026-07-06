@@ -14,6 +14,7 @@ internal fun ChatSM.PersonalChat.toTable(): PersonalChatTable {
 internal fun ChatSM.GroupChat.toTable(): GroupChatTable {
     return GroupChatTable(
         id = id,
+        authorId = authorId,
     )
 }
 

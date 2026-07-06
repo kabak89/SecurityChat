@@ -81,20 +81,20 @@ internal class ChatsRepoImpl(
         return chatsStorage.getChatsFlow()
             .flatMapLatest { chatList ->
                 val userFlows = chatList
-                    .map { chat ->
+                    .flatMap { chat ->
                         when (chat) {
                             is ChatSM.PersonalChat -> {
                                 listOf(usersStorage.getUserFlow(chat.interlocutorId))
                             }
 
                             is ChatSM.GroupChat -> {
-                                chat.members.map { memberId ->
+                                val members = chat.members + chat.authorId
+                                members.map { memberId ->
                                     usersStorage.getUserFlow(memberId)
                                 }
                             }
                         }
                     }
-                    .flatten()
 
                 combine(userFlows) { users ->
                     chatList
@@ -119,7 +119,24 @@ internal class ChatsRepoImpl(
                                             )
                                         }
 
-                                    chatSM.toDomain(members)
+                                    val author = chatSM.authorId.let { authorId ->
+                                        users.find { it?.id == authorId } ?: run {
+                                            val userNM = getAndSaveUser(authorId)
+                                            UserSM(
+                                                id = userNM.userId,
+                                                publicKey = userNM.publicKey,
+                                                name = userNM.name,
+                                            )
+                                        }
+                                    }
+
+                                    chatSM.toDomain(
+                                        members = members,
+                                        author = ChatMember(
+                                            id = chatSM.authorId,
+                                            username = author.name,
+                                        ),
+                                    )
                                 }
 
                                 is ChatSM.PersonalChat -> {
@@ -187,8 +204,23 @@ internal class ChatsRepoImpl(
                         )
                     }
 
+                val userForAuthor = usersStorage.getUser(chatResponse.authorId) ?: run {
+                    val user = getAndSaveUser(chatResponse.authorId)
+                    UserSM(
+                        id = user.userId,
+                        publicKey = user.publicKey,
+                        name = user.name,
+                    )
+                }
+
+                val author = ChatMember(
+                    id = chatResponse.authorId,
+                    username = userForAuthor.name,
+                )
+
                 chatResponse.toDomain(
                     members = members,
+                    author = author,
                 )
             }
 

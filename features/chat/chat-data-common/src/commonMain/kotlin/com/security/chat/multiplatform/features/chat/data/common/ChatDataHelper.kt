@@ -2,7 +2,6 @@ package com.security.chat.multiplatform.features.chat.data.common
 
 import com.security.chat.multiplatform.features.chat.data.common.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
-import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import dev.whyoleg.cryptography.CryptographyProvider
@@ -28,13 +27,11 @@ internal class ChatDataHelperImpl(
 ) : ChatDataHelper {
 
     override suspend fun fetchAndSaveMessages(chatId: String) {
-        val messages = fetchMessages(chatId = chatId)
+        val messages = chatNetworkManager.getMessages(chatId = chatId)
         if (messages.isEmpty()) return
         val messageIds = messages.map { it.id }
-        val companionId = messages.first().authorId
 
         confirmReceivingMessages(
-            authorId = companionId,
             chatId = chatId,
             messageIds = messageIds,
         )
@@ -50,6 +47,7 @@ internal class ChatDataHelperImpl(
                         privateKeyString = privateKey,
                     )
                 },
+                recipients = listOf(checkNotNull(userStorage.getUserId())),
             )
         }
         chatStorage.saveMessages(messages = messagesToStore)
@@ -60,12 +58,6 @@ internal class ChatDataHelperImpl(
         chatId: String,
     ): List<String> {
         val messages = chatNetworkManager.processNewMessages(serializedMessages)
-        val messageIds = messages.map { it.id }
-        confirmReceivingMessages(
-            authorId = messages.first().authorId,
-            chatId = chatId,
-            messageIds = messageIds,
-        )
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
 
         val messagesToStore = messages.map {
@@ -77,9 +69,17 @@ internal class ChatDataHelperImpl(
                     )
                 },
                 chatId = chatId,
+                recipients = listOf(checkNotNull(userStorage.getUserId())),
             )
         }
         chatStorage.saveMessages(messages = messagesToStore)
+
+        val messageIds = messages.map { it.id }
+        confirmReceivingMessages(
+            chatId = chatId,
+            messageIds = messageIds,
+        )
+
         return messagesToStore.map { it.text }
     }
 
@@ -108,20 +108,11 @@ internal class ChatDataHelperImpl(
         return Base64.encode(encryptedMessage)
     }
 
-    private suspend fun fetchMessages(chatId: String): List<ChatMessageNM> {
-        val userId = checkNotNull(userStorage.getUserId())
-
-        return chatNetworkManager.getMessages(chatId = chatId)
-            .filter { it.authorId != userId }
-    }
-
     private suspend fun confirmReceivingMessages(
-        authorId: String,
         chatId: String,
         messageIds: List<String>,
     ) {
         chatNetworkManager.confirmReceivingMessages(
-            authorId = authorId,
             chatId = chatId,
             messageIds = messageIds,
         )

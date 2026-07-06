@@ -12,6 +12,7 @@ sqldelight {
             packageName = modulePackage
             generateAsync = true
             dialect(libs.sqlite.dialect)
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
         }
     }
     linkSqlite = false

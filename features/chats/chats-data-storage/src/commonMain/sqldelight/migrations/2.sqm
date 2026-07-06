@@ -1,0 +1,8 @@
+-- authorId has no meaningful value for existing rows, so drop all old data
+-- and recreate GroupChatTable with the new schema.
+DROP TABLE IF EXISTS GroupChatTable;
+
+CREATE TABLE GroupChatTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  authorId TEXT NOT NULL
+);

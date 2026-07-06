@@ -28,6 +28,7 @@ import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
+import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
@@ -69,40 +70,33 @@ internal class ChatRepoImpl(
         message: String,
         chatId: String,
     ) {
-        val timestamp = timeProvider.now().toEpochMilliseconds()
+        val chat = chatsStorage.getPersonalChat(chatId) ?: chatsStorage.getGroupChat(chatId)
+        checkNotNull(chat)
 
-        val messageSM = MessageSM(
-            id = Uuid.random().toString(),
+        val userId = checkNotNull(userStorage.getUserId())
+
+        val recipients = when (chat) {
+            is ChatSM.GroupChat -> chat.members + chat.authorId - userId
+            is ChatSM.PersonalChat -> listOf(chat.interlocutorId)
+        }
+
+        val timestamp = timeProvider.now().toEpochMilliseconds()
+        val messageId = Uuid.random().toString()
+
+        val messageSm = MessageSM(
+            id = messageId,
             chatId = chatId,
             text = message,
-            authorId = checkNotNull(userStorage.getUserId()),
+            authorId = userId,
             status = MessageSM.Status.Created,
             timestamp = timestamp,
+            recipients = recipients,
         )
-        chatStorage.saveMessage(messageSM)
+
+        chatStorage.saveMessage(messageSm)
     }
 
     override suspend fun uploadMessages(chatId: String) {
-        val authorId = checkNotNull(userStorage.getUserId())
-        val chat = checkNotNull(chatsStorage.getPersonalChat(chatId))
-        val companionId = chat.interlocutorId
-
-        val publicKey = usersStorage.getUser(companionId)?.publicKey ?: run {
-            val userInfo = networkManager.runGet<FindUserResponse>(
-                relativePath = "/users/info",
-                request = mapOf("id" to companionId),
-            )
-
-            usersStorage.saveUser(
-                user = UserSM(
-                    id = userInfo.userId,
-                    publicKey = userInfo.publicKey,
-                    name = userInfo.login,
-                ),
-            )
-            userInfo.publicKey
-        }
-
         val messagesToUpload = chatStorage.getMessages(
             chatId = chatId,
             limit = Long.MAX_VALUE,
@@ -110,28 +104,49 @@ internal class ChatRepoImpl(
         )
             .filter { it.status == MessageSM.Status.Created }
 
-        messagesToUpload
-            .forEach { message ->
-                val encryptedText = chatDataHelper.encryptText(
-                    text = message.text,
-                    publicKeyString = publicKey,
-                )
 
-                networkManager.runPost<SendMessageRequest, Unit>(
-                    relativePath = "/messages",
-                    request = SendMessageRequest(
-                        id = message.id,
-                        authorId = authorId,
-                        chatId = chatId,
-                        recipients = listOf(
-                            RecipientCiphertext(
-                                recipientId = companionId,
-                                message = encryptedText,
+
+        messagesToUpload.forEach { message ->
+            val cipherTexts = message.recipients
+                .map { recipient ->
+                    val publicKey = usersStorage.getUser(recipient)?.publicKey ?: run {
+                        val userInfo = networkManager.runGet<FindUserResponse>(
+                            relativePath = "/users/info",
+                            request = mapOf("id" to recipient),
+                        )
+
+                        usersStorage.saveUser(
+                            user = UserSM(
+                                id = userInfo.userId,
+                                publicKey = userInfo.publicKey,
+                                name = userInfo.login,
                             ),
-                        ),
-                    ),
-                )
-            }
+                        )
+                        userInfo.publicKey
+                    }
+
+                    val encryptedText = chatDataHelper.encryptText(
+                        text = message.text,
+                        publicKeyString = publicKey,
+                    )
+
+                    RecipientCiphertext(
+                        recipientId = recipient,
+                        message = encryptedText,
+                    )
+                }
+
+            val request = SendMessageRequest(
+                id = message.id,
+                chatId = chatId,
+                recipients = cipherTexts,
+            )
+
+            networkManager.runPost<SendMessageRequest, Unit>(
+                relativePath = "/messages",
+                request = request,
+            )
+        }
 
         val messagesToUpdate = messagesToUpload.map { it.copy(status = MessageSM.Status.Sent) }
         messagesToUpdate.forEach { message -> chatStorage.updateMessage(message) }
@@ -170,7 +185,6 @@ internal class ChatRepoImpl(
     override suspend fun subscribeToNewMessages(chatId: String) {
         val authorId = requireNotNull(userStorage.getUserId())
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
-        val userId = checkNotNull(userStorage.getUserId())
 
         chatNetworkManager.getNewMessagesFlow(
             chatId = chatId,
@@ -184,16 +198,18 @@ internal class ChatRepoImpl(
                             privateKeyString = privateKey,
                         )
                     },
-                    appOwnerId = userId,
+                    appOwnerId = authorId,
                 )
 
-                val storageModel = newMessage.toSM(chatId)
+                val storageModel = newMessage.toSM(
+                    chatId = chatId,
+                    recipients = listOf(authorId),
+                )
                 chatStorage.saveMessage(storageModel)
 
                 networkManager.runPost<MessagesReceivedRequest, Unit>(
                     relativePath = "/messages/received",
                     request = MessagesReceivedRequest(
-                        authorId = newMessage.authorId,
                         chatId = chatId,
                         messageIds = listOf(newMessage.id),
                     ),

@@ -46,6 +46,7 @@ internal fun MessageSM.toDomain(
 
 internal fun Message.toSM(
     chatId: String,
+    recipients: List<String>,
 ): MessageSM {
     return MessageSM(
         id = id,
@@ -55,6 +56,7 @@ internal fun Message.toSM(
         //TODO
         status = MessageSM.Status.Received,
         timestamp = timestamp,
+        recipients = recipients,
     )
 }
 

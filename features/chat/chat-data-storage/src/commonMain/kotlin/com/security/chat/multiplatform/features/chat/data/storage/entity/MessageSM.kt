@@ -7,6 +7,7 @@ public data class MessageSM(
     val authorId: String,
     val status: Status,
     val timestamp: Long,
+    val recipients: List<String>,
 ) {
 
     public enum class Status {

@@ -37,7 +37,7 @@ internal class ChatsStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "personal_chats.db",
                         sqlSchema = ChatsDb.Schema,
-                        version = 2,
+                        version = 3,
                     ),
                 )
             },
@@ -86,15 +86,16 @@ internal class ChatsStorageImpl(
     override suspend fun getGroupChat(id: String): ChatSM.GroupChat? {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            val groupChatId =
+            val groupChatTable =
                 db.groupChatTableQueries.getById(id).executeAsOneOrNull() ?: return@withContext null
 
-            val members =
-                db.groupChatMemberTableQueries.getUserIdsByGroupChatId(groupChatId).executeAsList()
+            val members = db.groupChatMemberTableQueries.getUserIdsByGroupChatId(groupChatTable.id)
+                .executeAsList()
 
             ChatSM.GroupChat(
-                id = groupChatId,
+                id = groupChatTable.id,
                 members = members,
+                authorId = groupChatTable.authorId,
             )
         }
     }
@@ -126,13 +127,14 @@ internal class ChatsStorageImpl(
                             flowOf(emptyList())
                         } else {
                             val chatFlows: List<Flow<ChatSM.GroupChat>> =
-                                groupChatIds.map { groupChatId ->
+                                groupChatIds.map { groupChatTable ->
                                     db.groupChatMemberTableQueries
-                                        .getUserIdsByGroupChatId(groupChatId)
+                                        .getUserIdsByGroupChatId(groupChatTable.id)
                                         .asFlow()
                                         .map { membersQuery ->
                                             ChatSM.GroupChat(
-                                                id = groupChatId,
+                                                id = groupChatTable.id,
+                                                authorId = groupChatTable.authorId,
                                                 members = membersQuery.executeAsList(),
                                             )
                                         }

@@ -19,7 +19,6 @@ public interface ChatNetworkManager {
     public suspend fun getNewMessagesFlow(chatId: String, authorId: String): Flow<ChatMessageNM>
     public suspend fun processNewMessages(serializedMessages: String): List<ChatMessageNM>
     public suspend fun confirmReceivingMessages(
-        authorId: String,
         chatId: String,
         messageIds: List<String>,
     )
@@ -71,14 +70,12 @@ internal class ChatNetworkManagerImpl(
     }
 
     override suspend fun confirmReceivingMessages(
-        authorId: String,
         chatId: String,
         messageIds: List<String>,
     ) {
         networkManager.runPost<MessagesReceivedRequest, Unit>(
             relativePath = "/messages/received",
             request = MessagesReceivedRequest(
-                authorId = authorId,
                 chatId = chatId,
                 messageIds = messageIds,
             ),

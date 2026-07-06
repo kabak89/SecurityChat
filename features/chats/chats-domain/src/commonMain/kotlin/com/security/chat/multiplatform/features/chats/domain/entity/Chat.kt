@@ -12,6 +12,7 @@ public sealed interface Chat {
 
     public data class GroupChat(
         override val id: String,
+        val author: ChatMember,
         val members: List<ChatMember>,
     ) : Chat
 }

@@ -15,7 +15,7 @@ internal fun Chat.toUi(): ChatItem {
         }
 
         is Chat.GroupChat -> {
-            val text = members.joinToString(separator = ", ") { it.username }
+            val text = (listOf(author) + members).joinToString(separator = ", ") { it.username }
 
             ChatItem(
                 id = id,

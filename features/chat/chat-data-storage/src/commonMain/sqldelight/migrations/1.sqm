@@ -1,0 +1,7 @@
+-- v2: recipients are normalized into a dedicated join table.
+-- MessageTable schema is unchanged, so existing messages are preserved.
+CREATE TABLE MessageRecipients (
+  messageId TEXT NOT NULL,
+  userId TEXT NOT NULL,
+  PRIMARY KEY (messageId, userId)
+);

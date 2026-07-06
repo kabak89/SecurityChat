@@ -51,6 +51,9 @@ internal class GroupChatViewModel(
             .onEach { active ->
                 if (active) {
                     groupChatModel.syncMessages.startOnSubscribe()
+                    groupChatModel.onViewActive()
+                } else {
+                    groupChatModel.onViewInactive()
                 }
             }
             .launchIn(viewModelScope)

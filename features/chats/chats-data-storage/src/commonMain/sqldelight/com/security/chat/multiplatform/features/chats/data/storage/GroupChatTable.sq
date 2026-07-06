@@ -1,5 +1,6 @@
 CREATE TABLE GroupChatTable (
-  id TEXT PRIMARY KEY NOT NULL
+  id TEXT PRIMARY KEY NOT NULL,
+  authorId TEXT NOT NULL
 );
 
 insert:

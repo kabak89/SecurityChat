@@ -55,7 +55,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 1,
+                        version = 2,
                     ),
                 )
             },
@@ -63,42 +63,79 @@ internal class ChatStorageImpl(
 
     override suspend fun saveMessage(message: MessageSM) {
         withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries.insert(message.toTable())
-        }
-    }
-
-    override suspend fun saveMessages(messages: List<MessageSM>) {
-        withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries.transaction {
-                messages.forEach { message ->
-                    dbCreator.getDb().messageTableQueries.insert(message.toTable())
+            val db = dbCreator.getDb()
+            db.transaction {
+                db.messageTableQueries.insert(message.toTable())
+                message.recipients.forEach { recipient ->
+                    val messageRecipients = MessageRecipients(
+                        messageId = message.id,
+                        userId = recipient,
+                    )
+                    db.messageRecipientsQueries.insert(messageRecipients)
                 }
             }
         }
     }
 
-    override suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM> {
+    override suspend fun saveMessages(messages: List<MessageSM>) {
+        withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transaction {
+                messages.forEach { message ->
+                    db.messageTableQueries.insert(message.toTable())
+                    message.recipients.forEach { recipient ->
+                        db.messageRecipientsQueries.insert(
+                            MessageRecipients(
+                                messageId = message.id,
+                                userId = recipient,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun getMessages(
+        chatId: String,
+        limit: Long,
+        offset: Long,
+    ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries
+            val db = dbCreator.getDb()
+            db.messageTableQueries
                 .getPaged(
                     chatId = chatId,
                     limit = limit,
                     offset = offset,
                 )
                 .executeAsList()
-                .mapNotNull { it.toSM() }
+                .mapNotNull { messageTable ->
+                    val recipients = db.messageRecipientsQueries
+                        .getUserIdsByMessageId(messageTable.id)
+                        .executeAsList()
+
+                    messageTable.toSM(recipients = recipients)
+                }
         }
     }
 
     override suspend fun getNewestMessages(chatId: String, limit: Long): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries
+            val db = dbCreator.getDb()
+            db.messageTableQueries
                 .getNewest(
                     chatId = chatId,
                     limit = limit,
                 )
                 .executeAsList()
-                .mapNotNull { it.toSM() }
+                .mapNotNull { messageTable ->
+                    val recipients = db.messageRecipientsQueries
+                        .getUserIdsByMessageId(messageTable.id)
+                        .executeAsList()
+
+                    messageTable.toSM(recipients = recipients)
+                }
         }
     }
 
@@ -108,14 +145,21 @@ internal class ChatStorageImpl(
         limit: Long,
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries
+            val db = dbCreator.getDb()
+            db.messageTableQueries
                 .getOlderThan(
                     chatId = chatId,
                     beforeTimestamp = beforeTimestamp,
                     limit = limit,
                 )
                 .executeAsList()
-                .mapNotNull { it.toSM() }
+                .mapNotNull { messageTable ->
+                    val recipients = db.messageRecipientsQueries
+                        .getUserIdsByMessageId(messageTable.id)
+                        .executeAsList()
+
+                    messageTable.toSM(recipients = recipients)
+                }
         }
     }
 
@@ -125,14 +169,21 @@ internal class ChatStorageImpl(
         limit: Long,
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries
+            val db = dbCreator.getDb()
+            db.messageTableQueries
                 .getClosestNewerThan(
                     chatId = chatId,
                     afterTimestamp = afterTimestamp,
                     limit = limit,
                 )
                 .executeAsList()
-                .mapNotNull { it.toSM() }
+                .mapNotNull { messageTable ->
+                    val recipients = db.messageRecipientsQueries
+                        .getUserIdsByMessageId(messageTable.id)
+                        .executeAsList()
+
+                    messageTable.toSM(recipients = recipients)
+                }
         }
     }
 
@@ -158,13 +209,24 @@ internal class ChatStorageImpl(
     override suspend fun clearAll() {
         withContext(dispatcherProvider.IO) {
             dbCreator.getDb().messageTableQueries.removeAll()
+            dbCreator.getDb().messageRecipientsQueries.removeAll()
         }
     }
 
     override suspend fun getMessageByTimestamp(timestamp: Long): MessageSM? {
         return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries.getByTimestamp(timestamp).executeAsOneOrNull()
-                ?.toSM()
+            val db = dbCreator.getDb()
+            db.messageTableQueries
+                .getByTimestamp(timestamp)
+                .executeAsList()
+                .firstOrNull()
+                ?.let { messageTable ->
+                    val recipients = db.messageRecipientsQueries
+                        .getUserIdsByMessageId(messageTable.id)
+                        .executeAsList()
+
+                    messageTable.toSM(recipients = recipients)
+                }
         }
     }
 }

@@ -14,7 +14,9 @@ internal fun MessageSM.toTable(): MessageTable {
     )
 }
 
-internal fun MessageTable.toSM(): MessageSM? {
+internal fun MessageTable.toSM(
+    recipients: List<String>,
+): MessageSM? {
     return MessageSM(
         id = id,
         chatId = chatId,
@@ -22,6 +24,7 @@ internal fun MessageTable.toSM(): MessageSM? {
         authorId = authorId,
         status = mapStringToStatus(status) ?: return null,
         timestamp = timestamp,
+        recipients = recipients,
     )
 }
 

@@ -15,6 +15,7 @@ internal fun Chat.PersonalChat.toSM(): ChatSM.PersonalChat {
 internal fun Chat.GroupChat.toSM(): ChatSM.GroupChat {
     return ChatSM.GroupChat(
         id = id,
+        authorId = author.id,
         members = members.map { it.id },
     )
 }
@@ -31,9 +32,11 @@ internal fun ChatSM.PersonalChat.toDomain(
 
 internal fun ChatSM.GroupChat.toDomain(
     members: List<ChatMember>,
+    author: ChatMember,
 ): Chat.GroupChat {
     return Chat.GroupChat(
         id = id,
+        author = author,
         members = members,
     )
 }
@@ -51,9 +54,11 @@ internal fun UserChatsResponse.PersonalChat.toDomain(
 
 internal fun UserChatsResponse.GroupChat.toDomain(
     members: List<ChatMember>,
+    author: ChatMember,
 ): Chat.GroupChat {
     return Chat.GroupChat(
         id = id,
+        author = author,
         members = members,
     )
 }

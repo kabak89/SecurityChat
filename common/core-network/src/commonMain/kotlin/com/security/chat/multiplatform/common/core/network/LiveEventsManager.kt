@@ -179,6 +179,7 @@ public class LiveEventsManager(
                             ?: error("Wrong message type: $receivedFrame")
                         val newMessage: SocketMessage =
                             json.decodeFromString(textFrame.readText())
+                        Log.d { "new socket message: $newMessage" }
                         incomingFlow.emit(newMessage)
                     }
                 } finally {
