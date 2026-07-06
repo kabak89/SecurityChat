@@ -35,6 +35,10 @@ class ConventionBasePlugin : Plugin<Project> {
             iosArm64()
             iosSimulatorArm64()
             jvm()
+
+            compilerOptions {
+                optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            }
         }
 
         target.afterEvaluate {
