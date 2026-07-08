@@ -33,3 +33,42 @@ internal fun SqlSchema<QueryResult.AsyncValue<Unit>>.synchronous(): SqlSchema<Qu
         )
     }
 }
+
+/**
+ * Creates or migrates [schema] on [driver], tracking the applied version via `PRAGMA user_version`.
+ * Needed because [javax.sql.DataSource.asJdbcDriver] does not run schema creation/migration on its
+ * own (unlike the `JdbcSqliteDriver(url, properties, schema)` constructor). The version bookkeeping
+ * mirrors what `JdbcSqliteDriver` does internally, so databases created by the old driver keep their
+ * data.
+ */
+internal fun initSchema(
+    driver: SqlDriver,
+    schema: SqlSchema<QueryResult.Value<Unit>>,
+) {
+    val currentVersion = driver.executeQuery(
+        identifier = null,
+        sql = "PRAGMA user_version",
+        parameters = 0,
+        mapper = { cursor ->
+            QueryResult.Value(
+                if (cursor.next().value) cursor.getLong(0) ?: 0L else 0L,
+            )
+        },
+    ).value
+
+    when {
+        currentVersion == 0L -> {
+            schema.create(driver)
+            driver.setUserVersion(schema.version)
+        }
+
+        currentVersion < schema.version -> {
+            schema.migrate(driver, currentVersion, schema.version)
+            driver.setUserVersion(schema.version)
+        }
+    }
+}
+
+private fun SqlDriver.setUserVersion(version: Long) {
+    execute(identifier = null, sql = "PRAGMA user_version = $version", parameters = 0)
+}

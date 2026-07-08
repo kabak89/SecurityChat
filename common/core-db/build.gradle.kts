@@ -31,6 +31,7 @@ kotlin {
                 exclude(group = "org.xerial", module = "sqlite-jdbc")
             }
             implementation(libs.willena.sqlite.jdbc)
+            implementation(libs.hikari)
         }
     }
 }
