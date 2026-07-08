@@ -15,6 +15,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -53,6 +54,8 @@ internal class HttpClientFactoryImpl(
                             val status = exceptionResponse.status
                             throw NetworkError(statusCode = status.value)
                         }
+
+                        is CancellationException -> throw exception
 
                         else -> throw resolvePlatformError(exception) ?: resolveError(exception)
                     }
