@@ -1,6 +1,6 @@
 package com.security.chat.multiplatform.features.push.domain
 
-import com.security.chat.multiplatform.features.push.domain.entity.MessagesText
+import com.security.chat.multiplatform.features.push.domain.entity.NotificationInfo
 
 public interface PushRepository {
     public suspend fun registerCurrentToken()
@@ -10,7 +10,7 @@ public interface PushRepository {
     public suspend fun processNewMessages(
         serializedMessages: String,
         chatId: String,
-    ): MessagesText
+    ): NotificationInfo
 
     public fun setShowNotificationsForChat(chatId: String, show: Boolean)
     public fun isNotificationForChatMustBeShown(chatId: String): Boolean

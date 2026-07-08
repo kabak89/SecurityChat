@@ -9,11 +9,12 @@ import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
+import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.push.data.entity.SyncedPushToken
 import com.security.chat.multiplatform.features.push.data.network.RegisterDeviceTokenRequest
 import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
-import com.security.chat.multiplatform.features.push.domain.entity.MessagesText
+import com.security.chat.multiplatform.features.push.domain.entity.NotificationInfo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import kotlinx.coroutines.withContext
@@ -61,12 +62,35 @@ public class PushRepositoryImpl(
     override suspend fun processNewMessages(
         serializedMessages: String,
         chatId: String,
-    ): MessagesText {
+    ): NotificationInfo {
         val messagesTexts = chatDataHelper.processNewMessages(
             serializedMessages = serializedMessages,
             chatId = chatId,
         )
-        return MessagesText(messagesTexts.joinToString(separator = "\n"))
+
+        val chat = chatsStorage.getPersonalChat(chatId) ?: chatsStorage.getGroupChat(chatId)
+
+        val title = when (chat) {
+            is ChatSM.GroupChat -> {
+                (listOf(chat.authorId) + chat.members)
+                    .mapNotNull {
+                        usersStorage.getUser(it)?.name
+                    }
+                    .joinToString(separator = ", ")
+            }
+
+            is ChatSM.PersonalChat -> {
+                usersStorage.getUser(chat.interlocutorId)?.name ?: ""
+            }
+
+            //TODO chat could not be in cache
+            null -> ""
+        }
+
+        return NotificationInfo(
+            title = title,
+            description = messagesTexts.joinToString(separator = "\n"),
+        )
     }
 
     override fun setShowNotificationsForChat(chatId: String, show: Boolean) {

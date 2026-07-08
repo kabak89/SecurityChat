@@ -73,8 +73,6 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                     return
                 }
 
-                //TODO handle absence of interlocutor info on device
-//                val interlocutorName = requireNotNull(pushRepository.getInterlocutorName(chatId))
                 val serializedMessages = requireNotNull(data["messages"])
 
                 val intent = intentBuilder.getOpenChatIntent(context = this, chatId = chatId)
@@ -90,19 +88,15 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
 
-                val notificationText =
-                    requireNotNull(
-                        pushRepository.processNewMessages(
-                            serializedMessages = serializedMessages,
-                            chatId = chatId,
-                        ),
-                    )
+                val notificationInfo = pushRepository.processNewMessages(
+                    serializedMessages = serializedMessages,
+                    chatId = chatId,
+                )
 
                 val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
                     .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle("TODO")
-//                    .setContentTitle(interlocutorName)
-                    .setContentText(notificationText.value)
+                    .setContentTitle(notificationInfo.title)
+                    .setContentText(notificationInfo.description)
                     .setPriority(NotificationCompat.PRIORITY_MAX)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true)
