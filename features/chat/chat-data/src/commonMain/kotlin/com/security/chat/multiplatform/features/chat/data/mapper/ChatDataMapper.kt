@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chat.data.mapper
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
 import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
@@ -10,6 +11,7 @@ import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 internal suspend fun ChatMessageNM.toDomain(
     decryptMessage: suspend (encryptedText: String) -> String,
     appOwnerId: String,
+    author: MessageAuthor,
 ): Message {
     val direction = if (authorId == appOwnerId) {
         MessageDirection.Outgoing
@@ -20,7 +22,7 @@ internal suspend fun ChatMessageNM.toDomain(
     return Message(
         id = id,
         text = decryptMessage(text),
-        authorId = authorId,
+        author = author,
         timestamp = timestamp,
         direction = direction,
     )
@@ -28,6 +30,7 @@ internal suspend fun ChatMessageNM.toDomain(
 
 internal fun MessageSM.toDomain(
     appOwnerId: String,
+    author: MessageAuthor,
 ): Message {
     val direction = if (authorId == appOwnerId) {
         MessageDirection.Outgoing
@@ -38,7 +41,7 @@ internal fun MessageSM.toDomain(
     return Message(
         id = id,
         text = text,
-        authorId = authorId,
+        author = author,
         timestamp = timestamp,
         direction = direction,
     )
@@ -51,7 +54,7 @@ internal fun Message.toSM(
     return MessageSM(
         id = id,
         text = text,
-        authorId = authorId,
+        authorId = author.id,
         chatId = chatId,
         //TODO
         status = MessageSM.Status.Received,

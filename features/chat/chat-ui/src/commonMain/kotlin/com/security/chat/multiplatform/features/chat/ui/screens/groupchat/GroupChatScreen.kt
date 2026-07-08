@@ -332,6 +332,7 @@ internal fun GroupChatScreenPreview() {
                     id = "2",
                     text = "some text 2",
                     datetimeText = "12:10",
+                    senderName = "John",
                 ),
             ),
         ),

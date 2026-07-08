@@ -46,6 +46,7 @@ internal fun Message.toUi(): MessageUM {
                 id = id,
                 text = text,
                 datetimeText = datetimeText,
+                senderName = this.author.name,
             )
         }
 

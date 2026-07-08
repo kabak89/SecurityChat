@@ -26,6 +26,7 @@ import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
@@ -177,7 +178,34 @@ internal class ChatRepoImpl(
             .map { pagingData ->
                 val userId = checkNotNull(userStorage.getUserId())
                 pagingData.map { message ->
-                    message.toDomain(appOwnerId = userId)
+                    val author = usersStorage.getUser(message.authorId)?.let {
+                        MessageAuthor(
+                            id = it.id,
+                            name = it.name,
+                        )
+                    } ?: run {
+                        val userInfo = networkManager.runGet<FindUserResponse>(
+                            relativePath = "/users/info",
+                            request = mapOf("id" to message.authorId),
+                        )
+
+                        usersStorage.saveUser(
+                            user = UserSM(
+                                id = userInfo.userId,
+                                publicKey = userInfo.publicKey,
+                                name = userInfo.login,
+                            ),
+                        )
+                        MessageAuthor(
+                            id = userInfo.userId,
+                            name = userInfo.login,
+                        )
+                    }
+
+                    message.toDomain(
+                        appOwnerId = userId,
+                        author = author,
+                    )
                 }
             }
     }
@@ -191,6 +219,30 @@ internal class ChatRepoImpl(
             authorId = authorId,
         )
             .collect { chatMessage ->
+                val author = usersStorage.getUser(chatMessage.authorId)?.let {
+                    MessageAuthor(
+                        id = it.id,
+                        name = it.name,
+                    )
+                } ?: run {
+                    val userInfo = networkManager.runGet<FindUserResponse>(
+                        relativePath = "/users/info",
+                        request = mapOf("id" to chatMessage.authorId),
+                    )
+
+                    usersStorage.saveUser(
+                        user = UserSM(
+                            id = userInfo.userId,
+                            publicKey = userInfo.publicKey,
+                            name = userInfo.login,
+                        ),
+                    )
+                    MessageAuthor(
+                        id = userInfo.userId,
+                        name = userInfo.login,
+                    )
+                }
+
                 val newMessage = chatMessage.toDomain(
                     decryptMessage = { encryptedText ->
                         chatDataHelper.decryptText(
@@ -199,6 +251,7 @@ internal class ChatRepoImpl(
                         )
                     },
                     appOwnerId = authorId,
+                    author = author,
                 )
 
                 val storageModel = newMessage.toSM(
