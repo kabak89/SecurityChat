@@ -83,9 +83,9 @@ public class ChatsComponentImpl(
                             navigation.pop()
                             onPublicChatClicked(chatId)
                         },
-                        onGroupChatCreate = {
+                        onGroupChatCreate = { chatId ->
                             navigation.pop()
-                            //TODO add navigation after screen realization
+                            onGroupChatClicked(chatId)
                         },
                     ),
                 )

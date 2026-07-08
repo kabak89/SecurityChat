@@ -22,6 +22,7 @@ public interface ChatsStorage {
     public fun getChatsFlow(): Flow<List<ChatSM>>
     public fun getPersonalChatFlow(id: String): Flow<ChatSM.PersonalChat?>
     public suspend fun clearAll()
+    public suspend fun saveChat(chat: ChatSM)
 }
 
 internal class ChatsStorageImpl(
@@ -52,8 +53,8 @@ internal class ChatsStorageImpl(
 
                 chats
                     .filterIsInstance<ChatSM.PersonalChat>()
-                    .map { it.toTable() }
-                    .forEach { table ->
+                    .forEach { chat ->
+                        val table = chat.toTable()
                         db.personalChatTableQueries.insert(table)
                     }
 
@@ -105,6 +106,36 @@ internal class ChatsStorageImpl(
             dbCreator.getDb().personalChatTableQueries.removeAll()
             dbCreator.getDb().groupChatMemberTableQueries.removeAll()
             dbCreator.getDb().groupChatTableQueries.removeAll()
+        }
+    }
+
+    override suspend fun saveChat(chat: ChatSM) {
+        withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+
+            db.transaction {
+                when (chat) {
+                    is ChatSM.PersonalChat -> {
+                        val table = chat.toTable()
+                        db.personalChatTableQueries.insert(table)
+                    }
+
+                    is ChatSM.GroupChat -> {
+                        val table = chat.toTable()
+                        db.groupChatTableQueries.insert(table)
+
+                        chat.members
+                            .forEach { userId ->
+                                val groupChatMemberTables = GroupChatMemberTable(
+                                    groupChatId = chat.id,
+                                    userId = userId,
+                                )
+
+                                db.groupChatMemberTableQueries.insert(groupChatMemberTables)
+                            }
+                    }
+                }
+            }
         }
     }
 

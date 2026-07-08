@@ -244,6 +244,8 @@ internal class ChatsRepoImpl(
             ),
         )
 
+        chatsStorage.saveChat(response.toSM())
+
         return CreateChatResult.GroupChatCreated(
             id = response.chatId,
         )
