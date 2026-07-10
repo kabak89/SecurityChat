@@ -15,8 +15,8 @@ iosSqlCipher = "4.5.4"
 deploymentTarget = "14.0"
 #ios
 
-appVersionCode = "12"
-appVrersionName = "0.0.12"
+appVersionCode = "13"
+appVrersionName = "0.0.13"
 
 decompose = "3.5.0"
 essenty-lifecycle = "2.5.0"
