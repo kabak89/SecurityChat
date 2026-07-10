@@ -7,12 +7,16 @@ import android.app.PendingIntent
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
+import com.security.chat.multiplatform.features.push.domain.entity.NotificationInfo
 import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilder
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -75,39 +79,60 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
 
                 val serializedMessages = requireNotNull(data["messages"])
 
-                val intent = intentBuilder.getOpenChatIntent(context = this, chatId = chatId)
+                runSuspendCatching {
+                    pushRepository.processNewMessages(
+                        serializedMessages = serializedMessages,
+                        chatId = chatId,
+                    )
+                }
+                    .onErr {
+                        Log.e(it)
+                        return
+                    }
+                    .onOk { notificationInfo ->
+                        val intent = when (notificationInfo.chatType) {
+                            NotificationInfo.ChatType.Personal -> {
+                                intentBuilder.getOpenPersonalChatIntent(
+                                    context = this,
+                                    chatId = chatId,
+                                )
+                            }
 
-                val pendingIntent: PendingIntent = PendingIntent.getActivity(
-                    /* context = */
-                    this,
-                    /* requestCode = */
-                    chatId.hashCode(),
-                    /* intent = */
-                    intent,
-                    /* flags = */
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-                )
+                            NotificationInfo.ChatType.Group -> {
+                                intentBuilder.getOpenGroupChatIntent(
+                                    context = this,
+                                    chatId = chatId,
+                                )
+                            }
+                        }
 
-                val notificationInfo = pushRepository.processNewMessages(
-                    serializedMessages = serializedMessages,
-                    chatId = chatId,
-                )
+                        val pendingIntent: PendingIntent = PendingIntent.getActivity(
+                            /* context = */
+                            this,
+                            /* requestCode = */
+                            chatId.hashCode(),
+                            /* intent = */
+                            intent,
+                            /* flags = */
+                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                        )
 
-                val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
-                    .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle(notificationInfo.title)
-                    .setContentText(notificationInfo.description)
-                    .setPriority(NotificationCompat.PRIORITY_MAX)
-                    .setContentIntent(pendingIntent)
-                    .setAutoCancel(true)
+                        val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
+                            .setSmallIcon(R.drawable.ic_notification)
+                            .setContentTitle(notificationInfo.title)
+                            .setContentText(notificationInfo.description)
+                            .setPriority(NotificationCompat.PRIORITY_MAX)
+                            .setContentIntent(pendingIntent)
+                            .setAutoCancel(true)
 
-                val notificationManagerCompat = NotificationManagerCompat.from(this)
-                notificationManagerCompat.notify(
-                    /* id = */
-                    chatId.hashCode(),
-                    /* notification = */
-                    builder.build(),
-                )
+                        val notificationManagerCompat = NotificationManagerCompat.from(this)
+                        notificationManagerCompat.notify(
+                            /* id = */
+                            chatId.hashCode(),
+                            /* notification = */
+                            builder.build(),
+                        )
+                    }
             }
 
             else -> {

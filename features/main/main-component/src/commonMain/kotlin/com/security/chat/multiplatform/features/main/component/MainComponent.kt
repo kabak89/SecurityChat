@@ -24,7 +24,8 @@ public interface MainComponent : BackHandlerOwner {
 
     public fun onBackClicked()
 
-    public fun openChat(chatId: String)
+    public fun openPrivateChat(chatId: String)
+    public fun openGroupChat(chatId: String)
 
     public val childStack: Value<ChildStack<*, Child>>
 
@@ -33,11 +34,16 @@ public interface MainComponent : BackHandlerOwner {
         public class Settings(public val component: SettingsComponent) : Child
         public class Chat(public val component: ChatComponent) : Child
     }
+
+    public sealed interface Params {
+        public data class PrivateChat(val chatId: String) : Params
+        public data class GroupChat(val chatId: String) : Params
+    }
 }
 
 public class MainComponentImpl(
     private val onLogout: () -> Unit,
-    initialChatId: String? = null,
+    params: MainComponent.Params? = null,
     componentContext: ComponentContext,
 ) : MainComponent, ComponentContext by componentContext {
 
@@ -48,8 +54,22 @@ public class MainComponentImpl(
             source = navigation,
             serializer = Params.serializer(),
             initialStack = {
-                if (initialChatId != null) {
-                    listOf(Params.ChatsParams, Params.PublicChatParams(chatId = initialChatId))
+                if (params != null) {
+                    when (params) {
+                        is MainComponent.Params.GroupChat -> {
+                            listOf(
+                                Params.ChatsParams,
+                                Params.GroupChatParams(chatId = params.chatId),
+                            )
+                        }
+
+                        is MainComponent.Params.PrivateChat -> {
+                            listOf(
+                                Params.ChatsParams,
+                                Params.PrivateChatParams(chatId = params.chatId),
+                            )
+                        }
+                    }
                 } else {
                     listOf(Params.ChatsParams)
                 }
@@ -62,21 +82,40 @@ public class MainComponentImpl(
         navigation.pop()
     }
 
-    override fun openChat(chatId: String) {
+    override fun openPrivateChat(chatId: String) {
         navigation.navigate { stack ->
             when (val top = stack.last()) {
-                is Params.PublicChatParams -> when {
+                is Params.PrivateChatParams -> when {
                     top.chatId == chatId -> stack
-                    else -> stack.dropLast(1) + Params.PublicChatParams(chatId = chatId)
+                    else -> stack.dropLast(1) + Params.PrivateChatParams(chatId = chatId)
                 }
 
                 is Params.GroupChatParams,
                 is Params.SettingsParams,
                     -> {
-                    stack.dropLast(1) + Params.PublicChatParams(chatId = chatId)
+                    stack.dropLast(1) + Params.PrivateChatParams(chatId = chatId)
                 }
 
-                is Params.ChatsParams -> stack + Params.PublicChatParams(chatId = chatId)
+                is Params.ChatsParams -> stack + Params.PrivateChatParams(chatId = chatId)
+            }
+        }
+    }
+
+    override fun openGroupChat(chatId: String) {
+        navigation.navigate { stack ->
+            when (val top = stack.last()) {
+                is Params.GroupChatParams -> when {
+                    top.chatId == chatId -> stack
+                    else -> stack.dropLast(1) + Params.GroupChatParams(chatId = chatId)
+                }
+
+                is Params.PrivateChatParams,
+                is Params.SettingsParams,
+                    -> {
+                    stack.dropLast(1) + Params.GroupChatParams(chatId = chatId)
+                }
+
+                is Params.ChatsParams -> stack + Params.GroupChatParams(chatId = chatId)
             }
         }
     }
@@ -91,7 +130,7 @@ public class MainComponentImpl(
                     component = ChatsComponentImpl(
                         componentContext = componentContext,
                         onPublicChatClicked = { chatId ->
-                            val configuration = Params.PublicChatParams(
+                            val configuration = Params.PrivateChatParams(
                                 chatId = chatId,
                             )
                             navigation.push(configuration = configuration)
@@ -119,7 +158,7 @@ public class MainComponentImpl(
                 )
             }
 
-            is Params.PublicChatParams -> {
+            is Params.PrivateChatParams -> {
                 Chat(
                     component = ChatComponentImpl(
                         componentContext = componentContext,
@@ -151,7 +190,7 @@ public class MainComponentImpl(
         data object SettingsParams : Params
 
         @Serializable
-        data class PublicChatParams(
+        data class PrivateChatParams(
             val chatId: String,
         ) : Params
 

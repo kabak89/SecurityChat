@@ -68,7 +68,9 @@ public class PushRepositoryImpl(
             chatId = chatId,
         )
 
-        val chat = chatsStorage.getPersonalChat(chatId) ?: chatsStorage.getGroupChat(chatId)
+        val personalChat = chatsStorage.getPersonalChat(chatId)
+        val groupChat = chatsStorage.getGroupChat(chatId)
+        val chat = personalChat ?: groupChat
 
         val title = when (chat) {
             is ChatSM.GroupChat -> {
@@ -87,9 +89,16 @@ public class PushRepositoryImpl(
             null -> ""
         }
 
+        val chatType = when {
+            groupChat != null -> NotificationInfo.ChatType.Group
+            personalChat != null -> NotificationInfo.ChatType.Personal
+            else -> error("Something gone wrong")
+        }
+
         return NotificationInfo(
             title = title,
             description = messagesTexts.joinToString(separator = "\n"),
+            chatType = chatType,
         )
     }
 

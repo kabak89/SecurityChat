@@ -27,6 +27,7 @@ public fun rootViewController(): UIViewController {
         componentContext = DefaultComponentContext(
             lifecycle = lifecycle,
         ),
+        initialDeepLink = null,
     )
 
     return ComposeUIViewController(

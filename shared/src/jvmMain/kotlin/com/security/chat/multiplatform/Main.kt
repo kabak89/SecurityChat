@@ -29,6 +29,7 @@ public fun main() {
             componentContext = DefaultComponentContext(
                 lifecycle = lifecycle,
             ),
+            initialDeepLink = null,
         )
     }
 

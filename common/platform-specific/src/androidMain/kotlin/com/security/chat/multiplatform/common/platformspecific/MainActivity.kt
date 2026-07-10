@@ -34,7 +34,17 @@ public class MainActivity : ComponentActivity() {
 }
 
 private fun Intent.toDeepLink(): RootComponent.DeepLink? {
-    if (action != IntentBuilderContract.ACTION_OPEN_CHAT) return null
     val chatId = getStringExtra(IntentBuilderContract.EXTRA_CHAT_ID) ?: return null
-    return RootComponent.DeepLink.OpenChat(chatId = chatId)
+
+    return when (action) {
+        IntentBuilderContract.ACTION_OPEN_GROUP_CHAT -> {
+            RootComponent.DeepLink.OpenGroupChat(chatId = chatId)
+        }
+
+        IntentBuilderContract.ACTION_OPEN_PERSONAL_CHAT -> {
+            RootComponent.DeepLink.OpenPrivateChat(chatId = chatId)
+        }
+
+        else -> null
+    }
 }

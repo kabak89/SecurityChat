@@ -44,14 +44,13 @@ import org.koin.dsl.module
 
 public class RootComponentImpl(
     private val onCreate: () -> Unit = {},
-    initialDeepLink: RootComponent.DeepLink? = null,
+    initialDeepLink: RootComponent.DeepLink?,
     componentContext: ComponentContext,
 ) : RootComponent, ComponentContext by componentContext {
 
     private var diScope: Scope? = null
 
-    private var pendingChatId: String? =
-        (initialDeepLink as? RootComponent.DeepLink.OpenChat)?.chatId
+    private var deepLink: RootComponent.DeepLink? = initialDeepLink
 
     init {
         Log.d { "RootComponentImpl doOnCreate" }
@@ -160,13 +159,14 @@ public class RootComponentImpl(
 
     override fun handleDeepLink(link: RootComponent.DeepLink) {
         when (link) {
-            is RootComponent.DeepLink.OpenChat -> {
+            is RootComponent.DeepLink.OpenPrivateChat -> {
                 val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
-                if (activeMain != null) {
-                    activeMain.component.openChat(chatId = link.chatId)
-                } else {
-                    pendingChatId = link.chatId
-                }
+                activeMain?.component?.openPrivateChat(chatId = link.chatId)
+            }
+
+            is RootComponent.DeepLink.OpenGroupChat -> {
+                val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
+                activeMain?.component?.openGroupChat(chatId = link.chatId)
             }
         }
     }
@@ -207,12 +207,26 @@ public class RootComponentImpl(
     }
 
     private fun createMainComponent(componentContext: ComponentContext): MainComponent {
-        val chatId = pendingChatId
-        pendingChatId = null
+        val deeplinkParams = deepLink
+
+        val params = when (deeplinkParams) {
+            is RootComponent.DeepLink.OpenGroupChat -> {
+                MainComponent.Params.GroupChat(chatId = deeplinkParams.chatId)
+            }
+
+            is RootComponent.DeepLink.OpenPrivateChat -> {
+                MainComponent.Params.PrivateChat(chatId = deeplinkParams.chatId)
+            }
+
+            null -> null
+        }
+
+        deepLink = null
+
         return MainComponentImpl(
             componentContext = componentContext,
             onLogout = { navigation.replaceAll(Params.Authorize) },
-            initialChatId = chatId,
+            params = params,
         )
     }
 
