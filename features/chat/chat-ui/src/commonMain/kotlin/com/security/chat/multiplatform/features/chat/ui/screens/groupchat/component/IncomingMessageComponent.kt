@@ -28,43 +28,46 @@ import sh.calvin.autolinktext.rememberAutoLinkText
 internal fun IncomingMessageComponent(
     modifier: Modifier = Modifier,
     message: MessageUM.Incoming,
+    showSenderName: Boolean,
 ) {
     Column(
         modifier = modifier,
     ) {
         Spacer(Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
+        if (showSenderName) {
+            Row(
                 modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = AppTheme.colors.element,
-                        shape = AppTheme.shapes.circle,
-                    ),
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                val abbreviation =
-                    remember(message.senderName) { message.senderName.take(2).uppercase() }
-                Text(
+                Box(
                     modifier = Modifier
-                        .align(alignment = Alignment.Center),
-                    text = abbreviation,
-                    color = AppTheme.colors.textSecondary,
+                        .size(32.dp)
+                        .background(
+                            color = AppTheme.colors.element,
+                            shape = AppTheme.shapes.circle,
+                        ),
+                ) {
+                    val abbreviation =
+                        remember(message.senderName) { message.senderName.take(2).uppercase() }
+                    Text(
+                        modifier = Modifier
+                            .align(alignment = Alignment.Center),
+                        text = abbreviation,
+                        color = AppTheme.colors.textSecondary,
+                        style = AppTheme.typography.body,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = message.senderName,
+                    color = AppTheme.colors.textPrimary,
                     style = AppTheme.typography.body,
-                    textAlign = TextAlign.Center,
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = message.senderName,
-                color = AppTheme.colors.textPrimary,
-                style = AppTheme.typography.body,
-            )
+            Spacer(Modifier.height(8.dp))
         }
-        Spacer(Modifier.height(8.dp))
         FlowRow(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -101,6 +104,7 @@ internal fun IncomingMessageComponentPreview() {
                 datetimeText = "12:10",
                 senderName = "John",
             ),
+            showSenderName = true,
         )
     }
 }
@@ -117,6 +121,24 @@ internal fun IncomingMessageComponentLongTextPreview() {
                 datetimeText = "12:10",
                 senderName = "John",
             ),
+            showSenderName = true,
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun IncomingMessageComponentNoSenderName() {
+    AppTheme {
+        IncomingMessageComponent(
+            modifier = Modifier.background(AppTheme.colors.backgroundPrimary),
+            message = MessageUM.Incoming(
+                id = "1",
+                text = "some text text text text text text text text text text text text",
+                datetimeText = "12:10",
+                senderName = "John",
+            ),
+            showSenderName = false,
         )
     }
 }

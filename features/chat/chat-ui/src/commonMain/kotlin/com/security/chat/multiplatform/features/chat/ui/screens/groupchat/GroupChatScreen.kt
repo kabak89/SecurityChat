@@ -243,10 +243,20 @@ private fun MessagesComponent(
             ) { index ->
                 val message = messages[index] ?: return@items
                 when (message) {
-                    is MessageUM.Incoming -> IncomingMessageComponent(
-                        modifier = Modifier.fillMaxWidth(),
-                        message = message,
-                    )
+                    is MessageUM.Incoming -> {
+                        val previous = if (index + 1 < messages.itemCount) {
+                            messages.peek(index + 1)
+                        } else {
+                            null
+                        }
+                        val showSenderName =
+                            (previous as? MessageUM.Incoming)?.senderName != message.senderName
+                        IncomingMessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = message,
+                            showSenderName = showSenderName,
+                        )
+                    }
 
                     is MessageUM.Outgoing -> OutgoingMessageComponent(
                         modifier = Modifier.fillMaxWidth(),
