@@ -39,7 +39,6 @@ internal class UserNetworkManagerImpl(
         return networkManager.runPost<UpdateProfileRequest, ProfileResponse>(
             relativePath = "/profile",
             request = UpdateProfileRequest(
-                id = params.id,
                 login = params.name,
             ),
         )

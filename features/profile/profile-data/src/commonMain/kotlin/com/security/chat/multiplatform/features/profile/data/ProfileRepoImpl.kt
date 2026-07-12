@@ -31,10 +31,8 @@ internal class ProfileRepoImpl(
     }
 
     override suspend fun updateProfile(params: UpdateProfileParams) {
-        val userId = requireNotNull(userStorage.getUserId())
         val profile = userNetworkManager.updateProfile(
             params = UpdateProfileNM(
-                id = userId,
                 name = params.name,
             ),
         )
