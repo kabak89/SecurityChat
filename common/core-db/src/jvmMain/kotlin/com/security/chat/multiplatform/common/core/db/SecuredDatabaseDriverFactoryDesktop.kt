@@ -48,7 +48,7 @@ internal class SecuredDatabaseDriverFactoryDesktop(
             poolName = "sqlcipher-$databaseName"
         }
 
-        val driver = HikariDataSource(config).asJdbcDriver()
+        val driver = ListeningSqlDriver(HikariDataSource(config).asJdbcDriver())
         initSchema(driver = driver, schema = migrationSchema)
         return driver
     }
