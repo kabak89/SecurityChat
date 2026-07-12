@@ -4,4 +4,5 @@ public data class SocketConfig(
     val host: String,
     val path: String,
     val port: Int,
+    val secure: Boolean,
 )

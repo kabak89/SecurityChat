@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.network.entity.SocketSubscrib
 import com.security.chat.multiplatform.common.log.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.http.URLProtocol
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
@@ -133,6 +134,9 @@ public class LiveEventsManager(
             host = socketConfig.host,
             port = socketConfig.port,
             path = socketConfig.path,
+            request = {
+                url.protocol = if (socketConfig.secure) URLProtocol.WSS else URLProtocol.WS
+            },
             block = {
                 val sent: MutableSet<String> = mutableSetOf()
 

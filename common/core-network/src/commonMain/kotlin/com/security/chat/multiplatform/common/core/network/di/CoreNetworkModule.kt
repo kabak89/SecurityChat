@@ -49,10 +49,13 @@ public val coreNetworkModule: Module =
         val host = BuildKonfig.baseHost
 
         single {
+            val secure = !BuildKonfig.IS_DEBUG
+
             SocketConfig(
                 host = host,
                 path = "/ws",
-                port = 80,
+                port = if (secure) 443 else 80,
+                secure = secure,
             )
         }
 
