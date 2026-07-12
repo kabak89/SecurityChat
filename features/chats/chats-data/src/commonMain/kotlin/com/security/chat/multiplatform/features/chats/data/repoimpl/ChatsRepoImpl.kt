@@ -156,17 +156,14 @@ internal class ChatsRepoImpl(
     }
 
     override suspend fun fetchChatsList() {
-        val userId = userStorage.getUserId() ?: error("user id not found")
-
         val response: UserChatsResponse = networkManager.runGet(
             relativePath = "/chats",
-            request = mapOf(
-                "user_id" to userId,
-            ),
         )
 
         val personalChats = response.personalChats
             .map { chatResponse ->
+                val userId = userStorage.getUserId() ?: error("user id not found")
+
                 val companionId = if (chatResponse.firstUserId == userId) {
                     chatResponse.secondUserId
                 } else {
