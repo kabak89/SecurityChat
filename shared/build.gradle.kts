@@ -92,5 +92,8 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.security.chat.multiplatform.MainKt"
+        nativeDistributions {
+            includeAllModules = true
+        }
     }
 }
