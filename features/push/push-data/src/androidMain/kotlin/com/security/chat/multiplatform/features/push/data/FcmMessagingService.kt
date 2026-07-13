@@ -1,55 +1,48 @@
 package com.security.chat.multiplatform.features.push.data
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.github.michaelbull.result.coroutines.runSuspendCatching
-import com.github.michaelbull.result.onErr
-import com.github.michaelbull.result.onOk
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
 import com.security.chat.multiplatform.features.push.domain.entity.NotificationInfo
 import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilder
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import securitychat.common.localization.generated.resources.push_channel_description_new_message
 import securitychat.common.localization.generated.resources.push_channel_name_new_message
 
-public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), KoinComponent {
+public class FcmMessagingService : FirebaseMessagingService(), KoinComponent {
 
-    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        Log.e(throwable)
-    }
     private val pushRepository: PushRepository by inject()
     private val intentBuilder: IntentBuilder by inject()
     private val pushStorage: PushStorage by inject()
+    private val scope: CoroutineScope by inject(named(SCOPE_ID_APP))
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d { "FCM onNewToken: ${token.take(n = 12)}…" }
 
-        runBlocking(Dispatchers.IO + coroutineExceptionHandler) {
+        scope.launch {
             pushRepository.onTokenRefreshed(token = token)
         }
     }
 
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        runBlocking(Dispatchers.IO + coroutineExceptionHandler) {
+        scope.launch {
             processNewMessage(message)
         }
     }
@@ -79,60 +72,53 @@ public class SecurityChatFirebaseMessagingService : FirebaseMessagingService(), 
 
                 val serializedMessages = requireNotNull(data["messages"])
 
-                runSuspendCatching {
-                    pushRepository.processNewMessages(
-                        serializedMessages = serializedMessages,
-                        chatId = chatId,
-                    )
+                val notificationInfo = pushRepository.processNewMessages(
+                    serializedMessages = serializedMessages,
+                    chatId = chatId,
+                )
+
+                val intent = when (notificationInfo.chatType) {
+                    NotificationInfo.ChatType.Personal -> {
+                        intentBuilder.getOpenPersonalChatIntent(
+                            context = this,
+                            chatId = chatId,
+                        )
+                    }
+
+                    NotificationInfo.ChatType.Group -> {
+                        intentBuilder.getOpenGroupChatIntent(
+                            context = this,
+                            chatId = chatId,
+                        )
+                    }
                 }
-                    .onErr {
-                        Log.e(it)
-                        return
-                    }
-                    .onOk { notificationInfo ->
-                        val intent = when (notificationInfo.chatType) {
-                            NotificationInfo.ChatType.Personal -> {
-                                intentBuilder.getOpenPersonalChatIntent(
-                                    context = this,
-                                    chatId = chatId,
-                                )
-                            }
 
-                            NotificationInfo.ChatType.Group -> {
-                                intentBuilder.getOpenGroupChatIntent(
-                                    context = this,
-                                    chatId = chatId,
-                                )
-                            }
-                        }
+                val pendingIntent: PendingIntent = PendingIntent.getActivity(
+                    /* context = */
+                    this,
+                    /* requestCode = */
+                    chatId.hashCode(),
+                    /* intent = */
+                    intent,
+                    /* flags = */
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                )
 
-                        val pendingIntent: PendingIntent = PendingIntent.getActivity(
-                            /* context = */
-                            this,
-                            /* requestCode = */
-                            chatId.hashCode(),
-                            /* intent = */
-                            intent,
-                            /* flags = */
-                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-                        )
+                val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle(notificationInfo.title)
+                    .setContentText(notificationInfo.description)
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true)
 
-                        val builder = NotificationCompat.Builder(this, NEW_MESSAGES_CHANNEL)
-                            .setSmallIcon(R.drawable.ic_notification)
-                            .setContentTitle(notificationInfo.title)
-                            .setContentText(notificationInfo.description)
-                            .setPriority(NotificationCompat.PRIORITY_MAX)
-                            .setContentIntent(pendingIntent)
-                            .setAutoCancel(true)
-
-                        val notificationManagerCompat = NotificationManagerCompat.from(this)
-                        notificationManagerCompat.notify(
-                            /* id = */
-                            chatId.hashCode(),
-                            /* notification = */
-                            builder.build(),
-                        )
-                    }
+                val notificationManagerCompat = NotificationManagerCompat.from(this)
+                notificationManagerCompat.notify(
+                    /* id = */
+                    chatId.hashCode(),
+                    /* notification = */
+                    builder.build(),
+                )
             }
 
             else -> {

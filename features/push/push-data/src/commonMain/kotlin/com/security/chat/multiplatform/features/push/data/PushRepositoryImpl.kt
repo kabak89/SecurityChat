@@ -1,5 +1,8 @@
 package com.security.chat.multiplatform.features.push.data
 
+import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
@@ -133,19 +136,19 @@ public class PushRepositoryImpl(
             return
         }
 
-        runCatching {
+        runSuspendCatching {
             sendToken(
                 userId = userId,
                 token = token,
             )
         }
-            .onSuccess {
+            .onOk {
                 saveLastSyncedToken(
                     token = SyncedPushToken(userId = userId, token = token),
                 )
                 Log.d { "Push token successfully delivered to backend" }
             }
-            .onFailure { error ->
+            .onErr { error ->
                 Log.e(error = error, message = "Failed to send push token to backend")
             }
     }
