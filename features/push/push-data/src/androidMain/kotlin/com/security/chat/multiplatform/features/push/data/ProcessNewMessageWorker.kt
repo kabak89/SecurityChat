@@ -47,7 +47,7 @@ internal class ProcessNewMessageWorker(
                 /* notification = */
                 notification,
                 /* foregroundServiceType = */
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE,
             )
         } else {
             ForegroundInfo(
