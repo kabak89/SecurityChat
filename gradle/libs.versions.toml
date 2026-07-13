@@ -8,6 +8,7 @@ activityCompose = "1.13.0"
 firebase-bom = "34.15.0"
 google-services = "4.5.0"
 androidx-core = "1.19.0"
+androidx-work = "2.11.2"
 #android
 
 #ios
@@ -124,6 +125,8 @@ paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pag
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 
 kmp-clipboard = { module = "io.github.mobilebytelabs:kmp-clipboard", version.ref = "kmp-clipboard" }
 kmp-toast = { module = "io.github.mobilebytelabs:kmp-toast", version.ref = "kmp-toast" }
