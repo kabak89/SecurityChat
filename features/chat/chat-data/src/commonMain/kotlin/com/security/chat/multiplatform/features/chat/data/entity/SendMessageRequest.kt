@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 internal data class SendMessageRequest(
     @SerialName("id") val id: String,
     @SerialName("chatId") val chatId: String,
+    @SerialName("timestamp") val timestamp: Long,
     @SerialName("recipients") val recipients: List<RecipientCiphertext>,
 )
 

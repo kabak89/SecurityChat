@@ -105,8 +105,6 @@ internal class ChatRepoImpl(
         )
             .filter { it.status == MessageSM.Status.Created }
 
-
-
         messagesToUpload.forEach { message ->
             val cipherTexts = message.recipients
                 .map { recipient ->
@@ -141,6 +139,7 @@ internal class ChatRepoImpl(
                 id = message.id,
                 chatId = chatId,
                 recipients = cipherTexts,
+                timestamp = timeProvider.now().toEpochMilliseconds(),
             )
 
             networkManager.runPost<SendMessageRequest, Unit>(
