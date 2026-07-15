@@ -15,4 +15,5 @@ internal data class SendMessageRequest(
 internal data class RecipientCiphertext(
     @SerialName("recipientId") val recipientId: String,
     @SerialName("message") val message: String,
+    @SerialName("key") val key: String,
 )

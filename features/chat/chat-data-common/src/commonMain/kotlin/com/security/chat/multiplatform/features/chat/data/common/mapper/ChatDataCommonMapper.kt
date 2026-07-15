@@ -5,13 +5,13 @@ import com.security.chat.multiplatform.features.chat.data.storage.entity.Message
 
 internal suspend fun ChatMessageNM.toSM(
     chatId: String,
-    decryptMessage: suspend (encryptedText: String) -> String,
+    decryptMessage: suspend (encryptedText: String, key: String) -> String,
     recipients: List<String>,
 ): MessageSM {
     return MessageSM(
         id = id,
         chatId = chatId,
-        text = decryptMessage(text),
+        text = decryptMessage(text, key),
         authorId = authorId,
         //TODO
         status = MessageSM.Status.Received,

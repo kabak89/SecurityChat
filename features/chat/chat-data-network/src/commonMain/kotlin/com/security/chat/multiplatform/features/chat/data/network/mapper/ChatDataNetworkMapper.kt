@@ -7,6 +7,7 @@ internal fun ChatMessage.toNM(): ChatMessageNM {
     return ChatMessageNM(
         id = id,
         text = text,
+        key = key,
         authorId = authorId,
         timestamp = timestamp,
     )

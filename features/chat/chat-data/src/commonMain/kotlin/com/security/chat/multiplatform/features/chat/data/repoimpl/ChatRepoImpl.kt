@@ -124,14 +124,18 @@ internal class ChatRepoImpl(
                         userInfo.publicKey
                     }
 
-                    val encryptedText = chatDataHelper.encryptText(
+                    val key = chatDataHelper.getOneTimeEncryptionKey()
+
+                    val encryptedMessage = chatDataHelper.encryptText(
                         text = message.text,
                         publicKeyString = publicKey,
+                        key = key,
                     )
 
                     RecipientCiphertext(
                         recipientId = recipient,
-                        message = encryptedText,
+                        message = encryptedMessage.encryptedText,
+                        key = encryptedMessage.encryptedKey,
                     )
                 }
 
@@ -139,7 +143,7 @@ internal class ChatRepoImpl(
                 id = message.id,
                 chatId = chatId,
                 recipients = cipherTexts,
-                timestamp = timeProvider.now().toEpochMilliseconds(),
+                timestamp = message.timestamp,
             )
 
             networkManager.runPost<SendMessageRequest, Unit>(
@@ -247,6 +251,7 @@ internal class ChatRepoImpl(
                         chatDataHelper.decryptText(
                             text = encryptedText,
                             privateKeyString = privateKey,
+                            key = chatMessage.key,
                         )
                     },
                     appOwnerId = authorId,
