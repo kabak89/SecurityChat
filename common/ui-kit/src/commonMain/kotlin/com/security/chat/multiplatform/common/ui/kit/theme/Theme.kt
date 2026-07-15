@@ -3,6 +3,8 @@ package com.security.chat.multiplatform.common.ui.kit.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -37,7 +39,7 @@ private val lightColorPalette: AppColors =
 private val darkColorPalette: AppColors =
     AppColors(
         backgroundPrimary = Color(0xFF000000),
-        backgroundSecondary = Color(0xFF343434),
+        backgroundSecondary = Color(0xFF7D7D7D),
         textPrimary = Color(0xFFFFFFFF),
         textSecondary = Color(0xFFE1E1E1),
         textSuppressed = Color(0xFF959595),
@@ -63,12 +65,18 @@ public fun AppTheme(
     MaterialTheme(
         typography = Typography(),
     ) {
+        val selectionColors = TextSelectionColors(
+            backgroundColor = colors.backgroundSecondary.copy(alpha = 0.37f),
+            handleColor = colors.backgroundSecondary,
+        )
+
         CompositionLocalProvider(
             LocalAppColors provides colors,
             LocalAppTypography provides AppTheme.typography,
             LocalContentColor provides colors.textPrimary,
             LocalUseDarkTheme provides useDarkTheme,
             LocalAppShapes provides AppTheme.shapes,
+            LocalTextSelectionColors provides selectionColors,
             content = content,
         )
     }

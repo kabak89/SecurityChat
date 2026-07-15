@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,13 +27,15 @@ internal fun IncomingMessageComponent(
             .padding(end = 40.dp),
         horizontalArrangement = Arrangement.Start,
     ) {
-        Text(
-            modifier = Modifier
-                .padding(end = 8.dp),
-            text = AnnotatedString.rememberAutoLinkText(text = message.text),
-            color = AppTheme.colors.textPrimary,
-            style = AppTheme.typography.body,
-        )
+        SelectionContainer {
+            Text(
+                modifier = Modifier
+                    .padding(end = 8.dp),
+                text = AnnotatedString.rememberAutoLinkText(text = message.text),
+                color = AppTheme.colors.textPrimary,
+                style = AppTheme.typography.body,
+            )
+        }
         Text(
             modifier = Modifier
                 .align(alignment = Alignment.Bottom),

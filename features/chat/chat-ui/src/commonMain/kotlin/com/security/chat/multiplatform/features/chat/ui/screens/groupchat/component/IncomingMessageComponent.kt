@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -74,13 +75,15 @@ internal fun IncomingMessageComponent(
                 .padding(end = 40.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.Start,
         ) {
-            Text(
-                modifier = Modifier
-                    .padding(end = 8.dp),
-                text = AnnotatedString.rememberAutoLinkText(text = message.text),
-                color = AppTheme.colors.textPrimary,
-                style = AppTheme.typography.body,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier
+                        .padding(end = 8.dp),
+                    text = AnnotatedString.rememberAutoLinkText(text = message.text),
+                    color = AppTheme.colors.textPrimary,
+                    style = AppTheme.typography.body,
+                )
+            }
             Text(
                 modifier = Modifier
                     .align(alignment = Alignment.Bottom),
