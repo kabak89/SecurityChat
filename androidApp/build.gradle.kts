@@ -50,6 +50,9 @@ android {
         versionCode = libs.versions.appVersionCode.get().toInt()
         versionName = libs.versions.appVrersionName.get()
     }
+    androidResources {
+        localeFilters += listOf("en", "ru")
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
