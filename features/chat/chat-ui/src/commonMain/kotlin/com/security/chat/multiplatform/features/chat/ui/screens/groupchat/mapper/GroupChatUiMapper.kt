@@ -12,11 +12,11 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 private val fullDatetimeFormat = LocalDateTime.Format {
-    byUnicodePattern("yyyy-MM-dd HH:mm")
+    byUnicodePattern("dd-MM-yyyy HH:mm")
 }
 
 private val middleDatetimeFormat = LocalDateTime.Format {
-    byUnicodePattern("MM-dd HH:mm")
+    byUnicodePattern("dd-MM HH:mm")
 }
 
 private val shortTimeFormat = LocalDateTime.Format {
