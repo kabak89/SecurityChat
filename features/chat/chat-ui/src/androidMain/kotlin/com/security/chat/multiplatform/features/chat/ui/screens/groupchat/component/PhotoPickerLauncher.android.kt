@@ -1,0 +1,35 @@
+package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+
+@Composable
+internal actual fun rememberPhotoPickerLauncher(
+    onPhotoPicked: (PickedPhoto) -> Unit,
+): PhotoPickerLauncher {
+    val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
+
+    val pickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                currentOnPhotoPicked.value(PickedPhoto(uri))
+            }
+        },
+    )
+
+    return remember(pickerLauncher) {
+        PhotoPickerLauncher {
+            pickerLauncher.launch(
+                PickVisualMediaRequest(
+                    mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
+                ),
+            )
+        }
+    }
+}

@@ -55,6 +55,7 @@ import com.security.chat.multiplatform.features.chat.ui.screens.common.component
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingMessageComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -66,6 +67,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
+import securitychat.common.icons_kit.generated.resources.ic_attach
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.icons_kit.generated.resources.ic_send
 
@@ -102,6 +104,11 @@ private fun GroupChatContent(
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
 ) {
+    val photoPickerLauncher = rememberPhotoPickerLauncher(
+        onPhotoPicked = {
+            //TODO
+        },
+    )
     val hazeState = rememberHazeState()
     val backgroundPrimaryColor = AppTheme.colors.backgroundPrimary
     val hazeStyle = remember {
@@ -186,6 +193,7 @@ private fun GroupChatContent(
                 },
             message = state.message,
             onMessageEdited = onMessageEdited,
+            onAttachClicked = photoPickerLauncher::launch,
             onSendMessageClicked = onSendMessageClicked,
         )
     }
@@ -273,6 +281,7 @@ private fun EditMessageComponent(
     modifier: Modifier = Modifier,
     message: String,
     onMessageEdited: (String) -> Unit,
+    onAttachClicked: () -> Unit,
     onSendMessageClicked: () -> Unit,
 ) {
     Row(
@@ -304,10 +313,24 @@ private fun EditMessageComponent(
             textStyle = AppTheme.typography.body,
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Box(
+        Row(
             modifier = Modifier
                 .align(alignment = Alignment.CenterVertically),
         ) {
+            IconButton(
+                modifier = Modifier
+                    .size(48.dp),
+                onClick = onAttachClicked,
+                content = {
+                    Icon(
+                        modifier = Modifier
+                            .size(32.dp),
+                        imageVector = vectorResource(Res.drawable.ic_attach),
+                        tint = AppTheme.colors.element,
+                        contentDescription = null,
+                    )
+                },
+            )
             IconButton(
                 modifier = Modifier
                     .size(48.dp),
