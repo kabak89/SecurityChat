@@ -39,6 +39,22 @@ Each feature is split into layered modules with the Gradle path
 Reference feature: `features/settings`. For the full skeleton, naming rules, dependency graph and
 checklist, see `.cursor/skills/feature-template/SKILL.md` (and `reference.md` next to it).
 
+## Dependency injection (Koin)
+
+Where a Koin module is registered depends on how many places consume it:
+
+- **Used by a single feature:** load it inside that feature's root component. Call
+  `getKoin().loadModules(featureModules)` in `init` and `getKoin().unloadModules(featureModules)` in
+  `doOnDestroy`, so the module lives only while the component is alive and is released on destroy.
+  See
+  [SettingsComponentImpl.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponentImpl.kt).
+- **Used in several features / app-wide:** move it into the `commonAppDiModules` list in
+  [CommonAppDiModules.kt](shared/src/commonMain/kotlin/com/security/chat/multiplatform/di/CommonAppDiModules.kt).
+  These modules are loaded once at Koin startup and stay for the whole app lifetime.
+
+Rule of thumb: keep a module component-scoped for as long as it has a single consumer; promote it to
+`commonAppDiModules` only once a second place needs it.
+
 ## Conventions
 
 - **Namespace / packages:** `com.security.chat.multiplatform.<area>.<feature>.<layer>`.
