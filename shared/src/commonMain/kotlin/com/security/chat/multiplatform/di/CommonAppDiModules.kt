@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.di
 
 import com.security.chat.multiplatform.common.core.db.di.coreDbModule
+import com.security.chat.multiplatform.common.core.files.di.coreFilesModule
 import com.security.chat.multiplatform.common.core.network.di.coreNetworkModule
 import com.security.chat.multiplatform.common.core.network.di.networkEngineModule
 import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
@@ -26,6 +27,7 @@ internal val commonAppDiModules: List<Module> =
         sharedModule,
         coreThreadingModule,
         coreDbModule,
+        coreFilesModule,
         coreTimeModule,
         settingsModule,
         coreNetworkModule,

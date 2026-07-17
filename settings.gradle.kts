@@ -27,6 +27,7 @@ include(":androidApp")
 include(
     ":common:core-ui",
     ":common:core-domain",
+    ":common:core-files",
     ":common:localization",
     ":common:core-component",
     ":common:core-db",

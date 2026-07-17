@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalContext
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
 
 @Composable
@@ -13,12 +14,18 @@ internal actual fun rememberPhotoPickerLauncher(
     onPhotoPicked: (PickedPhoto) -> Unit,
 ): PhotoPickerLauncher {
     val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
+    val contentResolver = LocalContext.current.contentResolver
 
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             if (uri != null) {
-                currentOnPhotoPicked.value(PickedPhoto(uri))
+                currentOnPhotoPicked.value(
+                    PickedPhoto(
+                        uri = uri,
+                        contentResolver = contentResolver,
+                    ),
+                )
             }
         },
     )

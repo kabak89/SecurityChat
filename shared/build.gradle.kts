@@ -49,6 +49,7 @@ kotlin {
 
             implementation(projects.common.coreUi)
             implementation(projects.common.coreComponent)
+            implementation(projects.common.coreFiles)
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreThreading)

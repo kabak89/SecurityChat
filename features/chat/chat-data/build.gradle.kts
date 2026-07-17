@@ -18,6 +18,7 @@ kotlin {
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreTime)
             implementation(projects.common.coreThreading)
+            implementation(projects.common.coreFiles)
             implementation(projects.common.log)
 
             implementation(projects.features.chat.chatDomain)

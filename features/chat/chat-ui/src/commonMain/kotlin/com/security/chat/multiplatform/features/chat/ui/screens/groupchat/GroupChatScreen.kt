@@ -51,6 +51,7 @@ import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
@@ -87,6 +88,7 @@ internal fun GroupChatScreen(
             events = vm.viewEvent,
             onBackClicked = component::onExitClicked,
             onMessageEdited = vm::onMessageEdited,
+            onPhotoPicked = vm::onPhotoPicked,
             onSendMessageClicked = vm::onSendMessageClicked,
             onSyncClicked = vm::onSyncClicked,
         )
@@ -101,13 +103,12 @@ private fun GroupChatContent(
     events: Flow<GroupChatEvent>,
     onBackClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
+    onPhotoPicked: (PickedPhoto) -> Unit,
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
 ) {
     val photoPickerLauncher = rememberPhotoPickerLauncher(
-        onPhotoPicked = {
-            //TODO
-        },
+        onPhotoPicked = onPhotoPicked,
     )
     val hazeState = rememberHazeState()
     val backgroundPrimaryColor = AppTheme.colors.backgroundPrimary
@@ -383,6 +384,7 @@ internal fun GroupChatScreenPreview() {
             events = emptyFlow(),
             onBackClicked = {},
             onMessageEdited = {},
+            onPhotoPicked = {},
             onSendMessageClicked = {},
             onSyncClicked = {},
         )
