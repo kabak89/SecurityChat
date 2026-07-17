@@ -7,7 +7,6 @@ import com.security.chat.multiplatform.features.splash.data.di.splashDataModule
 import com.security.chat.multiplatform.features.splash.domain.SplashModel
 import com.security.chat.multiplatform.features.splash.domain.di.splashDomainModule
 import com.security.chat.multiplatform.features.splash.ui.di.splashUiModule
-import org.koin.core.qualifier.named
 
 public class SplashComponentImpl(
     private val onSplashFinished: (userState: UserState) -> Unit,
@@ -27,7 +26,7 @@ public class SplashComponentImpl(
         getKoin().loadModules(featureModules)
 
         val splashModel: SplashModel = getKoin().get()
-        splashModel.start(parentScope = getKoin().get(named(SCOPE_ID_SPLASH)))
+        splashModel.start(parentScope = componentCoroutineScope)
 
         doOnDestroy {
             getKoin().unloadModules(featureModules)

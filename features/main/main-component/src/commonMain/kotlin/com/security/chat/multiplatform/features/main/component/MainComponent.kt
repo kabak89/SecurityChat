@@ -4,7 +4,6 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
@@ -83,39 +82,65 @@ public class MainComponentImpl(
     }
 
     override fun openPrivateChat(chatId: String) {
-        navigation.navigate { stack ->
-            when (val top = stack.last()) {
-                is Params.PrivateChatParams -> when {
-                    top.chatId == chatId -> stack
-                    else -> stack.dropLast(1) + Params.PrivateChatParams(chatId = chatId)
-                }
+        val top = childStack.value.active.instance
 
-                is Params.GroupChatParams,
-                is Params.SettingsParams,
-                    -> {
-                    stack.dropLast(1) + Params.PrivateChatParams(chatId = chatId)
-                }
+        when (top) {
+            is Chat -> {
+                val params = top.component.params
 
-                is Params.ChatsParams -> stack + Params.PrivateChatParams(chatId = chatId)
+                when (params) {
+                    is ChatComponent.Params.PersonalChat -> {
+                        if (params.value == chatId) {
+                            //do nothing
+                        } else {
+                            navigation.pop()
+                            navigation.push(Params.PrivateChatParams(chatId = chatId))
+                        }
+                    }
+
+                    is ChatComponent.Params.GroupChatId -> {
+                        navigation.pop()
+                        navigation.push(Params.PrivateChatParams(chatId = chatId))
+                    }
+                }
+            }
+
+            is Chats -> navigation.push(Params.PrivateChatParams(chatId = chatId))
+            is Settings -> {
+                navigation.pop()
+                navigation.push(Params.PrivateChatParams(chatId = chatId))
             }
         }
     }
 
     override fun openGroupChat(chatId: String) {
-        navigation.navigate { stack ->
-            when (val top = stack.last()) {
-                is Params.GroupChatParams -> when {
-                    top.chatId == chatId -> stack
-                    else -> stack.dropLast(1) + Params.GroupChatParams(chatId = chatId)
-                }
+        val top = childStack.value.active.instance
 
-                is Params.PrivateChatParams,
-                is Params.SettingsParams,
-                    -> {
-                    stack.dropLast(1) + Params.GroupChatParams(chatId = chatId)
-                }
+        when (top) {
+            is Chat -> {
+                val params = top.component.params
 
-                is Params.ChatsParams -> stack + Params.GroupChatParams(chatId = chatId)
+                when (params) {
+                    is ChatComponent.Params.GroupChatId -> {
+                        if (params.value == chatId) {
+                            //do nothing
+                        } else {
+                            navigation.pop()
+                            navigation.push(Params.GroupChatParams(chatId = chatId))
+                        }
+                    }
+
+                    is ChatComponent.Params.PersonalChat -> {
+                        navigation.pop()
+                        navigation.push(Params.GroupChatParams(chatId = chatId))
+                    }
+                }
+            }
+
+            is Chats -> navigation.push(Params.GroupChatParams(chatId = chatId))
+            is Settings -> {
+                navigation.pop()
+                navigation.push(Params.GroupChatParams(chatId = chatId))
             }
         }
     }

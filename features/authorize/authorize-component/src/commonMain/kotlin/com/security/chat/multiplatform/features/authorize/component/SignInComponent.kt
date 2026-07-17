@@ -6,7 +6,6 @@ import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.SignInComponent
 import com.security.chat.multiplatform.features.authorize.component.api.UserState
 import com.security.chat.multiplatform.features.authorize.domain.SignInModel
-import org.koin.core.qualifier.named
 
 public class SignInComponentImpl(
     private val onSignUp: () -> Unit,
@@ -21,7 +20,7 @@ public class SignInComponentImpl(
     init {
         doOnCreate {
             val signInModel: SignInModel = getKoin().get()
-            signInModel.start(parentScope = getKoin().get(named(SCOPE_ID_SIGN_IN)))
+            signInModel.start(parentScope = componentCoroutineScope)
         }
     }
 

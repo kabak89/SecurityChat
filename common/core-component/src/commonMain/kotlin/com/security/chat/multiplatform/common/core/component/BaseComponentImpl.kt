@@ -13,11 +13,15 @@ import kotlinx.coroutines.cancel
 import org.koin.core.component.get
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.unloadKoinModules
+import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 public abstract class BaseComponentImpl(
     componentContext: ComponentContext,
     scopeId: String,
@@ -25,22 +29,36 @@ public abstract class BaseComponentImpl(
 
     override val viewModelStore: ViewModelStore = ViewModelStore()
 
+    /**
+     * Unique per-instance scope id. Decompose creates a new child before destroying the removed
+     * one, so two components of the same type may coexist for a short moment during navigation.
+     * A fixed [scopeId] would make them collide on [org.koin.core.Koin.createScope]; the random
+     * suffix keeps every instance isolated.
+     */
+    private val uniqueScopeId: String = "$scopeId-${Uuid.random()}"
+
+    private val scopeQualifier: Qualifier = named(uniqueScopeId)
+
     private var diScope: Scope? = null
+
+    /** Coroutine scope bound to this component's DI scope lifecycle. */
+    protected val componentCoroutineScope: CoroutineScope
+        get() = get(scopeQualifier)
 
     init {
         Log.d { "component ${this::class.qualifiedName} created" }
 
         diScope = getKoin().createScope(
-            scopeId = scopeId,
-            qualifier = named(scopeId),
+            scopeId = uniqueScopeId,
+            qualifier = scopeQualifier,
         )
 
-        Log.d { "scope $scopeId created" }
+        Log.d { "scope $uniqueScopeId created" }
 
         val coroutineScopeModule = module {
-            single(named(scopeId)) {
+            single(scopeQualifier) {
                 val errorHandler = CoroutineExceptionHandler { _, e ->
-                    Log.e(e, "error in coroutine scope in $scopeId DI scope")
+                    Log.e(e, "error in coroutine scope in $uniqueScopeId DI scope")
                 }
 
                 val dispatcherProvider: DispatcherProviderInterface = get()
@@ -48,7 +66,7 @@ public abstract class BaseComponentImpl(
                     dispatcherProvider.IO +
                             SupervisorJob() +
                             errorHandler +
-                            CoroutineName(scopeId),
+                            CoroutineName(uniqueScopeId),
                 )
             } bind CoroutineScope::class
         }
@@ -59,14 +77,14 @@ public abstract class BaseComponentImpl(
             Log.d { "component ${this::class.qualifiedName} destroyed" }
             viewModelStore.clear()
 
-            val scopedCoroutineScope: CoroutineScope = get(named(scopeId))
+            val scopedCoroutineScope: CoroutineScope = get(scopeQualifier)
             scopedCoroutineScope.cancel()
 
             diScope?.close()
 
             unloadKoinModules(coroutineScopeModule)
 
-            Log.d { "scope $scopeId closed" }
+            Log.d { "scope $uniqueScopeId closed" }
         }
     }
 

@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsMainComponent
 import com.security.chat.multiplatform.features.settings.domain.SettingsModel
-import org.koin.core.qualifier.named
 
 internal class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
@@ -22,7 +21,7 @@ internal class SettingsMainComponentImpl(
     init {
         doOnCreate {
             val settingsModel: SettingsModel = getKoin().get()
-            settingsModel.start(parentScope = getKoin().get(named(SCOPE_ID_SETTINGS_MAIN)))
+            settingsModel.start(parentScope = componentCoroutineScope)
         }
     }
 

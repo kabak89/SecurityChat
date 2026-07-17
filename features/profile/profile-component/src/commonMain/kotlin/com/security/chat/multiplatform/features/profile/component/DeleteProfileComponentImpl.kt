@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.profile.component.api.DeleteProfileComponent
 import com.security.chat.multiplatform.features.profile.domain.DeleteProfileModel
-import org.koin.core.qualifier.named
 
 internal class DeleteProfileComponentImpl(
     componentContext: ComponentContext,
@@ -20,7 +19,7 @@ internal class DeleteProfileComponentImpl(
     init {
         doOnCreate {
             val deleteProfileModel: DeleteProfileModel = getKoin().get()
-            deleteProfileModel.start(parentScope = getKoin().get(named(SCOPE_ID_DELETE_PROFILE)))
+            deleteProfileModel.start(parentScope = componentCoroutineScope)
         }
     }
 
