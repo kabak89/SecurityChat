@@ -24,6 +24,7 @@ import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkMan
 import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
@@ -84,12 +85,12 @@ internal class ChatRepoImpl(
         val timestamp = timeProvider.now().toEpochMilliseconds()
         val messageId = Uuid.random().toString()
 
-        val messageSm = MessageSM(
+        val messageSm = MessageSM.Text(
             id = messageId,
             chatId = chatId,
             text = message,
             authorId = userId,
-            status = MessageSM.Status.Created,
+            status = Status.Created,
             timestamp = timestamp,
             recipients = recipients,
         )
@@ -103,9 +104,13 @@ internal class ChatRepoImpl(
             limit = Long.MAX_VALUE,
             offset = 0,
         )
-            .filter { it.status == MessageSM.Status.Created }
+            .filter { it.status == Status.Created }
 
         messagesToUpload.forEach { message ->
+            val messageText = when (message) {
+                is MessageSM.Text -> message.text
+            }
+
             val cipherTexts = message.recipients
                 .map { recipient ->
                     val publicKey = usersStorage.getUser(recipient)?.publicKey ?: run {
@@ -127,7 +132,7 @@ internal class ChatRepoImpl(
                     val key = chatDataHelper.getOneTimeEncryptionKey()
 
                     val encryptedMessage = chatDataHelper.encryptText(
-                        text = message.text,
+                        text = messageText,
                         publicKeyString = publicKey,
                         key = key,
                     )
@@ -152,7 +157,11 @@ internal class ChatRepoImpl(
             )
         }
 
-        val messagesToUpdate = messagesToUpload.map { it.copy(status = MessageSM.Status.Sent) }
+        val messagesToUpdate = messagesToUpload.map { message ->
+            when (message) {
+                is MessageSM.Text -> message.copy(status = Status.Sent)
+            }
+        }
         messagesToUpdate.forEach { message -> chatStorage.updateMessage(message) }
     }
 

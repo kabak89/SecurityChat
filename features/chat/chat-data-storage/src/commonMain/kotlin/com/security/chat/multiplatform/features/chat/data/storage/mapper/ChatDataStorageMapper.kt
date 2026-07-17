@@ -1,23 +1,26 @@
 package com.security.chat.multiplatform.features.chat.data.storage.mapper
 
-import com.security.chat.multiplatform.features.chat.data.storage.MessageTable
+import com.security.chat.multiplatform.features.chat.data.storage.TextMessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 
-internal fun MessageSM.toTable(): MessageTable {
-    return MessageTable(
+internal fun MessageSM.toTable(): TextMessageTable {
+    return TextMessageTable(
         id = id,
         chatId = chatId,
-        text = text,
+        text = when (this) {
+            is MessageSM.Text -> text
+        },
         authorId = authorId,
         status = mapStatusToString(status = status),
         timestamp = timestamp,
     )
 }
 
-internal fun MessageTable.toSM(
+internal fun TextMessageTable.toSM(
     recipients: List<String>,
 ): MessageSM? {
-    return MessageSM(
+    return MessageSM.Text(
         id = id,
         chatId = chatId,
         text = text,
@@ -28,16 +31,16 @@ internal fun MessageTable.toSM(
     )
 }
 
-private fun mapStatusToString(status: MessageSM.Status): String {
+private fun mapStatusToString(status: Status): String {
     return when (status) {
-        MessageSM.Status.Created -> "Created"
-        MessageSM.Status.Sent -> "Sent"
-        MessageSM.Status.Received -> "Received"
+        Status.Created -> "Created"
+        Status.Sent -> "Sent"
+        Status.Received -> "Received"
     }
 }
 
-private fun mapStringToStatus(string: String): MessageSM.Status? {
-    MessageSM.Status.entries.forEach { status ->
+private fun mapStringToStatus(string: String): Status? {
+    Status.entries.forEach { status ->
         if (mapStatusToString(status) == string) {
             return status
         }

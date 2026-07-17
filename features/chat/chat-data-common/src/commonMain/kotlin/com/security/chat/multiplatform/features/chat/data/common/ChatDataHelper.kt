@@ -4,6 +4,7 @@ import com.security.chat.multiplatform.features.chat.data.common.entity.Encrypte
 import com.security.chat.multiplatform.features.chat.data.common.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
@@ -95,7 +96,11 @@ internal class ChatDataHelperImpl(
             messageIds = messageIds,
         )
 
-        return messagesToStore.map { it.text }
+        return messagesToStore.map { message ->
+            when (message) {
+                is MessageSM.Text -> message.text
+            }
+        }
     }
 
     override suspend fun decryptText(

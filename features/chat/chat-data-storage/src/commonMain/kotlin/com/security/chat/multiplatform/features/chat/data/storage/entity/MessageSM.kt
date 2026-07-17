@@ -1,18 +1,27 @@
 package com.security.chat.multiplatform.features.chat.data.storage.entity
 
-public data class MessageSM(
-    val id: String,
-    val chatId: String,
-    val text: String,
-    val authorId: String,
-    val status: Status,
-    val timestamp: Long,
-    val recipients: List<String>,
-) {
+public sealed interface MessageSM {
 
-    public enum class Status {
-        Created,
-        Sent,
-        Received,
-    }
+    public val id: String
+    public val chatId: String
+    public val recipients: List<String>
+    public val authorId: String
+    public val status: Status
+    public val timestamp: Long
+
+    public data class Text(
+        override val id: String,
+        override val chatId: String,
+        override val recipients: List<String>,
+        override val authorId: String,
+        override val status: Status,
+        override val timestamp: Long,
+        val text: String,
+    ) : MessageSM
+}
+
+public enum class Status {
+    Created,
+    Sent,
+    Received,
 }

@@ -1,0 +1,3 @@
+-- v3: MessageTable is renamed to TextMessageTable to make room for additional message types.
+-- The columns are unchanged, so existing messages are preserved.
+ALTER TABLE MessageTable RENAME TO TextMessageTable;

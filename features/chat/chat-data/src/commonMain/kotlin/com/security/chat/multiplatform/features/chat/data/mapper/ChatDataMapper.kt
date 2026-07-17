@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.features.chat.data.mapper
 
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
@@ -38,6 +39,10 @@ internal fun MessageSM.toDomain(
         MessageDirection.Incoming
     }
 
+    val text = when (this) {
+        is MessageSM.Text -> text
+    }
+
     return Message(
         id = id,
         text = text,
@@ -51,13 +56,13 @@ internal fun Message.toSM(
     chatId: String,
     recipients: List<String>,
 ): MessageSM {
-    return MessageSM(
+    return MessageSM.Text(
         id = id,
         text = text,
         authorId = author.id,
         chatId = chatId,
         //TODO
-        status = MessageSM.Status.Received,
+        status = Status.Received,
         timestamp = timestamp,
         recipients = recipients,
     )

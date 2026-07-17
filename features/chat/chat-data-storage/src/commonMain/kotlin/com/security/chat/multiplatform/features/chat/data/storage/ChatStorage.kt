@@ -55,7 +55,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 2,
+                        version = 3,
                     ),
                 )
             },
@@ -65,7 +65,7 @@ internal class ChatStorageImpl(
         withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
             db.transaction {
-                db.messageTableQueries.insert(message.toTable())
+                db.textMessageTableQueries.insert(message.toTable())
                 message.recipients.forEach { recipient ->
                     val messageRecipients = MessageRecipients(
                         messageId = message.id,
@@ -82,7 +82,7 @@ internal class ChatStorageImpl(
             val db = dbCreator.getDb()
             db.transaction {
                 messages.forEach { message ->
-                    db.messageTableQueries.insert(message.toTable())
+                    db.textMessageTableQueries.insert(message.toTable())
                     message.recipients.forEach { recipient ->
                         db.messageRecipientsQueries.insert(
                             MessageRecipients(
@@ -103,7 +103,7 @@ internal class ChatStorageImpl(
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            db.messageTableQueries
+            db.textMessageTableQueries
                 .getPaged(
                     chatId = chatId,
                     limit = limit,
@@ -123,7 +123,7 @@ internal class ChatStorageImpl(
     override suspend fun getNewestMessages(chatId: String, limit: Long): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            db.messageTableQueries
+            db.textMessageTableQueries
                 .getNewest(
                     chatId = chatId,
                     limit = limit,
@@ -146,7 +146,7 @@ internal class ChatStorageImpl(
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            db.messageTableQueries
+            db.textMessageTableQueries
                 .getOlderThan(
                     chatId = chatId,
                     beforeTimestamp = beforeTimestamp,
@@ -170,7 +170,7 @@ internal class ChatStorageImpl(
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            db.messageTableQueries
+            db.textMessageTableQueries
                 .getClosestNewerThan(
                     chatId = chatId,
                     afterTimestamp = afterTimestamp,
@@ -190,7 +190,7 @@ internal class ChatStorageImpl(
     override fun observeMessagesChanges(chatId: String): Flow<Unit> {
         return dbCreator.dbFlow
             .flatMapLatest { db ->
-                db.messageTableQueries
+                db.textMessageTableQueries
                     .getPaged(chatId = chatId, limit = 1L, offset = 0L)
                     .asFlow()
                     .map { it.executeAsOneOrNull() }
@@ -202,13 +202,13 @@ internal class ChatStorageImpl(
 
     override suspend fun updateMessage(message: MessageSM) {
         withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries.insert(message.toTable())
+            dbCreator.getDb().textMessageTableQueries.insert(message.toTable())
         }
     }
 
     override suspend fun clearAll() {
         withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries.removeAll()
+            dbCreator.getDb().textMessageTableQueries.removeAll()
             dbCreator.getDb().messageRecipientsQueries.removeAll()
         }
     }
@@ -216,7 +216,7 @@ internal class ChatStorageImpl(
     override suspend fun getMessageByTimestamp(timestamp: Long): MessageSM? {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
-            db.messageTableQueries
+            db.textMessageTableQueries
                 .getByTimestamp(timestamp)
                 .executeAsList()
                 .firstOrNull()
