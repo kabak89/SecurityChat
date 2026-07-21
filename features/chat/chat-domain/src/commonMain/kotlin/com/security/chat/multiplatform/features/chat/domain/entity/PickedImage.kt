@@ -1,3 +1,3 @@
 package com.security.chat.multiplatform.features.chat.domain.entity
 
-public expect class PickedPhoto
+public expect class PickedImage

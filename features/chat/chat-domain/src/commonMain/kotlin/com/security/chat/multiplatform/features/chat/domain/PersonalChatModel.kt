@@ -54,7 +54,7 @@ internal class PersonalChatModelImpl(
 
             val chatId = checkNotNull(stateFlow.value.chatId)
 
-            chatRepo.saveMessage(
+            chatRepo.saveTextMessage(
                 message = currentMessage,
                 chatId = chatId,
             )

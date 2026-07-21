@@ -51,7 +51,7 @@ import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
@@ -103,7 +103,7 @@ private fun GroupChatContent(
     events: Flow<GroupChatEvent>,
     onBackClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
-    onPhotoPicked: (PickedPhoto) -> Unit,
+    onPhotoPicked: (PickedImage) -> Unit,
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
 ) {

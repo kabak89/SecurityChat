@@ -1,7 +1,7 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component
 
 import androidx.compose.runtime.Composable
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 
 internal fun interface PhotoPickerLauncher {
 
@@ -10,5 +10,5 @@ internal fun interface PhotoPickerLauncher {
 
 @Composable
 internal expect fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedPhoto) -> Unit,
+    onPhotoPicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher

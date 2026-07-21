@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.chat.data.common
 
+import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.common.entity.EncryptedMessage
 import com.security.chat.multiplatform.features.chat.data.common.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
@@ -10,6 +11,10 @@ import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
 import dev.whyoleg.cryptography.algorithms.RSA
 import dev.whyoleg.cryptography.algorithms.SHA512
+import kotlinx.coroutines.withContext
+import kotlinx.io.buffered
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import kotlin.io.encoding.Base64
 
 public interface ChatDataHelper {
@@ -31,6 +36,17 @@ public interface ChatDataHelper {
         key: String,
     ): EncryptedMessage
 
+    public suspend fun encryptFile(
+        sourcePath: String,
+        destinationPath: String,
+        key: String,
+    )
+
+    public suspend fun encryptKey(
+        key: String,
+        publicKeyString: String,
+    ): String
+
     public suspend fun getOneTimeEncryptionKey(): String
 }
 
@@ -38,6 +54,7 @@ internal class ChatDataHelperImpl(
     private val userStorage: UserStorage,
     private val chatNetworkManager: ChatNetworkManager,
     private val chatStorage: ChatStorage,
+    private val dispatcherProvider: DispatcherProviderInterface,
 ) : ChatDataHelper {
 
     override suspend fun fetchAndSaveMessages(chatId: String) {
@@ -108,26 +125,28 @@ internal class ChatDataHelperImpl(
         privateKeyString: String,
         key: String,
     ): String {
-        val provider = CryptographyProvider.Default
+        return withContext(dispatcherProvider.Default) {
+            val provider = CryptographyProvider.Default
 
-        val rsa = provider.get(RSA.OAEP)
-        val privateKeyBytes = Base64.decode(privateKeyString)
-        val privateKey = rsa.privateKeyDecoder(digest = SHA512).decodeFromByteArray(
-            format = RSA.PrivateKey.Format.DER,
-            bytes = privateKeyBytes,
-        )
+            val rsa = provider.get(RSA.OAEP)
+            val privateKeyBytes = Base64.decode(privateKeyString)
+            val privateKey = rsa.privateKeyDecoder(digest = SHA512).decodeFromByteArray(
+                format = RSA.PrivateKey.Format.DER,
+                bytes = privateKeyBytes,
+            )
 
-        val encryptedAesKeyBytes = Base64.decode(key)
-        val rawAesKey = privateKey.decryptor().decrypt(encryptedAesKeyBytes)
+            val encryptedAesKeyBytes = Base64.decode(key)
+            val rawAesKey = privateKey.decryptor().decrypt(encryptedAesKeyBytes)
 
-        val aesGcm = provider.get(AES.GCM)
-        val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
-            format = AES.Key.Format.RAW,
-            bytes = rawAesKey,
-        )
+            val aesGcm = provider.get(AES.GCM)
+            val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
+                format = AES.Key.Format.RAW,
+                bytes = rawAesKey,
+            )
 
-        val ciphertextBytes = Base64.decode(text)
-        return aesKey.cipher().decrypt(ciphertext = ciphertextBytes).decodeToString()
+            val ciphertextBytes = Base64.decode(text)
+            aesKey.cipher().decrypt(ciphertext = ciphertextBytes).decodeToString()
+        }
     }
 
     override suspend fun encryptText(
@@ -135,37 +154,81 @@ internal class ChatDataHelperImpl(
         publicKeyString: String,
         key: String,
     ): EncryptedMessage {
-        val provider = CryptographyProvider.Default
-        val rawAesKey = Base64.decode(key)
-        val aesGcm = provider.get(AES.GCM)
+        return withContext(dispatcherProvider.Default) {
+            val provider = CryptographyProvider.Default
+            val rawAesKey = Base64.decode(key)
+            val aesGcm = provider.get(AES.GCM)
 
-        val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
-            format = AES.Key.Format.RAW,
-            bytes = rawAesKey,
-        )
+            val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
+                format = AES.Key.Format.RAW,
+                bytes = rawAesKey,
+            )
 
-        val encryptedTextBytes = aesKey.cipher().encrypt(plaintext = text.encodeToByteArray())
-        val rsa = provider.get(RSA.OAEP)
-        val publicKeyBytes = Base64.decode(publicKeyString)
+            val encryptedTextBytes = aesKey.cipher().encrypt(plaintext = text.encodeToByteArray())
+            val rsa = provider.get(RSA.OAEP)
+            val publicKeyBytes = Base64.decode(publicKeyString)
 
-        val publicKey = rsa.publicKeyDecoder(digest = SHA512).decodeFromByteArray(
-            format = RSA.PublicKey.Format.DER,
-            bytes = publicKeyBytes,
-        )
+            val publicKey = rsa.publicKeyDecoder(digest = SHA512).decodeFromByteArray(
+                format = RSA.PublicKey.Format.DER,
+                bytes = publicKeyBytes,
+            )
 
-        val encryptedKeyBytes = publicKey.encryptor().encrypt(rawAesKey)
+            val encryptedKeyBytes = publicKey.encryptor().encrypt(rawAesKey)
 
-        return EncryptedMessage(
-            encryptedText = Base64.encode(encryptedTextBytes),
-            encryptedKey = Base64.encode(encryptedKeyBytes),
-        )
+            EncryptedMessage(
+                encryptedText = Base64.encode(encryptedTextBytes),
+                encryptedKey = Base64.encode(encryptedKeyBytes),
+            )
+        }
+    }
+
+    override suspend fun encryptFile(
+        sourcePath: String,
+        destinationPath: String,
+        key: String,
+    ) {
+        withContext(dispatcherProvider.IO) {
+            val provider = CryptographyProvider.Default
+            val rawAesKey = Base64.decode(key)
+            val aesGcm = provider.get(AES.GCM)
+            val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
+                format = AES.Key.Format.RAW,
+                bytes = rawAesKey,
+            )
+            val cipher = aesKey.cipher()
+
+            SystemFileSystem.source(Path(sourcePath)).use { fileSource ->
+                val encryptingSource = cipher.encryptingSource(fileSource)
+                SystemFileSystem.sink(Path(destinationPath)).buffered().use { out ->
+                    encryptingSource.buffered().transferTo(out)
+                }
+            }
+        }
+    }
+
+    override suspend fun encryptKey(
+        key: String,
+        publicKeyString: String,
+    ): String {
+        return withContext(dispatcherProvider.Default) {
+            val provider = CryptographyProvider.Default
+            val rsa = provider.get(RSA.OAEP)
+            val publicKey = rsa.publicKeyDecoder(digest = SHA512).decodeFromByteArray(
+                format = RSA.PublicKey.Format.DER,
+                bytes = Base64.decode(publicKeyString),
+            )
+            val encryptedKeyBytes = publicKey.encryptor().encrypt(Base64.decode(key))
+            Base64.encode(encryptedKeyBytes)
+        }
     }
 
     override suspend fun getOneTimeEncryptionKey(): String {
-        val aesGcm = CryptographyProvider.Default.get(AES.GCM)
-        val aesKey = aesGcm.keyGenerator(AES.Key.Size.B256).generateKey()
-        val rawAesKey = aesKey.encodeToByteArray(AES.Key.Format.RAW)
-        return Base64.encode(rawAesKey)
+        return withContext(dispatcherProvider.Default) {
+            val aesGcm = CryptographyProvider.Default.get(AES.GCM)
+            val aesKey = aesGcm.keyGenerator(AES.Key.Size.B256).generateKey()
+            val rawAesKey = aesKey.encodeToByteArray(AES.Key.Format.RAW)
+            Base64.encode(rawAesKey)
+        }
     }
 
     private suspend fun confirmReceivingMessages(

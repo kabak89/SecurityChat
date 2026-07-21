@@ -3,7 +3,7 @@ package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
@@ -14,7 +14,7 @@ import platform.darwin.NSObject
 
 @Composable
 internal actual fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedPhoto) -> Unit,
+    onPhotoPicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher {
     val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
 
@@ -28,7 +28,7 @@ internal actual fun rememberPhotoPickerLauncher(
 }
 
 private class IosPhotoPickerLauncher(
-    private val onPhotoPicked: (PickedPhoto) -> Unit,
+    private val onPhotoPicked: (PickedImage) -> Unit,
 ) : PhotoPickerLauncher {
 
     private var delegate: PhotoPickerDelegate? = null
@@ -55,7 +55,7 @@ private class IosPhotoPickerLauncher(
     }
 
     private inner class PhotoPickerDelegate(
-        private val onPhotoPicked: (PickedPhoto) -> Unit,
+        private val onPhotoPicked: (PickedImage) -> Unit,
     ) : NSObject(), PHPickerViewControllerDelegateProtocol {
 
         override fun picker(
@@ -69,7 +69,7 @@ private class IosPhotoPickerLauncher(
             delegate = null
 
             val selectedPhoto = didFinishPicking.firstOrNull() as? PHPickerResult ?: return
-            onPhotoPicked(PickedPhoto(selectedPhoto.itemProvider))
+            onPhotoPicked(PickedImage(selectedPhoto.itemProvider))
         }
     }
 }

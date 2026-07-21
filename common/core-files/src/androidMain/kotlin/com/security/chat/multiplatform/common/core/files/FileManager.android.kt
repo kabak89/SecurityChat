@@ -41,6 +41,12 @@ internal class FileManagerAndroid(
         }
     }
 
+    override suspend fun deleteFile(path: String) {
+        withContext(dispatcherProvider.IO) {
+            File(path).delete()
+        }
+    }
+
     override suspend fun clearDirectory(name: String) {
         withContext(dispatcherProvider.IO) {
             val directory = cacheDirectory.resolve(name)

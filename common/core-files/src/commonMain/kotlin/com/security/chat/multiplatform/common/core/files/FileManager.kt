@@ -9,4 +9,5 @@ public interface FileManager {
 
     public suspend fun getDirectoryPath(name: String): String
     public suspend fun clearDirectory(name: String)
+    public suspend fun deleteFile(path: String)
 }

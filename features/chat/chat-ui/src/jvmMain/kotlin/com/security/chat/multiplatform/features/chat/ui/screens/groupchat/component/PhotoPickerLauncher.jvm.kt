@@ -3,7 +3,7 @@ package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
@@ -11,7 +11,7 @@ import java.io.FilenameFilter
 
 @Composable
 internal actual fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedPhoto) -> Unit,
+    onPhotoPicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher {
     val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
 
@@ -33,7 +33,7 @@ internal actual fun rememberPhotoPickerLauncher(
 
             val fileName = dialog.file ?: return@PhotoPickerLauncher
             val directory = dialog.directory ?: return@PhotoPickerLauncher
-            currentOnPhotoPicked.value(PickedPhoto(File(directory, fileName)))
+            currentOnPhotoPicked.value(PickedImage(File(directory, fileName)))
         }
     }
 }

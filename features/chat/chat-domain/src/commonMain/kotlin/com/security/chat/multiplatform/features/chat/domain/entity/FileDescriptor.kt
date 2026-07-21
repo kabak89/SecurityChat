@@ -1,5 +1,5 @@
 package com.security.chat.multiplatform.features.chat.domain.entity
 
-public data class CachedPhoto(
+public data class FileDescriptor(
     val localPath: String,
 )

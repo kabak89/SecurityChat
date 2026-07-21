@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.provider.optimal)
+            implementation(libs.kotlinx.io.core)
             implementation(libs.paging.common)
 
             implementation(projects.common.coreTime)

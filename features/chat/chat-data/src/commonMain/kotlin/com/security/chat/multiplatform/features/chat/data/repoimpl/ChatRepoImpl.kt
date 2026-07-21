@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.security.chat.multiplatform.common.core.files.FileManager
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
@@ -25,9 +26,13 @@ import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingS
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
+import com.security.chat.multiplatform.features.chat.domain.entity.FileDescriptor
+import com.security.chat.multiplatform.features.chat.domain.entity.ImageMessageDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
+import com.security.chat.multiplatform.features.chat.domain.entity.toFileSource
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
@@ -58,6 +63,7 @@ internal class ChatRepoImpl(
     private val dispatcherProvider: DispatcherProviderInterface,
     private val chatNetworkManager: ChatNetworkManager,
     private val chatDataHelper: ChatDataHelper,
+    private val fileManager: FileManager,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -67,8 +73,7 @@ internal class ChatRepoImpl(
         )
     }
 
-    @OptIn(ExperimentalUuidApi::class)
-    override suspend fun saveMessage(
+    override suspend fun saveTextMessage(
         message: String,
         chatId: String,
     ) {
@@ -96,6 +101,13 @@ internal class ChatRepoImpl(
         )
 
         chatStorage.saveMessage(messageSm)
+    }
+
+    override suspend fun saveImageMessage(
+        chatId: String,
+        message: ImageMessageDescriptor,
+    ) {
+        //TODO save message to table
     }
 
     override suspend fun uploadMessages(chatId: String) {
@@ -338,8 +350,54 @@ internal class ChatRepoImpl(
                 //no messages expected
             }
     }
+
+    override suspend fun copyImageToCache(image: PickedImage): FileDescriptor {
+        val localPath = fileManager.copyToCache(
+            fileSource = image.toFileSource(),
+            directoryName = IMAGES_CACHE_FOLDER,
+        )
+        return FileDescriptor(localPath = localPath)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun createEncryptedFile(
+        file: FileDescriptor,
+        chatId: String,
+    ): ImageMessageDescriptor {
+        val key = chatDataHelper.getOneTimeEncryptionKey()
+        val encryptedDirectory = fileManager.getDirectoryPath(IMAGES_CACHE_FOLDER)
+        val encryptedFilePath = "$encryptedDirectory/${Uuid.random()}"
+
+        chatDataHelper.encryptFile(
+            sourcePath = file.localPath,
+            destinationPath = encryptedFilePath,
+            key = key,
+        )
+
+        fileManager.deleteFile(file.localPath)
+
+        val currentUserId = checkNotNull(userStorage.getUserId())
+        val chat = requireNotNull(chatsStorage.getGroupChat(chatId))
+        val keys = (chat.members - currentUserId)
+            .associate { memberId ->
+                val user = requireNotNull(usersStorage.getUser(memberId))
+                user.id to chatDataHelper.encryptKey(
+                    key = key,
+                    publicKeyString = user.publicKey,
+                )
+            }
+
+        return ImageMessageDescriptor(
+            file = FileDescriptor(
+                localPath = encryptedFilePath,
+            ),
+            keys = keys,
+        )
+    }
 }
 
 private const val MESSAGES_PAGE_SIZE = 60
 private const val MESSAGES_INITIAL_LOAD_SIZE = 60
 private const val MESSAGES_PREFETCH_DISTANCE = 20
+
+private const val IMAGES_CACHE_FOLDER = "images"

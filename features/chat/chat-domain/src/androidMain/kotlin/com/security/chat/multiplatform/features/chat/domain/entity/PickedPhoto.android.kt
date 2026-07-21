@@ -4,7 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import com.security.chat.multiplatform.common.core.files.FileSource
 
-public actual class PickedPhoto(
+public actual class PickedImage(
     uri: Uri,
     contentResolver: ContentResolver,
 ) {
@@ -12,6 +12,6 @@ public actual class PickedPhoto(
     internal val fileSource = FileSource(uri, contentResolver)
 }
 
-public actual fun PickedPhoto.toFileSource(): FileSource {
+public actual fun PickedImage.toFileSource(): FileSource {
     return fileSource
 }

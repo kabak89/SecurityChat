@@ -44,6 +44,16 @@ internal class FileManagerIos(
     }
 
     @OptIn(ExperimentalForeignApi::class)
+    override suspend fun deleteFile(path: String) {
+        withContext(dispatcherProvider.IO) {
+            NSFileManager.defaultManager.removeItemAtPath(
+                path = path,
+                error = null,
+            )
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
     override suspend fun clearDirectory(name: String) {
         withContext(dispatcherProvider.IO) {
             val directoryPath = "$cacheDirectoryPath/$name"

@@ -11,7 +11,7 @@ import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.GroupChatModel
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toUi
 import kotlinx.coroutines.flow.Flow
@@ -71,8 +71,8 @@ internal class GroupChatViewModel(
         groupChatModel.setCurrentMessageText(text = newText)
     }
 
-    fun onPhotoPicked(photo: PickedPhoto) {
-        groupChatModel.cachePhoto.start(photo)
+    fun onPhotoPicked(photo: PickedImage) {
+        groupChatModel.sendImage.start(photo)
     }
 
     fun onSendMessageClicked() {

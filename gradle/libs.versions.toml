@@ -40,6 +40,7 @@ ktor = "3.5.1"
 cryptographyCore = "0.6.0"
 composeHotReload = "1.1.1"
 kotlinxDatetime = "0.8.0"
+kotlinxIo = "0.9.1"
 buildkonfig = "0.22.0"
 timber = "5.0.1"
 willena-sqlite-jdbc = "3.53.2.0"
@@ -113,6 +114,7 @@ cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", ver
 cryptography-provider-optimal = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cryptographyCore" }
 
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIo" }
 
 ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose" }
 

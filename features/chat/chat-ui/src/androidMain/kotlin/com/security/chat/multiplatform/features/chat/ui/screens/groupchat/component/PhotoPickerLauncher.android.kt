@@ -7,11 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 
 @Composable
 internal actual fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedPhoto) -> Unit,
+    onPhotoPicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher {
     val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
     val contentResolver = LocalContext.current.contentResolver
@@ -21,7 +21,7 @@ internal actual fun rememberPhotoPickerLauncher(
         onResult = { uri ->
             if (uri != null) {
                 currentOnPhotoPicked.value(
-                    PickedPhoto(
+                    PickedImage(
                         uri = uri,
                         contentResolver = contentResolver,
                     ),

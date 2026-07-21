@@ -4,11 +4,9 @@ import androidx.paging.PagingData
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.features.chat.domain.entity.CachedPhoto
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
-import com.security.chat.multiplatform.features.chat.domain.entity.PickedPhoto
+import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
-import com.security.chat.multiplatform.features.chat.domain.repo.PhotoCacheRepo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +22,7 @@ import ru.kode.remo.Task0
 import ru.kode.remo.Task1
 
 public interface GroupChatModel : ScopedModel {
-    public val cachePhoto: Task1<PickedPhoto, CachedPhoto>
+    public val sendImage: Task1<PickedImage, Unit>
     public val sendMessage: Task0<Unit>
     public val syncMessages: Task0<Unit>
 
@@ -38,7 +36,6 @@ public interface GroupChatModel : ScopedModel {
 
 internal class GroupChatModelImpl(
     private val chatRepo: ChatRepo,
-    private val photoCacheRepo: PhotoCacheRepo,
     dispatcherProvider: DispatcherProviderInterface,
 ) : GroupChatModel,
     BaseModel(
@@ -50,9 +47,16 @@ internal class GroupChatModelImpl(
     private var newMessagesJob: Job? = null
     private var publishOnlineStatusJob: Job? = null
 
-    override val cachePhoto: Task1<PickedPhoto, CachedPhoto> =
+    override val sendImage: Task1<PickedImage, Unit> =
         task { photo ->
-            photoCacheRepo.copyPhotoToCache(photo)
+            val cachedPhoto = chatRepo.copyImageToCache(photo)
+            val chatId = checkNotNull(stateFlow.value.chatId)
+            val messageDescriptor = chatRepo.createEncryptedFile(
+                file = cachedPhoto,
+                chatId = chatId,
+            )
+            chatRepo.saveImageMessage(chatId = chatId, message = messageDescriptor)
+            chatRepo.uploadMessages(chatId = chatId)
         }
 
     override val sendMessage: Task0<Unit> =
@@ -62,7 +66,7 @@ internal class GroupChatModelImpl(
 
             val chatId = checkNotNull(stateFlow.value.chatId)
 
-            chatRepo.saveMessage(
+            chatRepo.saveTextMessage(
                 message = currentMessage,
                 chatId = chatId,
             )
