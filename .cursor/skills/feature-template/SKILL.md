@@ -96,6 +96,12 @@ flowchart LR
 - Root component: a `SCOPE_ID_<FEATURE>` constant, `loadModules` in `init`, `unloadModules` in
   `doOnDestroy` —
   see [SettingsComponent.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponent.kt).
+- **DB access (SQLDelight-backed `{name}-data-storage`)**: keep a single `DatabaseCreator<T>`
+  instance per database (never create more than one for the same DB — otherwise changes between DB
+  instances do not sync). Obtain the DB via `dbCreator.getDb()` and wrap every read/write query
+  execution in `withContext(dispatcherProvider.IO)`; expose reactive queries through
+  `dbCreator.dbFlow` with `.flowOn(dispatcherProvider.IO)`. Reference:
+  [ChatStorage.kt](features/chat/chat-data-storage/src/commonMain/kotlin/com/security/chat/multiplatform/features/chat/data/storage/ChatStorage.kt).
 
 ## Skeleton checklist
 
