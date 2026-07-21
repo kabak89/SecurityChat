@@ -76,6 +76,12 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
   `dbCreator.getDb()` and wrap every read/write query execution in
   `withContext(dispatcherProvider.IO)`; expose reactive queries through `dbCreator.dbFlow` with
   `.flowOn(dispatcherProvider.IO)`.
+- **String mapping fallbacks:** when mapping a type to/from its string representation (enum or
+  sealed-type discriminators, `*SM` storage mappers, etc.), any unknown or unrecognized value must
+  be logged via `Log.e` before returning `null`. Never swallow it silently — an unmapped value means
+  data is dropped, and the log is the only trace of it. See `JoinedMessageRow.toSM` in
+  [ChatDataStorageMapper.kt](features/chat/chat-data-storage/src/commonMain/kotlin/com/security/chat/multiplatform/features/chat/data/storage/mapper/ChatDataStorageMapper.kt),
+  which logs the unknown `type` before returning `null`.
 
 ## Code style
 

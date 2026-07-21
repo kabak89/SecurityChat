@@ -8,9 +8,9 @@ insert:
 INSERT OR REPLACE INTO MessageRecipients
 VALUES ?;
 
-getUserIdsByMessageId:
-SELECT userId FROM MessageRecipients
-WHERE messageId = :messageId;
+getUserIdsByMessageIds:
+SELECT messageId, userId FROM MessageRecipients
+WHERE messageId IN :messageIds;
 
 removeAll:
 DELETE FROM MessageRecipients;

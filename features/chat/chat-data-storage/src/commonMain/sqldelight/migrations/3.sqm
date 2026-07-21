@@ -1,0 +1,33 @@
+-- v4: introduce a base MessageTable holding fields common to every message type;
+-- TextMessageTable becomes a detail table that keeps only text-specific columns and
+-- references MessageTable by id. Existing text messages are preserved.
+CREATE TABLE MessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  chatId TEXT NOT NULL,
+  authorId TEXT NOT NULL,
+  status TEXT NOT NULL,
+  timestamp INTEGER NOT NULL,
+  type TEXT NOT NULL
+);
+
+-- Move common fields of existing text messages into the base table.
+INSERT INTO MessageTable (id, chatId, authorId, status, timestamp, type)
+SELECT id, chatId, authorId, status, timestamp, 'Text'
+FROM TextMessageTable;
+
+-- Index backing keyset pagination.
+CREATE INDEX MessageTable_chatId_timestamp_id ON MessageTable(chatId, timestamp, id);
+
+-- Reshape TextMessageTable to keep only text-specific columns.
+ALTER TABLE TextMessageTable RENAME TO TextMessageTable_v3;
+
+CREATE TABLE TextMessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  text TEXT NOT NULL
+);
+
+INSERT INTO TextMessageTable (id, text)
+SELECT id, text
+FROM TextMessageTable_v3;
+
+DROP TABLE TextMessageTable_v3;

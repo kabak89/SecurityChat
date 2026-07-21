@@ -1,60 +1,16 @@
 CREATE TABLE TextMessageTable (
   id TEXT PRIMARY KEY NOT NULL,
-  chatId TEXT NOT NULL,
-  text TEXT NOT NULL,
-  authorId TEXT NOT NULL,
-  status TEXT NOT NULL,
-  timestamp INTEGER NOT NULL
+  text TEXT NOT NULL
 );
 
 insert:
 INSERT OR REPLACE INTO TextMessageTable
 VALUES ?;
 
-getAll:
-SELECT *
-FROM TextMessageTable;
-
 getById:
 SELECT *
 FROM TextMessageTable
 WHERE id = ?;
-
-getByTimestamp:
-SELECT *
-FROM TextMessageTable
-WHERE timestamp = ?;
-
-getPaged:
-SELECT *
-FROM TextMessageTable
-WHERE chatId = ?
-ORDER BY timestamp DESC, id DESC
-LIMIT :limit
-OFFSET :offset;
-
-getNewest:
-SELECT *
-FROM TextMessageTable
-WHERE chatId = :chatId
-ORDER BY timestamp DESC, id DESC
-LIMIT :limit;
-
-getOlderThan:
-SELECT *
-FROM TextMessageTable
-WHERE chatId = :chatId
-  AND timestamp < :beforeTimestamp
-ORDER BY timestamp DESC, id DESC
-LIMIT :limit;
-
-getClosestNewerThan:
-SELECT *
-FROM TextMessageTable
-WHERE chatId = :chatId
-  AND timestamp > :afterTimestamp
-ORDER BY timestamp ASC, id ASC
-LIMIT :limit;
 
 removeAll:
 DELETE FROM TextMessageTable;

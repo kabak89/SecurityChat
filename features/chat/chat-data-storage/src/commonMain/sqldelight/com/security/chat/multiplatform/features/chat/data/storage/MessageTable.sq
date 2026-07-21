@@ -1,0 +1,64 @@
+CREATE TABLE MessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  chatId TEXT NOT NULL,
+  authorId TEXT NOT NULL,
+  status TEXT NOT NULL,
+  timestamp INTEGER NOT NULL,
+  type TEXT NOT NULL
+);
+
+-- Covers keyset pagination: WHERE chatId = ? ORDER BY timestamp, id (both ASC and DESC scans).
+CREATE INDEX MessageTable_chatId_timestamp_id ON MessageTable(chatId, timestamp, id);
+
+insert:
+INSERT OR REPLACE INTO MessageTable
+VALUES ?;
+
+-- NOTE: the read queries below are text-only. They INNER JOIN TextMessageTable, so rows of any
+-- other message type are silently skipped. When a new message type (e.g. image) is added, switch
+-- these joins to LEFT JOINs against every detail table (or resolve the detail per `type`),
+-- otherwise pagination may drop those messages and misread the end of a page.
+
+getPaged:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.status, MessageTable.timestamp, MessageTable.type, TextMessageTable.text
+FROM MessageTable
+JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+WHERE MessageTable.chatId = ?
+ORDER BY MessageTable.timestamp DESC, MessageTable.id DESC
+LIMIT :limit
+OFFSET :offset;
+
+getNewest:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.status, MessageTable.timestamp, MessageTable.type, TextMessageTable.text
+FROM MessageTable
+JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+WHERE MessageTable.chatId = :chatId
+ORDER BY MessageTable.timestamp DESC, MessageTable.id DESC
+LIMIT :limit;
+
+getOlderThan:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.status, MessageTable.timestamp, MessageTable.type, TextMessageTable.text
+FROM MessageTable
+JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+WHERE MessageTable.chatId = :chatId
+  AND MessageTable.timestamp < :beforeTimestamp
+ORDER BY MessageTable.timestamp DESC, MessageTable.id DESC
+LIMIT :limit;
+
+getClosestNewerThan:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.status, MessageTable.timestamp, MessageTable.type, TextMessageTable.text
+FROM MessageTable
+JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+WHERE MessageTable.chatId = :chatId
+  AND MessageTable.timestamp > :afterTimestamp
+ORDER BY MessageTable.timestamp ASC, MessageTable.id ASC
+LIMIT :limit;
+
+getByTimestamp:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.status, MessageTable.timestamp, MessageTable.type, TextMessageTable.text
+FROM MessageTable
+JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+WHERE MessageTable.timestamp = ?;
+
+removeAll:
+DELETE FROM MessageTable;

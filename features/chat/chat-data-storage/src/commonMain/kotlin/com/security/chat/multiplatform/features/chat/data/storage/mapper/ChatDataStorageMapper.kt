@@ -1,34 +1,55 @@
 package com.security.chat.multiplatform.features.chat.data.storage.mapper
 
+import com.security.chat.multiplatform.common.log.Log
+import com.security.chat.multiplatform.features.chat.data.storage.MessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.TextMessageTable
+import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 
-internal fun MessageSM.toTable(): TextMessageTable {
-    return TextMessageTable(
+internal fun MessageSM.toMessageTable(): MessageTable {
+    return MessageTable(
         id = id,
         chatId = chatId,
-        text = when (this) {
-            is MessageSM.Text -> text
-        },
         authorId = authorId,
         status = mapStatusToString(status = status),
         timestamp = timestamp,
+        type = mapTypeToString(message = this),
     )
 }
 
-internal fun TextMessageTable.toSM(
-    recipients: List<String>,
-): MessageSM? {
-    return MessageSM.Text(
+internal fun MessageSM.Text.toTextTable(): TextMessageTable {
+    return TextMessageTable(
         id = id,
-        chatId = chatId,
         text = text,
-        authorId = authorId,
-        status = mapStringToStatus(status) ?: return null,
-        timestamp = timestamp,
-        recipients = recipients,
     )
+}
+
+internal fun JoinedMessageRow.toSM(recipients: List<String>): MessageSM? {
+    return when (type) {
+        TYPE_TEXT -> MessageSM.Text(
+            id = id,
+            chatId = chatId,
+            text = text,
+            authorId = authorId,
+            status = mapStringToStatus(status) ?: return null,
+            timestamp = timestamp,
+            recipients = recipients,
+        )
+
+        else -> {
+            Log.e("unknown type: $type")
+            null
+        }
+    }
+}
+
+private const val TYPE_TEXT: String = "Text"
+
+private fun mapTypeToString(message: MessageSM): String {
+    return when (message) {
+        is MessageSM.Text -> TYPE_TEXT
+    }
 }
 
 private fun mapStatusToString(status: Status): String {
