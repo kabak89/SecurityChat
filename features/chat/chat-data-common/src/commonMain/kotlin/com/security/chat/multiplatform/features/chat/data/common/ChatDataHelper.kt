@@ -1,7 +1,6 @@
 package com.security.chat.multiplatform.features.chat.data.common
 
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
-import com.security.chat.multiplatform.features.chat.data.common.entity.EncryptedMessage
 import com.security.chat.multiplatform.features.chat.data.common.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
@@ -32,9 +31,8 @@ public interface ChatDataHelper {
 
     public suspend fun encryptText(
         text: String,
-        publicKeyString: String,
         key: String,
-    ): EncryptedMessage
+    ): String
 
     public suspend fun encryptFile(
         sourcePath: String,
@@ -151,13 +149,11 @@ internal class ChatDataHelperImpl(
 
     override suspend fun encryptText(
         text: String,
-        publicKeyString: String,
         key: String,
-    ): EncryptedMessage {
+    ): String {
         return withContext(dispatcherProvider.Default) {
-            val provider = CryptographyProvider.Default
             val rawAesKey = Base64.decode(key)
-            val aesGcm = provider.get(AES.GCM)
+            val aesGcm = CryptographyProvider.Default.get(AES.GCM)
 
             val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
                 format = AES.Key.Format.RAW,
@@ -165,20 +161,7 @@ internal class ChatDataHelperImpl(
             )
 
             val encryptedTextBytes = aesKey.cipher().encrypt(plaintext = text.encodeToByteArray())
-            val rsa = provider.get(RSA.OAEP)
-            val publicKeyBytes = Base64.decode(publicKeyString)
-
-            val publicKey = rsa.publicKeyDecoder(digest = SHA512).decodeFromByteArray(
-                format = RSA.PublicKey.Format.DER,
-                bytes = publicKeyBytes,
-            )
-
-            val encryptedKeyBytes = publicKey.encryptor().encrypt(rawAesKey)
-
-            EncryptedMessage(
-                encryptedText = Base64.encode(encryptedTextBytes),
-                encryptedKey = Base64.encode(encryptedKeyBytes),
-            )
+            Base64.encode(encryptedTextBytes)
         }
     }
 

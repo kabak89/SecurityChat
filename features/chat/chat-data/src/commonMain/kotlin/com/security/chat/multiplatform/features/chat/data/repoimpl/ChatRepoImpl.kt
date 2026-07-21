@@ -123,6 +123,12 @@ internal class ChatRepoImpl(
                 is MessageSM.Text -> message.text
             }
 
+            val key = chatDataHelper.getOneTimeEncryptionKey()
+            val encryptedText = chatDataHelper.encryptText(
+                text = messageText,
+                key = key,
+            )
+
             val cipherTexts = message.recipients
                 .map { recipient ->
                     val publicKey = usersStorage.getUser(recipient)?.publicKey ?: run {
@@ -141,18 +147,13 @@ internal class ChatRepoImpl(
                         userInfo.publicKey
                     }
 
-                    val key = chatDataHelper.getOneTimeEncryptionKey()
-
-                    val encryptedMessage = chatDataHelper.encryptText(
-                        text = messageText,
-                        publicKeyString = publicKey,
-                        key = key,
-                    )
-
                     RecipientCiphertext(
                         recipientId = recipient,
-                        message = encryptedMessage.encryptedText,
-                        key = encryptedMessage.encryptedKey,
+                        message = encryptedText,
+                        key = chatDataHelper.encryptKey(
+                            key = key,
+                            publicKeyString = publicKey,
+                        ),
                     )
                 }
 
