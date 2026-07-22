@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.files.FileManager
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
@@ -11,15 +12,16 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.core.time.TimeProvider
-import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
+import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
 import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.RecipientCiphertext
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
+import com.security.chat.multiplatform.features.chat.data.entity.TextMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
@@ -49,6 +51,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.serialization.json.Json
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -66,6 +69,7 @@ internal class ChatRepoImpl(
     private val chatNetworkManager: ChatNetworkManager,
     private val chatDataHelper: ChatDataHelper,
     private val fileManager: FileManager,
+    private val json: Json,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -138,64 +142,118 @@ internal class ChatRepoImpl(
             .filter { it.status == Status.Created }
 
         messagesToUpload.forEach { message ->
-            if (message !is MessageSM.Text) {
-                /** TODO: uploading image messages is not implemented yet. */
-                Log.e("skip uploading unsupported message type, id=${message.id}")
-                return@forEach
-            }
-
-            val key = chatDataHelper.getOneTimeEncryptionKey()
-            val encryptedText = chatDataHelper.encryptText(
-                text = message.text,
-                key = key,
-            )
-
-            val cipherTexts = message.recipients
-                .map { recipient ->
-                    val publicKey = usersStorage.getUser(recipient)?.publicKey ?: run {
-                        val userInfo = networkManager.runGet<FindUserResponse>(
-                            relativePath = "/users/info",
-                            request = mapOf("id" to recipient),
-                        )
-
-                        usersStorage.saveUser(
-                            user = UserSM(
-                                id = userInfo.userId,
-                                publicKey = userInfo.publicKey,
-                                name = userInfo.login,
-                            ),
-                        )
-                        userInfo.publicKey
-                    }
-
-                    RecipientCiphertext(
-                        recipientId = recipient,
+            val sendMessageRequest = when (message) {
+                is MessageSM.Text -> {
+                    val key = chatDataHelper.getOneTimeEncryptionKey()
+                    val encryptedText = chatDataHelper.encryptText(
+                        text = message.text,
+                        key = key,
+                    )
+                    val recipients = buildRecipientCipherTexts(
+                        recipients = message.recipients,
+                        key = key,
+                    )
+                    val textMessageRequest = TextMessageRequest(
+                        id = message.id,
+                        chatId = chatId,
+                        timestamp = message.timestamp,
+                        recipients = recipients,
                         message = encryptedText,
-                        key = chatDataHelper.encryptKey(
-                            key = key,
-                            publicKeyString = publicKey,
-                        ),
+                    )
+                    SendMessageRequest(
+                        type = "text",
+                        message = json.encodeToString(textMessageRequest),
                     )
                 }
 
-            val request = SendMessageRequest(
-                id = message.id,
-                chatId = chatId,
-                recipients = cipherTexts,
-                timestamp = message.timestamp,
-            )
+                is MessageSM.Image -> {
+                    uploadImageFile(fileId = message.fileId)
+                    val recipients = buildRecipientCipherTexts(
+                        recipients = message.recipients,
+                        key = message.key,
+                    )
+                    val imageMessageRequest = ImageMessageRequest(
+                        id = message.id,
+                        chatId = chatId,
+                        timestamp = message.timestamp,
+                        recipients = recipients,
+                        fileId = message.fileId,
+                    )
+                    SendMessageRequest(
+                        type = "image",
+                        message = json.encodeToString(imageMessageRequest),
+                    )
+                }
+            }
 
             networkManager.runPost<SendMessageRequest, Unit>(
                 relativePath = "/messages",
-                request = request,
+                request = sendMessageRequest,
+            )
+
+            when (message) {
+                is MessageSM.Text -> chatStorage.updateMessage(message.copy(status = Status.Sent))
+                is MessageSM.Image -> {
+                    chatStorage.updateMessage(message.copy(status = Status.Sent))
+                    /** The encrypted copy is uploaded already and no longer needed locally. */
+                    deleteEncryptedImageFile(fileId = message.fileId)
+                }
+            }
+        }
+    }
+
+    private suspend fun resolveRecipientPublicKey(recipientId: String): String {
+        return usersStorage.getUser(recipientId)?.publicKey ?: run {
+            val userInfo = networkManager.runGet<FindUserResponse>(
+                relativePath = "/users/info",
+                request = mapOf("id" to recipientId),
+            )
+
+            usersStorage.saveUser(
+                user = UserSM(
+                    id = userInfo.userId,
+                    publicKey = userInfo.publicKey,
+                    name = userInfo.login,
+                ),
+            )
+            userInfo.publicKey
+        }
+    }
+
+    private suspend fun buildRecipientCipherTexts(
+        recipients: List<String>,
+        key: String,
+    ): List<RecipientCiphertext> {
+        return recipients.map { recipient ->
+            RecipientCiphertext(
+                recipientId = recipient,
+                key = chatDataHelper.encryptKey(
+                    key = key,
+                    publicKeyString = resolveRecipientPublicKey(recipient),
+                ),
             )
         }
+    }
 
-        val messagesToUpdate = messagesToUpload
-            .filterIsInstance<MessageSM.Text>()
-            .map { message -> message.copy(status = Status.Sent) }
+    private suspend fun uploadImageFile(fileId: String) {
+        val encryptedDirectory = fileManager.getDataDirectoryPath(ENCRYPTED_IMAGES_FOLDER)
+        val filePath = "$encryptedDirectory/$fileId"
+        try {
+            networkManager.runPostFile(
+                relativePath = "/files/$fileId",
+                filePath = filePath,
+            )
+        } catch (error: NetworkError) {
+            /** 409 means the file already exists on the server, which is fine for retries. */
+            if (error.statusCode != 409) {
+                throw error
+            }
+        }
+    }
 
-        messagesToUpdate.forEach { message -> chatStorage.updateMessage(message) }
+    private suspend fun deleteEncryptedImageFile(fileId: String) {
+        val encryptedDirectory = fileManager.getDataDirectoryPath(ENCRYPTED_IMAGES_FOLDER)
+        fileManager.deleteFile(path = "$encryptedDirectory/$fileId")
     }
 
     override suspend fun fetchMessages(
@@ -402,7 +460,7 @@ internal class ChatRepoImpl(
             fileId = fileId,
             localPath = localPath,
             key = key,
-            recipients = chat.members - currentUserId,
+            recipients = chat.members + chat.authorId - currentUserId,
         )
     }
 }

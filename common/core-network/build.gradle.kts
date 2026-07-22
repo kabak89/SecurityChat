@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.client.auth)
+            implementation(libs.kotlinx.io.core)
 
             implementation(projects.common.coreComponent)
             implementation(projects.common.error)

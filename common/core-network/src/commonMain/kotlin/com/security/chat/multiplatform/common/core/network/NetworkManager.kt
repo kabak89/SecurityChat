@@ -7,7 +7,13 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
+import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.writeSource
+import kotlinx.io.buffered
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 
 public class NetworkManager(
     @PublishedApi
@@ -39,6 +45,29 @@ public class NetworkManager(
             contentType(ContentType.Application.Json)
         }
             .body()
+    }
+
+    public suspend fun runPostFile(
+        relativePath: String,
+        filePath: String,
+    ) {
+        val path = Path(filePath)
+        val fileSize = SystemFileSystem.metadataOrNull(path)?.size
+
+        httpClient.post(urlString = baseUrl + relativePath) {
+            setBody(
+                object : OutgoingContent.WriteChannelContent() {
+                    override val contentType: ContentType = ContentType.Application.OctetStream
+                    override val contentLength: Long? = fileSize
+
+                    override suspend fun writeTo(channel: ByteWriteChannel) {
+                        SystemFileSystem.source(path).buffered().use { source ->
+                            channel.writeSource(source)
+                        }
+                    }
+                },
+            )
+        }
     }
 
     public suspend inline fun runDelete(

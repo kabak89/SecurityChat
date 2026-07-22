@@ -16,6 +16,7 @@ kotlin {
             implementation(libs.paging.common)
 
             implementation(projects.common.coreNetwork)
+            implementation(projects.common.error)
             implementation(projects.common.coreTime)
             implementation(projects.common.coreThreading)
             implementation(projects.common.coreFiles)
