@@ -17,13 +17,9 @@ internal class FileManagerJvm(
         directoryName: String,
     ): String {
         return withContext(dispatcherProvider.IO) {
-            val extension = fileSource.file.extension
-                .takeIf(String::isNotBlank)
-                ?.let { ".$it" }
-                .orEmpty()
             val destinationFile = File(
                 getOrCreateDirectory(directoryName),
-                "${UUID.randomUUID()}$extension",
+                UUID.randomUUID().toString(),
             )
 
             fileSource.file.copyTo(destinationFile)
