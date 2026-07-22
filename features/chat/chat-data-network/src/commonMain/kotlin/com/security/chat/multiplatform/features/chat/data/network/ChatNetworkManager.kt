@@ -11,7 +11,7 @@ import com.security.chat.multiplatform.features.chat.data.network.entity.network
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessagesReceivedRequest
 import com.security.chat.multiplatform.features.chat.data.network.mapper.toNM
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.serialization.json.Json
 
 public interface ChatNetworkManager {
@@ -44,7 +44,7 @@ internal class ChatNetworkManagerImpl(
             request = mapOf("chat-id" to chatId),
         )
             .messages
-            .map { it.toNM() }
+            .mapNotNull { it.toNM(json = json) }
     }
 
     override suspend fun getNewMessagesFlow(
@@ -61,12 +61,12 @@ internal class ChatNetworkManagerImpl(
                 subscribeMessage = subscribeMessage,
                 type = "chat_message",
             )
-            .map { it.toNM() }
+            .mapNotNull { it.toNM(json = json) }
     }
 
     override suspend fun processNewMessages(serializedMessages: String): List<ChatMessageNM> {
         return json.decodeFromString<GetMessagesResponse>(serializedMessages).messages
-            .map { it.toNM() }
+            .mapNotNull { it.toNM(json = json) }
     }
 
     override suspend fun confirmReceivingMessages(

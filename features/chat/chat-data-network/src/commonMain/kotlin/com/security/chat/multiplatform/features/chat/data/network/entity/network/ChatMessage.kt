@@ -5,9 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class ChatMessage(
-    @SerialName("id") val id: String,
-    @SerialName("text") val text: String,
-    @SerialName("key") val key: String,
-    @SerialName("authorId") val authorId: String,
-    @SerialName("timestamp") val timestamp: Long,
+    @SerialName("type") val type: String,
+    @SerialName("message") val message: String,
 )

@@ -28,7 +28,7 @@ import sh.calvin.autolinktext.rememberAutoLinkText
 @Composable
 internal fun IncomingMessageComponent(
     modifier: Modifier = Modifier,
-    message: MessageUM.Incoming,
+    message: MessageUM.Incoming.Text,
     showSenderName: Boolean,
 ) {
     Column(
@@ -101,7 +101,7 @@ internal fun IncomingMessageComponentPreview() {
     AppTheme {
         IncomingMessageComponent(
             modifier = Modifier.background(AppTheme.colors.backgroundPrimary),
-            message = MessageUM.Incoming(
+            message = MessageUM.Incoming.Text(
                 id = "1",
                 text = "some text",
                 datetimeText = "12:10",
@@ -118,7 +118,7 @@ internal fun IncomingMessageComponentLongTextPreview() {
     AppTheme {
         IncomingMessageComponent(
             modifier = Modifier.background(AppTheme.colors.backgroundPrimary),
-            message = MessageUM.Incoming(
+            message = MessageUM.Incoming.Text(
                 id = "1",
                 text = "some text text text text text text text text text text text text",
                 datetimeText = "12:10",
@@ -135,7 +135,7 @@ internal fun IncomingMessageComponentNoSenderName() {
     AppTheme {
         IncomingMessageComponent(
             modifier = Modifier.background(AppTheme.colors.backgroundPrimary),
-            message = MessageUM.Incoming(
+            message = MessageUM.Incoming.Text(
                 id = "1",
                 text = "some text text text text text text text text text text text text",
                 datetimeText = "12:10",

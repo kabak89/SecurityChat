@@ -11,6 +11,7 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.core.time.TimeProvider
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
@@ -22,6 +23,7 @@ import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequ
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
+import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
@@ -103,11 +105,28 @@ internal class ChatRepoImpl(
         chatStorage.saveMessage(messageSm)
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveImageMessage(
         chatId: String,
         message: ImageMessageDescriptor,
     ) {
-        //TODO save message to table
+        val userId = checkNotNull(userStorage.getUserId())
+        val timestamp = timeProvider.now().toEpochMilliseconds()
+        val messageId = Uuid.random().toString()
+
+        val messageSm = MessageSM.Image(
+            id = messageId,
+            chatId = chatId,
+            recipients = message.recipients,
+            authorId = userId,
+            status = Status.Created,
+            timestamp = timestamp,
+            fileId = message.fileId,
+            key = message.key,
+            localPath = message.localPath,
+        )
+
+        chatStorage.saveMessage(messageSm)
     }
 
     override suspend fun uploadMessages(chatId: String) {
@@ -119,13 +138,15 @@ internal class ChatRepoImpl(
             .filter { it.status == Status.Created }
 
         messagesToUpload.forEach { message ->
-            val messageText = when (message) {
-                is MessageSM.Text -> message.text
+            if (message !is MessageSM.Text) {
+                /** TODO: uploading image messages is not implemented yet. */
+                Log.e("skip uploading unsupported message type, id=${message.id}")
+                return@forEach
             }
 
             val key = chatDataHelper.getOneTimeEncryptionKey()
             val encryptedText = chatDataHelper.encryptText(
-                text = messageText,
+                text = message.text,
                 key = key,
             )
 
@@ -170,11 +191,10 @@ internal class ChatRepoImpl(
             )
         }
 
-        val messagesToUpdate = messagesToUpload.map { message ->
-            when (message) {
-                is MessageSM.Text -> message.copy(status = Status.Sent)
-            }
-        }
+        val messagesToUpdate = messagesToUpload
+            .filterIsInstance<MessageSM.Text>()
+            .map { message -> message.copy(status = Status.Sent) }
+
         messagesToUpdate.forEach { message -> chatStorage.updateMessage(message) }
     }
 
@@ -244,53 +264,43 @@ internal class ChatRepoImpl(
             authorId = authorId,
         )
             .collect { chatMessage ->
-                val author = usersStorage.getUser(chatMessage.authorId)?.let {
-                    MessageAuthor(
-                        id = it.id,
-                        name = it.name,
-                    )
-                } ?: run {
-                    val userInfo = networkManager.runGet<FindUserResponse>(
-                        relativePath = "/users/info",
-                        request = mapOf("id" to chatMessage.authorId),
-                    )
-
-                    usersStorage.saveUser(
-                        user = UserSM(
-                            id = userInfo.userId,
-                            publicKey = userInfo.publicKey,
-                            name = userInfo.login,
-                        ),
-                    )
-                    MessageAuthor(
-                        id = userInfo.userId,
-                        name = userInfo.login,
-                    )
-                }
-
-                val newMessage = chatMessage.toDomain(
-                    decryptMessage = { encryptedText ->
-                        chatDataHelper.decryptText(
-                            text = encryptedText,
+                val storageModel: MessageSM = when (chatMessage) {
+                    is ChatMessageNM.Text -> MessageSM.Text(
+                        id = chatMessage.id,
+                        chatId = chatId,
+                        text = chatDataHelper.decryptText(
+                            text = chatMessage.text,
                             privateKeyString = privateKey,
                             key = chatMessage.key,
-                        )
-                    },
-                    appOwnerId = authorId,
-                    author = author,
-                )
+                        ),
+                        authorId = chatMessage.authorId,
+                        status = Status.Received,
+                        timestamp = chatMessage.timestamp,
+                        recipients = listOf(authorId),
+                    )
 
-                val storageModel = newMessage.toSM(
-                    chatId = chatId,
-                    recipients = listOf(authorId),
-                )
+                    is ChatMessageNM.Image -> MessageSM.Image(
+                        id = chatMessage.id,
+                        chatId = chatId,
+                        fileId = chatMessage.fileId,
+                        key = chatDataHelper.decryptKey(
+                            key = chatMessage.key,
+                            privateKeyString = privateKey,
+                        ),
+                        localPath = null,
+                        authorId = chatMessage.authorId,
+                        status = Status.Received,
+                        timestamp = chatMessage.timestamp,
+                        recipients = listOf(authorId),
+                    )
+                }
                 chatStorage.saveMessage(storageModel)
 
                 networkManager.runPost<MessagesReceivedRequest, Unit>(
                     relativePath = "/messages/received",
                     request = MessagesReceivedRequest(
                         chatId = chatId,
-                        messageIds = listOf(newMessage.id),
+                        messageIds = listOf(chatMessage.id),
                     ),
                 )
             }
@@ -357,17 +367,20 @@ internal class ChatRepoImpl(
             fileSource = image.toFileSource(),
             directoryName = IMAGES_CACHE_FOLDER,
         )
-        return FileDescriptor(localPath = localPath)
+        return FileDescriptor(
+            localPath = localPath,
+            filename = localPath.substringAfterLast('/'),
+        )
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun createEncryptedFile(
         file: FileDescriptor,
         chatId: String,
     ): ImageMessageDescriptor {
         val key = chatDataHelper.getOneTimeEncryptionKey()
-        val encryptedDirectory = fileManager.getDirectoryPath(IMAGES_CACHE_FOLDER)
-        val encryptedFilePath = "$encryptedDirectory/${Uuid.random()}"
+        val fileId = file.filename
+        val encryptedDirectory = fileManager.getDataDirectoryPath(ENCRYPTED_IMAGES_FOLDER)
+        val encryptedFilePath = "$encryptedDirectory/$fileId"
 
         chatDataHelper.encryptFile(
             sourcePath = file.localPath,
@@ -375,24 +388,21 @@ internal class ChatRepoImpl(
             key = key,
         )
 
-        fileManager.deleteFile(file.localPath)
+        val imagesDirectory = fileManager.getDataDirectoryPath(IMAGES_DATA_FOLDER)
+        val localPath = "$imagesDirectory/$fileId"
+        fileManager.moveFile(
+            sourcePath = file.localPath,
+            destinationPath = localPath,
+        )
 
         val currentUserId = checkNotNull(userStorage.getUserId())
         val chat = requireNotNull(chatsStorage.getGroupChat(chatId))
-        val keys = (chat.members - currentUserId)
-            .associate { memberId ->
-                val user = requireNotNull(usersStorage.getUser(memberId))
-                user.id to chatDataHelper.encryptKey(
-                    key = key,
-                    publicKeyString = user.publicKey,
-                )
-            }
 
         return ImageMessageDescriptor(
-            file = FileDescriptor(
-                localPath = encryptedFilePath,
-            ),
-            keys = keys,
+            fileId = fileId,
+            localPath = localPath,
+            key = key,
+            recipients = chat.members - currentUserId,
         )
     }
 }
@@ -402,3 +412,5 @@ private const val MESSAGES_INITIAL_LOAD_SIZE = 60
 private const val MESSAGES_PREFETCH_DISTANCE = 20
 
 private const val IMAGES_CACHE_FOLDER = "images"
+private const val IMAGES_DATA_FOLDER = "images"
+private const val ENCRYPTED_IMAGES_FOLDER = "encrypted_images"

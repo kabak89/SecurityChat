@@ -7,5 +7,8 @@ internal data class JoinedMessageRow(
     val status: String,
     val timestamp: Long,
     val type: String,
-    val text: String,
+    val text: String?,
+    val fileId: String?,
+    val key: String?,
+    val localPath: String?,
 )

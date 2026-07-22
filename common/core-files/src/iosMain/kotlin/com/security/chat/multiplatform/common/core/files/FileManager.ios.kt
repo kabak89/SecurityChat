@@ -4,6 +4,7 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSCachesDirectory
+import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSItemProvider
 import platform.Foundation.NSURL
@@ -44,6 +45,30 @@ internal class FileManagerIos(
     }
 
     @OptIn(ExperimentalForeignApi::class)
+    override suspend fun getDataDirectoryPath(name: String): String {
+        return withContext(dispatcherProvider.IO) {
+            val directoryPath = "$dataDirectoryPath/$name"
+            createDirectory(directoryPath)
+            directoryPath
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    override suspend fun moveFile(sourcePath: String, destinationPath: String) {
+        withContext(dispatcherProvider.IO) {
+            NSFileManager.defaultManager.removeItemAtPath(
+                path = destinationPath,
+                error = null,
+            )
+            NSFileManager.defaultManager.moveItemAtPath(
+                srcPath = sourcePath,
+                toPath = destinationPath,
+                error = null,
+            )
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
     override suspend fun deleteFile(path: String) {
         withContext(dispatcherProvider.IO) {
             NSFileManager.defaultManager.removeItemAtPath(
@@ -78,6 +103,21 @@ internal class FileManagerIos(
                 ),
             )
             return requireNotNull(cacheDirectory.path)
+        }
+
+    @OptIn(ExperimentalForeignApi::class)
+    private val dataDirectoryPath: String
+        get() {
+            val dataDirectory = requireNotNull(
+                NSFileManager.defaultManager.URLForDirectory(
+                    directory = NSDocumentDirectory,
+                    inDomain = NSUserDomainMask,
+                    appropriateForURL = null,
+                    create = true,
+                    error = null,
+                ),
+            )
+            return requireNotNull(dataDirectory.path)
         }
 
     @OptIn(ExperimentalForeignApi::class)

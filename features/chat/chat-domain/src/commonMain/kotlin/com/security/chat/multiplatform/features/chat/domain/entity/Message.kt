@@ -1,9 +1,25 @@
 package com.security.chat.multiplatform.features.chat.domain.entity
 
-public data class Message(
-    val id: String,
-    val text: String,
-    val author: MessageAuthor,
-    val timestamp: Long,
-    val direction: MessageDirection,
-)
+public sealed interface Message {
+
+    public val id: String
+    public val author: MessageAuthor
+    public val timestamp: Long
+    public val direction: MessageDirection
+
+    public data class Text(
+        override val id: String,
+        override val author: MessageAuthor,
+        override val timestamp: Long,
+        override val direction: MessageDirection,
+        val text: String,
+    ) : Message
+
+    public data class Image(
+        override val id: String,
+        override val author: MessageAuthor,
+        override val timestamp: Long,
+        override val direction: MessageDirection,
+        val filePath: String?,
+    ) : Message
+}

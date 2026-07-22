@@ -42,11 +42,16 @@ internal fun Message.toUi(): MessageUM {
         else -> timestampDatetime.format(fullDatetimeFormat)
     }
 
+    val messageText = when (this) {
+        is Message.Text -> text
+        is Message.Image -> "image"
+    }
+
     return when (this.direction) {
         MessageDirection.Incoming -> {
             MessageUM.Incoming(
                 id = id,
-                text = text,
+                text = messageText,
                 datetimeText = datetimeText,
             )
         }
@@ -54,7 +59,7 @@ internal fun Message.toUi(): MessageUM {
         MessageDirection.Outgoing -> {
             MessageUM.Outgoing(
                 id = id,
-                text = text,
+                text = messageText,
                 datetimeText = datetimeText,
             )
         }

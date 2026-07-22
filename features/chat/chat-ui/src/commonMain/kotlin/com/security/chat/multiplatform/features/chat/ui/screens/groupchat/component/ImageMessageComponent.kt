@@ -6,37 +6,36 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
-import sh.calvin.autolinktext.rememberAutoLinkText
 
 @Composable
-internal fun OutgoingMessageComponent(
+internal fun ImageMessageComponent(
     modifier: Modifier = Modifier,
-    message: MessageUM.Outgoing.Text,
+    message: MessageUM,
+    isOutgoing: Boolean,
 ) {
     FlowRow(
         modifier = modifier
             .padding(all = 16.dp),
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = if (isOutgoing) Arrangement.End else Arrangement.Start,
     ) {
-        SelectionContainer {
-            Text(
-                modifier = Modifier
-                    .padding(start = 40.dp),
-                text = AnnotatedString.rememberAutoLinkText(text = message.text),
-                color = AppTheme.colors.textPrimary,
-                style = AppTheme.typography.body,
-            )
-        }
+        Text(
+            modifier = Modifier
+                .padding(
+                    start = if (isOutgoing) 40.dp else 0.dp,
+                    end = if (isOutgoing) 0.dp else 40.dp,
+                ),
+            text = message.text,
+            color = AppTheme.colors.textPrimary,
+            style = AppTheme.typography.body,
+        )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             modifier = Modifier
@@ -50,30 +49,32 @@ internal fun OutgoingMessageComponent(
 
 @Preview
 @Composable
-internal fun OutgoingMessageComponentPreview() {
+internal fun IncomingImageMessageComponentPreview() {
     AppTheme {
-        OutgoingMessageComponent(
+        ImageMessageComponent(
             modifier = Modifier.background(AppTheme.colors.backgroundPrimary),
-            message = MessageUM.Outgoing.Text(
+            message = MessageUM.Incoming.Image(
                 id = "1",
-                text = "some text",
+                text = "image",
                 datetimeText = "12:10",
             ),
+            isOutgoing = false,
         )
     }
 }
 
 @Preview
 @Composable
-internal fun OutgoingMessageComponentLongTextPreview() {
+internal fun OutgoingImageMessageComponentPreview() {
     AppTheme {
-        OutgoingMessageComponent(
+        ImageMessageComponent(
             modifier = Modifier.background(AppTheme.colors.backgroundPrimary),
-            message = MessageUM.Outgoing.Text(
+            message = MessageUM.Outgoing.Image(
                 id = "1",
-                text = "some text text text text text text text text text text text text",
+                text = "image",
                 datetimeText = "12:10",
             ),
+            isOutgoing = true,
         )
     }
 }

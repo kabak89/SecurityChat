@@ -14,6 +14,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(projects.common.coreNetwork)
+            implementation(projects.common.log)
         }
     }
 }

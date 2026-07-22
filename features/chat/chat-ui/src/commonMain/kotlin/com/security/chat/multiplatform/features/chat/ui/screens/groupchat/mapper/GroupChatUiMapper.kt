@@ -40,20 +40,32 @@ internal fun Message.toUi(): MessageUM {
         else -> timestampDatetime.format(fullDatetimeFormat)
     }
 
-    return when (this.direction) {
-        MessageDirection.Incoming -> {
-            MessageUM.Incoming(
+    return when (this) {
+        is Message.Text -> when (direction) {
+            MessageDirection.Incoming -> MessageUM.Incoming.Text(
                 id = id,
                 text = text,
                 datetimeText = datetimeText,
-                senderName = this.author.name,
+                senderName = author.name,
+            )
+
+            MessageDirection.Outgoing -> MessageUM.Outgoing.Text(
+                id = id,
+                text = text,
+                datetimeText = datetimeText,
             )
         }
 
-        MessageDirection.Outgoing -> {
-            MessageUM.Outgoing(
+        is Message.Image -> when (direction) {
+            MessageDirection.Incoming -> MessageUM.Incoming.Image(
                 id = id,
-                text = text,
+                text = "image",
+                datetimeText = datetimeText,
+            )
+
+            MessageDirection.Outgoing -> MessageUM.Outgoing.Image(
+                id = id,
+                text = "image",
                 datetimeText = datetimeText,
             )
         }

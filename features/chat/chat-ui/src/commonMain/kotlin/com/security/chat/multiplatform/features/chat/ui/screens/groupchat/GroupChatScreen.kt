@@ -54,6 +54,7 @@ import com.security.chat.multiplatform.features.chat.component.api.GroupChatComp
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.ImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
@@ -245,21 +246,23 @@ private fun MessagesComponent(
                 key = messages.itemKey { it.id },
                 contentType = messages.itemContentType { message ->
                     when (message) {
-                        is MessageUM.Incoming -> "incoming"
-                        is MessageUM.Outgoing -> "outgoing"
+                        is MessageUM.Incoming.Image -> "incoming_image"
+                        is MessageUM.Incoming.Text -> "incoming_text"
+                        is MessageUM.Outgoing.Image -> "outgoing_image"
+                        is MessageUM.Outgoing.Text -> "outgoing_text"
                     }
                 },
             ) { index ->
                 val message = messages[index] ?: return@items
                 when (message) {
-                    is MessageUM.Incoming -> {
+                    is MessageUM.Incoming.Text -> {
                         val previous = if (index + 1 < messages.itemCount) {
                             messages.peek(index + 1)
                         } else {
                             null
                         }
                         val showSenderName =
-                            (previous as? MessageUM.Incoming)?.senderName != message.senderName
+                            (previous as? MessageUM.Incoming.Text)?.senderName != message.senderName
                         IncomingMessageComponent(
                             modifier = Modifier.fillMaxWidth(),
                             message = message,
@@ -267,9 +270,21 @@ private fun MessagesComponent(
                         )
                     }
 
-                    is MessageUM.Outgoing -> OutgoingMessageComponent(
+                    is MessageUM.Incoming.Image -> ImageMessageComponent(
                         modifier = Modifier.fillMaxWidth(),
                         message = message,
+                        isOutgoing = false,
+                    )
+
+                    is MessageUM.Outgoing.Text -> OutgoingMessageComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        message = message,
+                    )
+
+                    is MessageUM.Outgoing.Image -> ImageMessageComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        message = message,
+                        isOutgoing = true,
                     )
                 }
             }
@@ -357,16 +372,26 @@ internal fun GroupChatScreenPreview() {
     val previewMessages = flowOf(
         PagingData.from(
             data = listOf(
-                MessageUM.Outgoing(
+                MessageUM.Outgoing.Text(
                     id = "1",
                     text = "some text",
                     datetimeText = "12:10",
                 ),
-                MessageUM.Incoming(
+                MessageUM.Incoming.Text(
                     id = "2",
                     text = "some text 2",
                     datetimeText = "12:10",
                     senderName = "John",
+                ),
+                MessageUM.Outgoing.Image(
+                    id = "3",
+                    text = "image",
+                    datetimeText = "12:11",
+                ),
+                MessageUM.Incoming.Image(
+                    id = "4",
+                    text = "image",
+                    datetimeText = "12:11",
                 ),
             ),
         ),

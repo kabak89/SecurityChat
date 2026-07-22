@@ -1,0 +1,11 @@
+-- v5: add a detail table for image messages. It references MessageTable by id, mirroring
+-- TextMessageTable. Common fields stay in MessageTable (type = 'Image'). `fileId` is the
+-- server-side file identifier; the file is downloaded and cached under that name locally.
+-- `key` is the key used to decrypt that file after download. `localPath` is the cached local
+-- file path once available (null until downloaded / for messages without a local copy).
+CREATE TABLE ImageMessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  fileId TEXT NOT NULL,
+  key TEXT NOT NULL,
+  localPath TEXT
+);

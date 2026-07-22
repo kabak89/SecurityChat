@@ -29,6 +29,11 @@ public interface ChatDataHelper {
         key: String,
     ): String
 
+    public suspend fun decryptKey(
+        key: String,
+        privateKeyString: String,
+    ): String
+
     public suspend fun encryptText(
         text: String,
         key: String,
@@ -77,6 +82,9 @@ internal class ChatDataHelperImpl(
                         key = key,
                     )
                 },
+                decryptKey = { key ->
+                    decryptKey(key = key, privateKeyString = privateKey)
+                },
                 recipients = listOf(checkNotNull(userStorage.getUserId())),
             )
         }
@@ -99,6 +107,9 @@ internal class ChatDataHelperImpl(
                         key = key,
                     )
                 },
+                decryptKey = { key ->
+                    decryptKey(key = key, privateKeyString = privateKey)
+                },
                 chatId = chatId,
                 recipients = listOf(checkNotNull(userStorage.getUserId())),
             )
@@ -114,6 +125,8 @@ internal class ChatDataHelperImpl(
         return messagesToStore.map { message ->
             when (message) {
                 is MessageSM.Text -> message.text
+                //TODO
+                is MessageSM.Image -> "image"
             }
         }
     }
@@ -124,9 +137,27 @@ internal class ChatDataHelperImpl(
         key: String,
     ): String {
         return withContext(dispatcherProvider.Default) {
-            val provider = CryptographyProvider.Default
+            val rawAesKey = Base64.decode(
+                decryptKey(key = key, privateKeyString = privateKeyString),
+            )
 
-            val rsa = provider.get(RSA.OAEP)
+            val aesGcm = CryptographyProvider.Default.get(AES.GCM)
+            val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
+                format = AES.Key.Format.RAW,
+                bytes = rawAesKey,
+            )
+
+            val ciphertextBytes = Base64.decode(text)
+            aesKey.cipher().decrypt(ciphertext = ciphertextBytes).decodeToString()
+        }
+    }
+
+    override suspend fun decryptKey(
+        key: String,
+        privateKeyString: String,
+    ): String {
+        return withContext(dispatcherProvider.Default) {
+            val rsa = CryptographyProvider.Default.get(RSA.OAEP)
             val privateKeyBytes = Base64.decode(privateKeyString)
             val privateKey = rsa.privateKeyDecoder(digest = SHA512).decodeFromByteArray(
                 format = RSA.PrivateKey.Format.DER,
@@ -136,14 +167,7 @@ internal class ChatDataHelperImpl(
             val encryptedAesKeyBytes = Base64.decode(key)
             val rawAesKey = privateKey.decryptor().decrypt(encryptedAesKeyBytes)
 
-            val aesGcm = provider.get(AES.GCM)
-            val aesKey = aesGcm.keyDecoder().decodeFromByteArray(
-                format = AES.Key.Format.RAW,
-                bytes = rawAesKey,
-            )
-
-            val ciphertextBytes = Base64.decode(text)
-            aesKey.cipher().decrypt(ciphertext = ciphertextBytes).decodeToString()
+            Base64.encode(rawAesKey)
         }
     }
 

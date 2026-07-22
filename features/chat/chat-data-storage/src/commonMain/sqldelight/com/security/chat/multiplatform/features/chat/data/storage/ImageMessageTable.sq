@@ -1,0 +1,18 @@
+CREATE TABLE ImageMessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  fileId TEXT NOT NULL,
+  key TEXT NOT NULL,
+  localPath TEXT
+);
+
+insert:
+INSERT OR REPLACE INTO ImageMessageTable
+VALUES ?;
+
+getById:
+SELECT *
+FROM ImageMessageTable
+WHERE id = ?;
+
+removeAll:
+DELETE FROM ImageMessageTable;

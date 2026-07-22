@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFacto
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.mapper.toImageTable
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toMessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toTextTable
@@ -56,7 +57,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 4,
+                        version = 5,
                     ),
                 )
             },
@@ -193,6 +194,7 @@ internal class ChatStorageImpl(
             db.transaction {
                 db.messageTableQueries.removeAll()
                 db.textMessageTableQueries.removeAll()
+                db.imageMessageTableQueries.removeAll()
                 db.messageRecipientsQueries.removeAll()
             }
         }
@@ -214,6 +216,7 @@ internal class ChatStorageImpl(
     private suspend fun ChatDb.insertMessageDetail(message: MessageSM) {
         when (message) {
             is MessageSM.Text -> textMessageTableQueries.insert(message.toTextTable())
+            is MessageSM.Image -> imageMessageTableQueries.insert(message.toImageTable())
         }
     }
 

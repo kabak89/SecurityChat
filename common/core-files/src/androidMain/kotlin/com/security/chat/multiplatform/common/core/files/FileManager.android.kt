@@ -13,6 +13,7 @@ internal class FileManagerAndroid(
 ) : FileManager {
 
     private val cacheDirectory = context.cacheDir
+    private val dataDirectory = context.filesDir
 
     override suspend fun copyToCache(
         fileSource: FileSource,
@@ -38,6 +39,26 @@ internal class FileManagerAndroid(
     override suspend fun getDirectoryPath(name: String): String {
         return withContext(dispatcherProvider.IO) {
             getOrCreateDirectory(name).absolutePath
+        }
+    }
+
+    override suspend fun getDataDirectoryPath(name: String): String {
+        return withContext(dispatcherProvider.IO) {
+            val directory = dataDirectory.resolve(name)
+            check(directory.isDirectory || directory.mkdirs()) {
+                "Cannot create data directory: ${directory.absolutePath}"
+            }
+            directory.absolutePath
+        }
+    }
+
+    override suspend fun moveFile(sourcePath: String, destinationPath: String) {
+        withContext(dispatcherProvider.IO) {
+            val source = File(sourcePath)
+            val destination = File(destinationPath)
+            destination.parentFile?.mkdirs()
+            source.copyTo(destination, overwrite = true)
+            source.delete()
         }
     }
 

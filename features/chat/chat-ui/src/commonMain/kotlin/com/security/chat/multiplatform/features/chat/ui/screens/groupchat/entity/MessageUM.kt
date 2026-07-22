@@ -9,18 +9,40 @@ internal sealed interface MessageUM : ItemWithId {
     val text: String
     val datetimeText: String
 
-    @Immutable
-    data class Outgoing(
-        override val id: String,
-        override val text: String,
-        override val datetimeText: String,
-    ) : MessageUM
+    sealed interface Outgoing : MessageUM {
+        override val id: String
 
-    @Immutable
-    data class Incoming(
-        override val id: String,
-        override val text: String,
-        override val datetimeText: String,
-        val senderName: String,
-    ) : MessageUM
+        @Immutable
+        data class Text(
+            override val id: String,
+            override val text: String,
+            override val datetimeText: String,
+        ) : Outgoing
+
+        @Immutable
+        data class Image(
+            override val id: String,
+            override val text: String,
+            override val datetimeText: String,
+        ) : Outgoing
+    }
+
+    sealed interface Incoming : MessageUM {
+        override val id: String
+
+        @Immutable
+        data class Text(
+            override val id: String,
+            override val text: String,
+            override val datetimeText: String,
+            val senderName: String,
+        ) : Incoming
+
+        @Immutable
+        data class Image(
+            override val id: String,
+            override val text: String,
+            override val datetimeText: String,
+        ) : Incoming
+    }
 }

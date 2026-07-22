@@ -18,6 +18,18 @@ public sealed interface MessageSM {
         override val timestamp: Long,
         val text: String,
     ) : MessageSM
+
+    public data class Image(
+        override val id: String,
+        override val chatId: String,
+        override val recipients: List<String>,
+        override val authorId: String,
+        override val status: Status,
+        override val timestamp: Long,
+        val fileId: String,
+        val key: String,
+        val localPath: String?,
+    ) : MessageSM
 }
 
 public enum class Status {
