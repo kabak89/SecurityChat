@@ -41,6 +41,7 @@
     <string name="push_channel_name_message_sync">Обработка сообщений</string>
     <string name="push_channel_description_message_sync">Канал для фоновой обработки входящих сообщений</string>
     <string name="push_message_sync_title">Обработка новых сообщений</string>
+    <string name="push_stub_image">Фотография</string>
 
     <string name="sign_in_user_not_found_error_title">Пользователь не найден</string>
     <string name="sign_in_user_not_found_error_description">Пользователь с таким именем не найден</string>

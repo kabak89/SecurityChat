@@ -202,60 +202,6 @@ internal class ChatRepoImpl(
         }
     }
 
-    private suspend fun resolveRecipientPublicKey(recipientId: String): String {
-        return usersStorage.getUser(recipientId)?.publicKey ?: run {
-            val userInfo = networkManager.runGet<FindUserResponse>(
-                relativePath = "/users/info",
-                request = mapOf("id" to recipientId),
-            )
-
-            usersStorage.saveUser(
-                user = UserSM(
-                    id = userInfo.userId,
-                    publicKey = userInfo.publicKey,
-                    name = userInfo.login,
-                ),
-            )
-            userInfo.publicKey
-        }
-    }
-
-    private suspend fun buildRecipientCipherTexts(
-        recipients: List<String>,
-        key: String,
-    ): List<RecipientCiphertext> {
-        return recipients.map { recipient ->
-            RecipientCiphertext(
-                recipientId = recipient,
-                key = chatDataHelper.encryptKey(
-                    key = key,
-                    publicKeyString = resolveRecipientPublicKey(recipient),
-                ),
-            )
-        }
-    }
-
-    private suspend fun uploadImageFile(fileId: String) {
-        val encryptedDirectory = fileManager.getDataDirectoryPath(ENCRYPTED_IMAGES_FOLDER)
-        val filePath = "$encryptedDirectory/$fileId"
-        try {
-            networkManager.runPostFile(
-                relativePath = "/files/$fileId",
-                filePath = filePath,
-            )
-        } catch (error: NetworkError) {
-            /** 409 means the file already exists on the server, which is fine for retries. */
-            if (error.statusCode != 409) {
-                throw error
-            }
-        }
-    }
-
-    private suspend fun deleteEncryptedImageFile(fileId: String) {
-        val encryptedDirectory = fileManager.getDataDirectoryPath(ENCRYPTED_IMAGES_FOLDER)
-        fileManager.deleteFile(path = "$encryptedDirectory/$fileId")
-    }
-
     override suspend fun fetchMessages(
         chatId: String,
     ) {
@@ -337,20 +283,24 @@ internal class ChatRepoImpl(
                         recipients = listOf(authorId),
                     )
 
-                    is ChatMessageNM.Image -> MessageSM.Image(
-                        id = chatMessage.id,
-                        chatId = chatId,
-                        fileId = chatMessage.fileId,
-                        key = chatDataHelper.decryptKey(
-                            key = chatMessage.key,
-                            privateKeyString = privateKey,
-                        ),
-                        localPath = null,
-                        authorId = chatMessage.authorId,
-                        status = Status.Received,
-                        timestamp = chatMessage.timestamp,
-                        recipients = listOf(authorId),
-                    )
+                    is ChatMessageNM.Image -> {
+                        val imageMessage = MessageSM.Image(
+                            id = chatMessage.id,
+                            chatId = chatId,
+                            fileId = chatMessage.fileId,
+                            key = chatDataHelper.decryptKey(
+                                key = chatMessage.key,
+                                privateKeyString = privateKey,
+                            ),
+                            localPath = null,
+                            authorId = chatMessage.authorId,
+                            status = Status.Received,
+                            timestamp = chatMessage.timestamp,
+                            recipients = listOf(authorId),
+                        )
+
+                        imageMessage.copy(localPath = chatDataHelper.downloadImage(imageMessage))
+                    }
                 }
                 chatStorage.saveMessage(storageModel)
 
@@ -423,7 +373,7 @@ internal class ChatRepoImpl(
     override suspend fun copyImageToCache(image: PickedImage): FileDescriptor {
         val localPath = fileManager.copyToCache(
             fileSource = image.toFileSource(),
-            directoryName = IMAGES_CACHE_FOLDER,
+            directoryName = FileManager.IMAGES_FOLDER,
         )
         return FileDescriptor(
             localPath = localPath,
@@ -437,7 +387,8 @@ internal class ChatRepoImpl(
     ): ImageMessageDescriptor {
         val key = chatDataHelper.getOneTimeEncryptionKey()
         val fileId = file.filename
-        val encryptedDirectory = fileManager.getDataDirectoryPath(ENCRYPTED_IMAGES_FOLDER)
+        val encryptedDirectory =
+            fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
         val encryptedFilePath = "$encryptedDirectory/$fileId"
 
         chatDataHelper.encryptFile(
@@ -446,7 +397,7 @@ internal class ChatRepoImpl(
             key = key,
         )
 
-        val imagesDirectory = fileManager.getDataDirectoryPath(IMAGES_DATA_FOLDER)
+        val imagesDirectory = fileManager.getDataDirectoryPath(FileManager.IMAGES_FOLDER)
         val localPath = "$imagesDirectory/$fileId"
         fileManager.moveFile(
             sourcePath = file.localPath,
@@ -463,12 +414,64 @@ internal class ChatRepoImpl(
             recipients = chat.members + chat.authorId - currentUserId,
         )
     }
+
+    private suspend fun resolveRecipientPublicKey(recipientId: String): String {
+        return usersStorage.getUser(recipientId)?.publicKey ?: run {
+            val userInfo = networkManager.runGet<FindUserResponse>(
+                relativePath = "/users/info",
+                request = mapOf("id" to recipientId),
+            )
+
+            usersStorage.saveUser(
+                user = UserSM(
+                    id = userInfo.userId,
+                    publicKey = userInfo.publicKey,
+                    name = userInfo.login,
+                ),
+            )
+            userInfo.publicKey
+        }
+    }
+
+    private suspend fun buildRecipientCipherTexts(
+        recipients: List<String>,
+        key: String,
+    ): List<RecipientCiphertext> {
+        return recipients.map { recipient ->
+            RecipientCiphertext(
+                recipientId = recipient,
+                key = chatDataHelper.encryptKey(
+                    key = key,
+                    publicKeyString = resolveRecipientPublicKey(recipient),
+                ),
+            )
+        }
+    }
+
+    private suspend fun uploadImageFile(fileId: String) {
+        val encryptedDirectory =
+            fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
+        val filePath = "$encryptedDirectory/$fileId"
+        try {
+            networkManager.runPostFile(
+                relativePath = "/files/$fileId",
+                filePath = filePath,
+            )
+        } catch (error: NetworkError) {
+            /** 409 means the file already exists on the server, which is fine for retries. */
+            if (error.statusCode != 409) {
+                throw error
+            }
+        }
+    }
+
+    private suspend fun deleteEncryptedImageFile(fileId: String) {
+        val encryptedDirectory =
+            fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
+        fileManager.deleteFile(path = "$encryptedDirectory/$fileId")
+    }
 }
 
 private const val MESSAGES_PAGE_SIZE = 60
 private const val MESSAGES_INITIAL_LOAD_SIZE = 60
 private const val MESSAGES_PREFETCH_DISTANCE = 20
-
-private const val IMAGES_CACHE_FOLDER = "images"
-private const val IMAGES_DATA_FOLDER = "images"
-private const val ENCRYPTED_IMAGES_FOLDER = "encrypted_images"

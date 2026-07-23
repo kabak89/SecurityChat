@@ -15,9 +15,13 @@ kotlin {
             implementation(libs.cryptography.provider.optimal)
             implementation(libs.kotlinx.io.core)
             implementation(libs.paging.common)
+            implementation(libs.compose.resources)
+
+            implementation(projects.common.localization)
 
             implementation(projects.common.coreTime)
             implementation(projects.common.coreThreading)
+            implementation(projects.common.coreFiles)
             implementation(projects.common.log)
 
             implementation(projects.features.chat.chatDataNetwork)
@@ -26,6 +30,12 @@ kotlin {
             implementation(projects.features.users.usersDataStorage)
             implementation(projects.features.users.usersDataNetwork)
             implementation(projects.features.chats.chatsDataStorage)
+        }
+    }
+
+    android {
+        androidResources {
+            enable = true
         }
     }
 }

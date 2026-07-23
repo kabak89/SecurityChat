@@ -5,11 +5,14 @@ import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.prepareGet
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.readRemaining
 import io.ktor.utils.io.writeSource
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
@@ -70,6 +73,20 @@ public class NetworkManager(
         }
     }
 
+    public suspend fun runGetFile(
+        relativePath: String,
+        destinationPath: String,
+    ) {
+        httpClient.prepareGet(urlString = baseUrl + relativePath).execute { response ->
+            val channel = response.bodyAsChannel()
+            SystemFileSystem.sink(Path(destinationPath)).buffered().use { sink ->
+                while (!channel.isClosedForRead) {
+                    channel.readRemaining(DOWNLOAD_CHUNK_SIZE).transferTo(sink)
+                }
+            }
+        }
+    }
+
     public suspend inline fun runDelete(
         relativePath: String,
     ) {
@@ -78,3 +95,5 @@ public class NetworkManager(
         }
     }
 }
+
+private const val DOWNLOAD_CHUNK_SIZE = 8L * 1024L

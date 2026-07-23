@@ -22,6 +22,8 @@ public interface ChatNetworkManager {
         chatId: String,
         messageIds: List<String>,
     )
+
+    public suspend fun downloadFile(fileId: String, destinationPath: String)
 }
 
 internal class ChatNetworkManagerImpl(
@@ -79,6 +81,13 @@ internal class ChatNetworkManagerImpl(
                 chatId = chatId,
                 messageIds = messageIds,
             ),
+        )
+    }
+
+    override suspend fun downloadFile(fileId: String, destinationPath: String) {
+        networkManager.runGetFile(
+            relativePath = "/files/$fileId",
+            destinationPath = destinationPath,
         )
     }
 }
