@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chat.ui.screens.groupchat
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import androidx.paging.map
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
@@ -27,7 +28,9 @@ internal class GroupChatViewModel(
     internal val messages: Flow<PagingData<MessageUM>> =
         groupChatModel.getMessagesPager()
             .map { pagingData ->
-                pagingData.map { it.toUi() }
+                pagingData
+                    .map { it.toUi() }
+                    .filter { it !is MessageUM.Nothing }
             }
             .cachedIn(viewModelScope)
 

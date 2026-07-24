@@ -52,6 +52,7 @@ kmp-toast = "0.1.0"
 navigationeventCompose = "1.1.0"
 kotlinResult = "2.3.1"
 autolinktext = "2.0.2"
+coil = "3.5.0"
 
 [libraries]
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -145,6 +146,8 @@ androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "kotlinResult" }
 
 autolinktext = { module = "sh.calvin.autolinktext:autolinktext", version.ref = "autolinktext" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

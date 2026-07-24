@@ -15,6 +15,7 @@ kotlin {
             implementation(libs.paging.compose)
             implementation(libs.kotlinx.datetime)
             implementation(libs.autolinktext)
+            implementation(libs.coil.compose)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)

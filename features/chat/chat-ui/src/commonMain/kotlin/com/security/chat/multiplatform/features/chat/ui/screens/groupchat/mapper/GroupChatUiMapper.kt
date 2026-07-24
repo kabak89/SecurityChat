@@ -57,17 +57,44 @@ internal fun Message.toUi(): MessageUM {
         }
 
         is Message.Image -> when (direction) {
-            MessageDirection.Incoming -> MessageUM.Incoming.Image(
-                id = id,
-                text = "image",
-                datetimeText = datetimeText,
-            )
+            MessageDirection.Incoming -> {
+                val localFilePath = filePath
 
-            MessageDirection.Outgoing -> MessageUM.Outgoing.Image(
-                id = id,
-                text = "image",
-                datetimeText = datetimeText,
-            )
+                if (localFilePath == null) {
+                    return MessageUM.Nothing(
+                        id = id,
+                        text = "",
+                        datetimeText = datetimeText,
+                    )
+                }
+
+                MessageUM.Incoming.Image(
+                    id = id,
+                    text = "image",
+                    datetimeText = datetimeText,
+                    filePath = localFilePath,
+                    senderName = author.name,
+                )
+            }
+
+            MessageDirection.Outgoing -> {
+                val localFilePath = filePath
+
+                if (localFilePath == null) {
+                    return MessageUM.Nothing(
+                        id = id,
+                        text = "",
+                        datetimeText = datetimeText,
+                    )
+                }
+
+                MessageUM.Outgoing.Image(
+                    id = id,
+                    text = "image",
+                    datetimeText = datetimeText,
+                    filePath = localFilePath,
+                )
+            }
         }
     }
 }

@@ -24,18 +24,20 @@ internal sealed interface MessageUM : ItemWithId {
             override val id: String,
             override val text: String,
             override val datetimeText: String,
+            val filePath: String,
         ) : Outgoing
     }
 
     sealed interface Incoming : MessageUM {
         override val id: String
+        val senderName: String
 
         @Immutable
         data class Text(
             override val id: String,
             override val text: String,
             override val datetimeText: String,
-            val senderName: String,
+            override val senderName: String,
         ) : Incoming
 
         @Immutable
@@ -43,6 +45,15 @@ internal sealed interface MessageUM : ItemWithId {
             override val id: String,
             override val text: String,
             override val datetimeText: String,
+            override val senderName: String,
+            val filePath: String,
         ) : Incoming
     }
+
+    @Immutable
+    data class Nothing(
+        override val id: String,
+        override val text: String,
+        override val datetimeText: String,
+    ) : MessageUM
 }

@@ -31,7 +31,6 @@ internal fun MessageSM.toDomain(
             author = author,
             timestamp = timestamp,
             direction = direction,
-            /** Present for the sender's local copy; null for received messages until downloaded. */
             filePath = localPath,
         )
     }

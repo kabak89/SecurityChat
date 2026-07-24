@@ -54,8 +54,9 @@ import com.security.chat.multiplatform.features.chat.component.api.GroupChatComp
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
-import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.ImageMessageComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
@@ -250,42 +251,55 @@ private fun MessagesComponent(
                         is MessageUM.Incoming.Text -> "incoming_text"
                         is MessageUM.Outgoing.Image -> "outgoing_image"
                         is MessageUM.Outgoing.Text -> "outgoing_text"
+                        is MessageUM.Nothing -> "nothing"
                     }
                 },
             ) { index ->
                 val message = messages[index] ?: return@items
                 when (message) {
-                    is MessageUM.Incoming.Text -> {
+                    is MessageUM.Incoming -> {
                         val previous = if (index + 1 < messages.itemCount) {
                             messages.peek(index + 1)
                         } else {
                             null
                         }
                         val showSenderName =
-                            (previous as? MessageUM.Incoming.Text)?.senderName != message.senderName
-                        IncomingMessageComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            message = message,
-                            showSenderName = showSenderName,
-                        )
-                    }
+                            (previous as? MessageUM.Incoming)?.senderName != message.senderName
 
-                    is MessageUM.Incoming.Image -> ImageMessageComponent(
-                        modifier = Modifier.fillMaxWidth(),
-                        message = message,
-                        isOutgoing = false,
-                    )
+                        when (message) {
+                            is MessageUM.Incoming.Text -> {
+                                IncomingMessageComponent(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    message = message,
+                                    showSenderName = showSenderName,
+                                )
+                            }
+
+                            is MessageUM.Incoming.Image -> {
+                                IncomingImageMessageComponent(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    message = message,
+                                    showSenderName = showSenderName,
+                                )
+                            }
+                        }
+                    }
 
                     is MessageUM.Outgoing.Text -> OutgoingMessageComponent(
                         modifier = Modifier.fillMaxWidth(),
                         message = message,
                     )
 
-                    is MessageUM.Outgoing.Image -> ImageMessageComponent(
+                    is MessageUM.Outgoing.Image -> OutgoingImageMessageComponent(
                         modifier = Modifier.fillMaxWidth(),
                         message = message,
-                        isOutgoing = true,
                     )
+
+                    is MessageUM.Nothing -> {
+                        /**
+                         * do not show such items
+                         */
+                    }
                 }
             }
         },
@@ -387,11 +401,14 @@ internal fun GroupChatScreenPreview() {
                     id = "3",
                     text = "image",
                     datetimeText = "12:11",
+                    filePath = "",
                 ),
                 MessageUM.Incoming.Image(
                     id = "4",
                     text = "image",
                     datetimeText = "12:11",
+                    filePath = "",
+                    senderName = "John",
                 ),
             ),
         ),

@@ -148,3 +148,4 @@ interop/compile errors), use:
 - Break layer boundaries between feature modules.
 - Wire a new feature's navigation into existing modules as part of scaffolding it (separate task).
 - Add dependencies outside the version catalog.
+- Add a library without first checking its version.

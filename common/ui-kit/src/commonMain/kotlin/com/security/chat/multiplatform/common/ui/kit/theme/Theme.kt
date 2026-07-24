@@ -138,6 +138,7 @@ public class AppTypography internal constructor(
 public class Shapes internal constructor(
     public val circle: Shape = CircleShape,
     public val roundedRectangle16: Shape = RoundedCornerShape(16.dp),
+    public val roundedRectangle8: Shape = RoundedCornerShape(8.dp),
 )
 
 private val LocalUseDarkTheme: ProvidableCompositionLocal<Boolean> =
