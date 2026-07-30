@@ -1,8 +1,12 @@
 package com.security.chat.multiplatform
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.uikit.OnFocusBehavior
 import androidx.compose.ui.window.ComposeUIViewController
 import com.arkivanov.decompose.DefaultComponentContext
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.PredictiveBackGestureOverlay
+import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.ApplicationLifecycle
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
@@ -23,9 +27,13 @@ public fun rootViewController(): UIViewController {
             appLifecycleChanger.onAppStarted()
         },
     )
+
+    val backDispatcher = BackDispatcher()
+
     val rootComponent = RootComponentImpl(
         componentContext = DefaultComponentContext(
             lifecycle = lifecycle,
+            backHandler = backDispatcher,
         ),
         initialDeepLink = null,
     )
@@ -36,9 +44,16 @@ public fun rootViewController(): UIViewController {
             enforceStrictPlistSanityCheck = false
         },
         content = {
-            RootContent(
-                rootComponent = rootComponent,
-            )
+            PredictiveBackGestureOverlay(
+                backDispatcher = backDispatcher,
+                backIcon = null,
+                modifier = Modifier.fillMaxSize(),
+                endEdgeEnabled = false,
+            ) {
+                RootContent(
+                    rootComponent = rootComponent,
+                )
+            }
         },
     )
 }
