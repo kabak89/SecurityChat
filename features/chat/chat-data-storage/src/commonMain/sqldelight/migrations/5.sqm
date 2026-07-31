@@ -1,0 +1,22 @@
+import kotlin.Boolean;
+
+-- v6: replace ImageMessageTable.localPath with a boolean flag. The absolute path was unusable
+-- across launches on iOS, where the data container UUID is regenerated on every reinstall, so
+-- every stored path pointed at the previous container. The path is now rebuilt at read time from
+-- the images directory and `fileId`, which is also the file name on disk.
+-- Existing rows keep their state: a non-null localPath means the file is already on disk under
+-- `fileId`, and it moved along with the container, so those images stay available.
+ALTER TABLE ImageMessageTable RENAME TO ImageMessageTable_v5;
+
+CREATE TABLE ImageMessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  fileId TEXT NOT NULL,
+  key TEXT NOT NULL,
+  isDownloaded INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+INSERT INTO ImageMessageTable (id, fileId, key, isDownloaded)
+SELECT id, fileId, key, CASE WHEN localPath IS NOT NULL THEN 1 ELSE 0 END
+FROM ImageMessageTable_v5;
+
+DROP TABLE ImageMessageTable_v5;

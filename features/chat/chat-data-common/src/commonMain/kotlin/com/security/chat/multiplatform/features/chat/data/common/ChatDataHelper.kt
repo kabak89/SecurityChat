@@ -1,10 +1,16 @@
 package com.security.chat.multiplatform.features.chat.data.common
 
+import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.getOrElse
+import com.github.michaelbull.result.getOrThrow
+import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.files.FileManager
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
+import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
@@ -62,7 +68,7 @@ public interface ChatDataHelper {
 
     public suspend fun getOneTimeEncryptionKey(): String
 
-    public suspend fun downloadImage(message: MessageSM.Image): String
+    public suspend fun downloadImage(message: MessageSM.Image)
 }
 
 internal class ChatDataHelperImpl(
@@ -76,35 +82,21 @@ internal class ChatDataHelperImpl(
     override suspend fun fetchAndSaveMessages(chatId: String) {
         val messages = chatNetworkManager.getMessages(chatId = chatId)
         if (messages.isEmpty()) return
-        val messageIds = messages.map { it.id }
 
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
+        val recipients = listOf(checkNotNull(userStorage.getUserId()))
 
-        val messagesToStore = messages
-            .map {
-                it.toSM(
-                    chatId = chatId,
-                    decryptMessage = { encryptedText, key ->
-                        decryptText(
-                            text = encryptedText,
-                            privateKeyString = privateKey,
-                            key = key,
-                        )
-                    },
-                    decryptKey = { key ->
-                        decryptKey(key = key, privateKeyString = privateKey)
-                    },
-                    recipients = listOf(checkNotNull(userStorage.getUserId())),
-                )
-            }
-            .map { message ->
-                when (message) {
-                    is MessageSM.Image -> message.copy(localPath = downloadImage(message))
-                    is MessageSM.Text -> message
-                }
-            }
+        val messagesToStore = messages.mapNotNull {
+            it.toSMOrNull(
+                chatId = chatId,
+                privateKey = privateKey,
+                recipients = recipients,
+            )
+        }
 
         chatStorage.saveMessages(messages = messagesToStore)
+
+        val messageIds = messagesToStore.map { it.id }
 
         confirmReceivingMessages(
             chatId = chatId,
@@ -118,33 +110,19 @@ internal class ChatDataHelperImpl(
     ): List<String> {
         val messages = chatNetworkManager.processNewMessages(serializedMessages)
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
+        val recipients = listOf(checkNotNull(userStorage.getUserId()))
 
-        val messagesToStore = messages
-            .map {
-                it.toSM(
-                    decryptMessage = { encryptedText, key ->
-                        decryptText(
-                            text = encryptedText,
-                            privateKeyString = privateKey,
-                            key = key,
-                        )
-                    },
-                    decryptKey = { key ->
-                        decryptKey(key = key, privateKeyString = privateKey)
-                    },
-                    chatId = chatId,
-                    recipients = listOf(checkNotNull(userStorage.getUserId())),
-                )
-            }
-            .map { message ->
-                when (message) {
-                    is MessageSM.Image -> message.copy(localPath = downloadImage(message))
-                    is MessageSM.Text -> message
-                }
-            }
+        val messagesToStore = messages.mapNotNull {
+            it.toSMOrNull(
+                chatId = chatId,
+                privateKey = privateKey,
+                recipients = recipients,
+            )
+        }
+
         chatStorage.saveMessages(messages = messagesToStore)
+        val messageIds = messagesToStore.map { it.id }
 
-        val messageIds = messages.map { it.id }
         confirmReceivingMessages(
             chatId = chatId,
             messageIds = messageIds,
@@ -175,7 +153,18 @@ internal class ChatDataHelperImpl(
             )
 
             val ciphertextBytes = Base64.decode(text)
-            aesKey.cipher().decrypt(ciphertext = ciphertextBytes).decodeToString()
+
+            return@withContext runSuspendCatching {
+                aesKey.cipher().decrypt(ciphertext = ciphertextBytes).decodeToString()
+            }
+                .onErr {
+                    Log.e(
+                        "AES-GCM decrypt failed: aesKeyBytes=${rawAesKey.size}, " +
+                                "ciphertextBytes=${ciphertextBytes.size}, " +
+                                "wrappedKeyBytes=${Base64.decode(key).size}",
+                    )
+                }
+                .getOrThrow()
         }
     }
 
@@ -299,7 +288,7 @@ internal class ChatDataHelperImpl(
         )
     }
 
-    override suspend fun downloadImage(message: MessageSM.Image): String {
+    override suspend fun downloadImage(message: MessageSM.Image) {
         val encryptedDirectory =
             fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
         val encryptedFilePath = "$encryptedDirectory/${message.fileId}"
@@ -309,16 +298,56 @@ internal class ChatDataHelperImpl(
             destinationPath = encryptedFilePath,
         )
 
-        val imagesDirectory = fileManager.getDataDirectoryPath(FileManager.IMAGES_FOLDER)
-        val localPath = "$imagesDirectory/${message.fileId}"
+        val imagesDirectory = fileManager.getImagesDirectoryPath()
 
         decryptFile(
             sourcePath = encryptedFilePath,
-            destinationPath = localPath,
+            destinationPath = "$imagesDirectory/${message.fileId}",
             key = message.key,
         )
 
         fileManager.deleteFile(path = encryptedFilePath)
-        return localPath
+    }
+
+    private suspend fun ChatMessageNM.toSMOrNull(
+        chatId: String,
+        privateKey: String,
+        recipients: List<String>,
+    ): MessageSM? {
+        return runSuspendCatching {
+            val message = toSM(
+                chatId = chatId,
+                decryptMessage = { encryptedText, key ->
+                    decryptText(
+                        text = encryptedText,
+                        privateKeyString = privateKey,
+                        key = key,
+                    )
+                },
+                decryptKey = { key ->
+                    decryptKey(key = key, privateKeyString = privateKey)
+                },
+                recipients = recipients,
+            )
+            when (message) {
+                is MessageSM.Image -> {
+                    downloadImage(message)
+                    message.copy(isDownloaded = true)
+                }
+
+                is MessageSM.Text -> message
+            }
+        }
+            .getOrElse { error ->
+                val type = when (this) {
+                    is ChatMessageNM.Text -> "text"
+                    is ChatMessageNM.Image -> "image"
+                }
+                val message =
+                    "Skipped $type message: id=$id, authorId=$authorId, timestamp=$timestamp"
+
+                Log.e(error, message)
+                null
+            }
     }
 }

@@ -12,6 +12,7 @@ public interface FileManager {
     public suspend fun moveFile(sourcePath: String, destinationPath: String)
     public suspend fun clearDirectory(name: String)
     public suspend fun deleteFile(path: String)
+    public suspend fun getImagesDirectoryPath(): String = getDataDirectoryPath(IMAGES_FOLDER)
 
     public companion object {
         public const val IMAGES_FOLDER: String = "images"

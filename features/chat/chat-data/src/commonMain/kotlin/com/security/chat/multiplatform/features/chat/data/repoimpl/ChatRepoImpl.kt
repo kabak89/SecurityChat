@@ -4,6 +4,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.files.FileManager
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
@@ -12,6 +14,7 @@ import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.core.time.TimeProvider
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
@@ -127,7 +130,7 @@ internal class ChatRepoImpl(
             timestamp = timestamp,
             fileId = message.fileId,
             key = message.key,
-            localPath = message.localPath,
+            isDownloaded = true,
         )
 
         chatStorage.saveMessage(messageSm)
@@ -226,6 +229,7 @@ internal class ChatRepoImpl(
         ).flow
             .map { pagingData ->
                 val userId = checkNotNull(userStorage.getUserId())
+                val imagesDirectoryPath = fileManager.getImagesDirectoryPath()
                 pagingData.map { message ->
                     val author = usersStorage.getUser(message.authorId)?.let {
                         MessageAuthor(
@@ -254,6 +258,7 @@ internal class ChatRepoImpl(
                     message.toDomain(
                         appOwnerId = userId,
                         author = author,
+                        imagesDirectoryPath = imagesDirectoryPath,
                     )
                 }
             }
@@ -268,49 +273,64 @@ internal class ChatRepoImpl(
             authorId = authorId,
         )
             .collect { chatMessage ->
-                val storageModel: MessageSM = when (chatMessage) {
-                    is ChatMessageNM.Text -> MessageSM.Text(
-                        id = chatMessage.id,
-                        chatId = chatId,
-                        text = chatDataHelper.decryptText(
-                            text = chatMessage.text,
-                            privateKeyString = privateKey,
-                            key = chatMessage.key,
-                        ),
-                        authorId = chatMessage.authorId,
-                        status = Status.Received,
-                        timestamp = chatMessage.timestamp,
-                        recipients = listOf(authorId),
-                    )
-
-                    is ChatMessageNM.Image -> {
-                        val imageMessage = MessageSM.Image(
+                runSuspendCatching {
+                    val storageModel: MessageSM = when (chatMessage) {
+                        is ChatMessageNM.Text -> MessageSM.Text(
                             id = chatMessage.id,
                             chatId = chatId,
-                            fileId = chatMessage.fileId,
-                            key = chatDataHelper.decryptKey(
-                                key = chatMessage.key,
+                            text = chatDataHelper.decryptText(
+                                text = chatMessage.text,
                                 privateKeyString = privateKey,
+                                key = chatMessage.key,
                             ),
-                            localPath = null,
                             authorId = chatMessage.authorId,
                             status = Status.Received,
                             timestamp = chatMessage.timestamp,
                             recipients = listOf(authorId),
                         )
 
-                        imageMessage.copy(localPath = chatDataHelper.downloadImage(imageMessage))
-                    }
-                }
-                chatStorage.saveMessage(storageModel)
+                        is ChatMessageNM.Image -> {
+                            val imageMessage = MessageSM.Image(
+                                id = chatMessage.id,
+                                chatId = chatId,
+                                fileId = chatMessage.fileId,
+                                key = chatDataHelper.decryptKey(
+                                    key = chatMessage.key,
+                                    privateKeyString = privateKey,
+                                ),
+                                isDownloaded = false,
+                                authorId = chatMessage.authorId,
+                                status = Status.Received,
+                                timestamp = chatMessage.timestamp,
+                                recipients = listOf(authorId),
+                            )
 
-                networkManager.runPost<MessagesReceivedRequest, Unit>(
-                    relativePath = "/messages/received",
-                    request = MessagesReceivedRequest(
-                        chatId = chatId,
-                        messageIds = listOf(chatMessage.id),
-                    ),
-                )
+                            chatDataHelper.downloadImage(imageMessage)
+                            imageMessage.copy(isDownloaded = true)
+                        }
+                    }
+                    chatStorage.saveMessage(storageModel)
+
+                    networkManager.runPost<MessagesReceivedRequest, Unit>(
+                        relativePath = "/messages/received",
+                        request = MessagesReceivedRequest(
+                            chatId = chatId,
+                            messageIds = listOf(chatMessage.id),
+                        ),
+                    )
+                }
+                    .onErr { error ->
+                        val type = when (chatMessage) {
+                            is ChatMessageNM.Text -> "text"
+                            is ChatMessageNM.Image -> "image"
+                        }
+                        val message =
+                            "Skipped $type message: id=${chatMessage.id}, " +
+                                    "authorId=${chatMessage.authorId}, " +
+                                    "timestamp=${chatMessage.timestamp}"
+
+                        Log.e(error, message)
+                    }
             }
     }
 
@@ -397,11 +417,10 @@ internal class ChatRepoImpl(
             key = key,
         )
 
-        val imagesDirectory = fileManager.getDataDirectoryPath(FileManager.IMAGES_FOLDER)
-        val localPath = "$imagesDirectory/$fileId"
+        val imagesDirectory = fileManager.getImagesDirectoryPath()
         fileManager.moveFile(
             sourcePath = file.localPath,
-            destinationPath = localPath,
+            destinationPath = "$imagesDirectory/$fileId",
         )
 
         val currentUserId = checkNotNull(userStorage.getUserId())
@@ -409,7 +428,6 @@ internal class ChatRepoImpl(
 
         return ImageMessageDescriptor(
             fileId = fileId,
-            localPath = localPath,
             key = key,
             recipients = chat.members + chat.authorId - currentUserId,
         )

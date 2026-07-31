@@ -31,7 +31,7 @@ internal fun MessageSM.Image.toImageTable(): ImageMessageTable {
         id = id,
         fileId = fileId,
         key = key,
-        localPath = localPath,
+        isDownloaded = isDownloaded,
     )
 }
 
@@ -41,10 +41,7 @@ internal fun JoinedMessageRow.toSM(recipients: List<String>): MessageSM? {
         TYPE_TEXT -> MessageSM.Text(
             id = id,
             chatId = chatId,
-            text = text ?: run {
-                Log.e("missing text detail for message id=$id")
-                return null
-            },
+            text = text ?: return logMissingColumn(column = "text"),
             authorId = authorId,
             status = status,
             timestamp = timestamp,
@@ -54,15 +51,9 @@ internal fun JoinedMessageRow.toSM(recipients: List<String>): MessageSM? {
         TYPE_IMAGE -> MessageSM.Image(
             id = id,
             chatId = chatId,
-            fileId = fileId ?: run {
-                Log.e("missing image detail for message id=$id")
-                return null
-            },
-            key = key ?: run {
-                Log.e("missing image key for message id=$id")
-                return null
-            },
-            localPath = localPath,
+            fileId = fileId ?: return logMissingColumn(column = "fileId"),
+            key = key ?: return logMissingColumn(column = "key"),
+            isDownloaded = isDownloaded ?: return logMissingColumn(column = "isDownloaded"),
             authorId = authorId,
             status = status,
             timestamp = timestamp,
@@ -74,6 +65,11 @@ internal fun JoinedMessageRow.toSM(recipients: List<String>): MessageSM? {
             null
         }
     }
+}
+
+private fun JoinedMessageRow.logMissingColumn(column: String): Nothing? {
+    Log.e("missing $column for $type message id=$id")
+    return null
 }
 
 private fun mapTypeToString(message: MessageSM): String {

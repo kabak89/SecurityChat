@@ -33,7 +33,7 @@ internal suspend fun ChatMessageNM.toSM(
                 recipients = recipients,
                 fileId = fileId,
                 key = decryptKey(key),
-                localPath = null,
+                isDownloaded = false,
             )
         }
     }

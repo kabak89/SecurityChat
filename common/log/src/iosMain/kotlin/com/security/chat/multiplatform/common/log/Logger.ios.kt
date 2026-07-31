@@ -8,6 +8,7 @@ internal actual class Logger {
 
     actual fun e(error: Throwable, message: String?) {
         println(error)
+        error.printStackTrace()
         if (message != null) {
             println(message)
         }

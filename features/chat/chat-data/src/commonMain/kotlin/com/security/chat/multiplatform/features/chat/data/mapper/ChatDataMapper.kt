@@ -10,6 +10,7 @@ import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 internal fun MessageSM.toDomain(
     appOwnerId: String,
     author: MessageAuthor,
+    imagesDirectoryPath: String,
 ): Message {
     val direction = if (authorId == appOwnerId) {
         MessageDirection.Outgoing
@@ -31,7 +32,7 @@ internal fun MessageSM.toDomain(
             author = author,
             timestamp = timestamp,
             direction = direction,
-            filePath = localPath,
+            filePath = if (isDownloaded) "$imagesDirectoryPath/$fileId" else null,
         )
     }
 }

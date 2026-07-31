@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import platform.PhotosUI.PHPickerConfiguration
+import platform.PhotosUI.PHPickerConfigurationAssetRepresentationModeCompatible
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
@@ -42,6 +43,8 @@ private class IosPhotoPickerLauncher(
             configuration = PHPickerConfiguration().apply {
                 filter = PHPickerFilter.imagesFilter
                 selectionLimit = 1
+                preferredAssetRepresentationMode =
+                    PHPickerConfigurationAssetRepresentationModeCompatible
             },
         ).apply {
             delegate = photoPickerDelegate

@@ -28,7 +28,7 @@ public sealed interface MessageSM {
         override val timestamp: Long,
         val fileId: String,
         val key: String,
-        val localPath: String?,
+        val isDownloaded: Boolean,
     ) : MessageSM
 }
 

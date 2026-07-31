@@ -1,8 +1,10 @@
+import kotlin.Boolean;
+
 CREATE TABLE ImageMessageTable (
   id TEXT PRIMARY KEY NOT NULL,
   fileId TEXT NOT NULL,
   key TEXT NOT NULL,
-  localPath TEXT
+  isDownloaded INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 insert:

@@ -12,6 +12,7 @@ kotlin {
             api(libs.koin.core)
 
             implementation(projects.common.coreThreading)
+            implementation(projects.common.log)
         }
     }
 }

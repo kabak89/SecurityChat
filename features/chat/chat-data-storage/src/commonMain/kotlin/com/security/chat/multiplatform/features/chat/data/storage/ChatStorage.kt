@@ -57,7 +57,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 5,
+                        version = 6,
                     ),
                 )
             },
