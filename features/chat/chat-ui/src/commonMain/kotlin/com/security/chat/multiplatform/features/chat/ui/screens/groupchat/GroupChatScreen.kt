@@ -49,6 +49,7 @@ import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
@@ -90,7 +91,7 @@ internal fun GroupChatScreen(
             events = vm.viewEvent,
             onBackClicked = component::onExitClicked,
             onMessageEdited = vm::onMessageEdited,
-            onPhotoPicked = vm::onPhotoPicked,
+            onImagePicked = vm::onImagePicked,
             onSendMessageClicked = vm::onSendMessageClicked,
             onSyncClicked = vm::onSyncClicked,
         )
@@ -105,12 +106,12 @@ private fun GroupChatContent(
     events: Flow<GroupChatEvent>,
     onBackClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
-    onPhotoPicked: (PickedImage) -> Unit,
+    onImagePicked: (PickedImage) -> Unit,
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
 ) {
     val photoPickerLauncher = rememberPhotoPickerLauncher(
-        onPhotoPicked = onPhotoPicked,
+        onImagePicked = onImagePicked,
     )
     val hazeState = rememberHazeState()
     val backgroundPrimaryColor = AppTheme.colors.backgroundPrimary
@@ -198,6 +199,15 @@ private fun GroupChatContent(
             onMessageEdited = onMessageEdited,
             onAttachClicked = photoPickerLauncher::launch,
             onSendMessageClicked = onSendMessageClicked,
+        )
+    }
+    if (state.alertDialogDescriptor != null) {
+        AlertDialogComponent(
+            content = state.alertDialogDescriptor.content,
+            onDismissRequest = state.alertDialogDescriptor.dismissAction,
+            onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
+            onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+            hazeState = hazeState,
         )
     }
 }
@@ -421,12 +431,13 @@ internal fun GroupChatScreenPreview() {
             state = GroupChatState(
                 message = "",
                 syncState = UiLceState.NotStarted,
+                alertDialogDescriptor = null,
             ),
             messages = previewMessages,
             events = emptyFlow(),
             onBackClicked = {},
             onMessageEdited = {},
-            onPhotoPicked = {},
+            onImagePicked = {},
             onSendMessageClicked = {},
             onSyncClicked = {},
         )

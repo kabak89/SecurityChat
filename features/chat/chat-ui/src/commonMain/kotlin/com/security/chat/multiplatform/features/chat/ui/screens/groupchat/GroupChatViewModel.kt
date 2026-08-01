@@ -7,18 +7,26 @@ import androidx.paging.filter
 import androidx.paging.map
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
+import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.GroupChatModel
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.groupChatErrorMapper
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.isNotImageError
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toUi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import securitychat.common.localization.generated.resources.common_close
 
 internal class GroupChatViewModel(
     private val groupChatModel: GroupChatModel,
@@ -61,12 +69,47 @@ internal class GroupChatViewModel(
                 }
             }
             .launchIn(viewModelScope)
+
+        groupChatModel.sendImage.jobFlow.asLceState()
+            .map { it.toUiLceState(::groupChatErrorMapper) }
+            .filterIsInstance<UiLceState.Error>()
+            .onEach { error ->
+                val alertDialogDescriptor = if (error.error.cause.isNotImageError()) {
+                    val content = AlertDialogContent(
+                        title = error.error.title,
+                        message = error.error.description,
+                        positiveButtonText = resPrintableText(StringRes.common_close),
+                    )
+                    AlertDialogDescriptor(
+                        content = content,
+                        dismissAction = { updateState { it.copy(alertDialogDescriptor = null) } },
+                        positiveAction = {
+                            updateState { it.copy(alertDialogDescriptor = null) }
+                        },
+                    )
+                } else {
+                    val alertDialogContent = AlertDialogContent(
+                        title = error.error.title,
+                        message = error.error.description,
+                        positiveButtonText = resPrintableText(StringRes.common_close),
+                    )
+
+                    AlertDialogDescriptor(
+                        content = alertDialogContent,
+                        positiveAction = { updateState { it.copy(alertDialogDescriptor = null) } },
+                        dismissAction = { updateState { it.copy(alertDialogDescriptor = null) } },
+                    )
+                }
+                updateState { it.copy(alertDialogDescriptor = alertDialogDescriptor) }
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): GroupChatState {
         return GroupChatState(
             message = "",
             syncState = UiLceState.NotStarted,
+            alertDialogDescriptor = null,
         )
     }
 
@@ -74,8 +117,8 @@ internal class GroupChatViewModel(
         groupChatModel.setCurrentMessageText(text = newText)
     }
 
-    fun onPhotoPicked(photo: PickedImage) {
-        groupChatModel.sendImage.start(photo)
+    fun onImagePicked(photo: PickedImage) {
+        groupChatModel.sendImage.startOnSubscribe(photo)
     }
 
     fun onSendMessageClicked() {

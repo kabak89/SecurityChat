@@ -2,6 +2,10 @@ package com.security.chat.multiplatform.common.core.files
 
 public interface FileManager {
 
+    public suspend fun isImage(fileSource: FileSource): Boolean
+    public suspend fun isRenderable(path: String): Boolean
+    public suspend fun transcodeToJpeg(path: String)
+
     public suspend fun copyToCache(
         fileSource: FileSource,
         directoryName: String,

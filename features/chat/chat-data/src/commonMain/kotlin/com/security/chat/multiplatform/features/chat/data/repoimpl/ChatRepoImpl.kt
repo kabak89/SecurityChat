@@ -8,6 +8,7 @@ import com.github.michaelbull.result.coroutines.runSuspendCatching
 import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.files.FileManager
+import com.security.chat.multiplatform.common.core.files.error.TranscodeException
 import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
@@ -39,6 +40,7 @@ import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
+import com.security.chat.multiplatform.features.chat.domain.entity.error.NotImageError
 import com.security.chat.multiplatform.features.chat.domain.entity.toFileSource
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
@@ -391,10 +393,27 @@ internal class ChatRepoImpl(
     }
 
     override suspend fun copyImageToCache(image: PickedImage): FileDescriptor {
+        val fileSource = image.toFileSource()
+
+        if (!fileManager.isImage(fileSource)) {
+            throw NotImageError()
+        }
+
         val localPath = fileManager.copyToCache(
-            fileSource = image.toFileSource(),
+            fileSource = fileSource,
             directoryName = FileManager.IMAGES_FOLDER,
         )
+
+        if (!fileManager.isRenderable(localPath)) {
+            try {
+                fileManager.transcodeToJpeg(localPath)
+            } catch (error: TranscodeException) {
+                Log.e(error)
+                fileManager.deleteFile(localPath)
+                error("Can not transcode image")
+            }
+        }
+
         return FileDescriptor(
             localPath = localPath,
             filename = localPath.substringAfterLast('/'),

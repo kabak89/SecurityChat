@@ -11,6 +11,7 @@ kotlin {
         commonMain.dependencies {
             api(projects.common.coreDomain)
             api(projects.common.coreFiles)
+            api(projects.common.error)
             api(libs.paging.common)
         }
     }

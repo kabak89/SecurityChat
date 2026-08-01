@@ -75,4 +75,7 @@
     <string name="create_chat_type_personal">Личный</string>
     <string name="create_chat_type_group">Групповой</string>
     <string name="create_chat_create_group_chat_button">Создать</string>
+
+    <string name="group_chat_error_not_image_title">Невозможно отправить сообщение</string>
+    <string name="group_chat_error_not_image_description">Возможна отправка только картинок</string>
 </resources>

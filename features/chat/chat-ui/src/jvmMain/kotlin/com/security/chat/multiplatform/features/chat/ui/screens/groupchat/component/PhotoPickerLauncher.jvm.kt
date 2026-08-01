@@ -11,9 +11,9 @@ import java.io.FilenameFilter
 
 @Composable
 internal actual fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedImage) -> Unit,
+    onImagePicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher {
-    val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
+    val currentOnPhotoPicked = rememberUpdatedState(onImagePicked)
 
     return remember {
         PhotoPickerLauncher {

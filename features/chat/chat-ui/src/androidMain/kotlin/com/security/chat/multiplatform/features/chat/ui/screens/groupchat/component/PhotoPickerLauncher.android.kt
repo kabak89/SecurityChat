@@ -11,9 +11,9 @@ import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 
 @Composable
 internal actual fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedImage) -> Unit,
+    onImagePicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher {
-    val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
+    val currentOnPhotoPicked = rememberUpdatedState(onImagePicked)
     val contentResolver = LocalContext.current.contentResolver
 
     val pickerLauncher = rememberLauncherForActivityResult(

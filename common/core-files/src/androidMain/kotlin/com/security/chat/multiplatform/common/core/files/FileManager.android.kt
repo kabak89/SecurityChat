@@ -1,10 +1,16 @@
 package com.security.chat.multiplatform.common.core.files
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
+import com.security.chat.multiplatform.common.core.files.error.TranscodeException
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 import java.util.UUID
 
 internal class FileManagerAndroid(
@@ -14,6 +20,59 @@ internal class FileManagerAndroid(
 
     private val cacheDirectory = context.cacheDir
     private val dataDirectory = context.filesDir
+
+    override suspend fun isImage(fileSource: FileSource): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            val header = fileSource.contentResolver
+                .openInputStream(fileSource.uri)
+                ?.use { inputStream -> inputStream.readImageHeader() }
+                ?: error("Cannot read selected file")
+
+            header.hasImageSignature()
+        }
+    }
+
+    override suspend fun isRenderable(path: String): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            File(path).readImageHeader().hasRenderableImageSignature()
+        }
+    }
+
+    override suspend fun transcodeToJpeg(path: String) {
+        withContext(dispatcherProvider.IO) {
+            val file = File(path)
+
+            /** HEIF decoding was only added in Android 9, older versions have no decoder at all. */
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                throw TranscodeException("Cannot decode $path: requires Android 9 or newer")
+            }
+
+            val bitmap = try {
+                ImageDecoder.decodeBitmap(ImageDecoder.createSource(file))
+            } catch (error: IOException) {
+                throw TranscodeException("Cannot decode $path", error)
+            }
+
+            val transcodedFile = File("$path$TRANSCODED_SUFFIX")
+            try {
+                transcodedFile.outputStream().use { outputStream ->
+                    val isEncoded = bitmap.compress(
+                        Bitmap.CompressFormat.JPEG,
+                        JPEG_COMPRESSION_QUALITY,
+                        outputStream,
+                    )
+                    if (!isEncoded) throw TranscodeException("Cannot encode $path to JPEG")
+                }
+                if (!transcodedFile.renameTo(file)) {
+                    throw TranscodeException("Cannot write transcoded image to $path")
+                }
+            } finally {
+                bitmap.recycle()
+                /** Nothing is left at that path once the rename succeeded. */
+                transcodedFile.delete()
+            }
+        }
+    }
 
     override suspend fun copyToCache(
         fileSource: FileSource,
@@ -86,3 +145,23 @@ internal class FileManagerAndroid(
         return directory
     }
 }
+
+private fun File.readImageHeader(): ByteArray {
+    return inputStream().use { inputStream -> inputStream.readImageHeader() }
+}
+
+private fun InputStream.readImageHeader(): ByteArray {
+    val header = ByteArray(IMAGE_HEADER_SIZE)
+    var offset = 0
+    while (offset < IMAGE_HEADER_SIZE) {
+        val readCount = read(header, offset, IMAGE_HEADER_SIZE - offset)
+        if (readCount < 0) break
+        offset += readCount
+    }
+    return header.copyOf(offset)
+}
+
+/** Kept next to the original file so that the rename stays on the same filesystem. */
+private const val TRANSCODED_SUFFIX = ".jpeg"
+
+private const val JPEG_COMPRESSION_QUALITY = 95

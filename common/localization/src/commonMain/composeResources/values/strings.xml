@@ -74,4 +74,7 @@
     <string name="create_chat_type_personal">Personal</string>
     <string name="create_chat_type_group">Group</string>
     <string name="create_chat_create_group_chat_button">Create</string>
+
+    <string name="group_chat_error_not_image_title">Can't send the message</string>
+    <string name="group_chat_error_not_image_description">You can only send images</string>
 </resources>

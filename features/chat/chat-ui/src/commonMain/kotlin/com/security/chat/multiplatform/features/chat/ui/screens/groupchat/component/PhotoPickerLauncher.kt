@@ -10,5 +10,5 @@ internal fun interface PhotoPickerLauncher {
 
 @Composable
 internal expect fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedImage) -> Unit,
+    onImagePicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher

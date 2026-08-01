@@ -15,14 +15,14 @@ import platform.darwin.NSObject
 
 @Composable
 internal actual fun rememberPhotoPickerLauncher(
-    onPhotoPicked: (PickedImage) -> Unit,
+    onImagePicked: (PickedImage) -> Unit,
 ): PhotoPickerLauncher {
-    val currentOnPhotoPicked = rememberUpdatedState(onPhotoPicked)
+    val currentOnImagePicked = rememberUpdatedState(onImagePicked)
 
     return remember {
         IosPhotoPickerLauncher(
             onPhotoPicked = { photo ->
-                currentOnPhotoPicked.value(photo)
+                currentOnImagePicked.value(photo)
             },
         )
     }
