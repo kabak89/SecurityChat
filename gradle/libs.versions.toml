@@ -1,10 +1,10 @@
 [versions]
 #java
 # Toolchain and bytecode target for all app modules.
-javaVersion = "21"
+javaVersion = "25"
 # Bytecode target of build-logic convention plugins: they are loaded into the Gradle daemon,
 # so this is bound to the daemon JDK and intentionally decoupled from javaVersion.
-buildLogicJavaVersion = "21"
+buildLogicJavaVersion = "25"
 #java
 
 #android
