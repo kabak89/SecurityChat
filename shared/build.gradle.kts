@@ -94,7 +94,23 @@ compose.desktop {
     application {
         mainClass = "com.security.chat.multiplatform.MainKt"
         nativeDistributions {
-            includeAllModules = true
+            /**
+             * Explicit module list instead of `includeAllModules`: JDKs built with JEP 493 ship no
+             * `jmods` folder and jlink refuses to put `jdk.jlink` into the produced image.
+             * Base set comes from the `suggestRuntimeModules` task; `jdk.crypto.ec` is added for
+             * TLS handshakes in the OkHttp engine and `jdk.localedata` for non-English locales,
+             * as neither is discoverable by static analysis.
+             */
+            modules(
+                "java.instrument",
+                "java.management",
+                "java.naming",
+                "java.prefs",
+                "java.sql",
+                "jdk.crypto.ec",
+                "jdk.localedata",
+                "jdk.unsupported",
+            )
         }
     }
 }
