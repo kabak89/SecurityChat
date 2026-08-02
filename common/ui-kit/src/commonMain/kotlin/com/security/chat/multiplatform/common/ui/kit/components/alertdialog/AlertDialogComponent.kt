@@ -123,22 +123,29 @@ public fun AlertDialogComponent(
     val backProgressEased = (backProgress * BACK_PROGRESS_SPEED).coerceAtMost(1f)
     val visibility = appear.value * (1f - backProgressEased)
 
-    val backgroundPrimary = AppTheme.colors.backgroundSecondary
+    val overlayColor = AppTheme.colors.backgroundSecondary
 
-    val hazeStyle = remember(visibility) {
+    val hazeStyle = remember(visibility, overlayColor) {
         HazeStyle(
-            backgroundColor = backgroundPrimary,
-            tint = HazeTint(color = backgroundPrimary.copy(alpha = TINT_ALPHA * visibility)),
+            backgroundColor = overlayColor,
+            tint = HazeTint(color = overlayColor.copy(alpha = TINT_ALPHA * visibility)),
             blurRadius = (MAX_BLUR_RADIUS_DP * visibility).dp,
             fallbackTint = HazeTint(
-                color = backgroundPrimary.copy(alpha = FALLBACK_TINT_ALPHA * visibility),
+                color = overlayColor.copy(alpha = FALLBACK_TINT_ALPHA * visibility),
             ),
             noiseFactor = 0f,
         )
     }
 
+    /**
+     * The blur follows [visibility] linearly, while the alpha stays opaque until the dialog is
+     * half hidden and only then fades out, twice as fast.
+     */
+    val contentAlpha = (visibility / ALPHA_FADE_VISIBILITY).coerceAtMost(1f)
+
     BoxWithConstraints(
         modifier = Modifier
+            .graphicsLayer { alpha = contentAlpha }
             .fillMaxSize()
             .hazeEffect(
                 state = hazeState,
@@ -159,7 +166,6 @@ public fun AlertDialogComponent(
             }
         Box(
             modifier = Modifier
-                .graphicsLayer { alpha = visibility }
                 .wrapContentHeight()
                 .padding(horizontal = sidePadding)
                 .padding(bottom = 16.dp)
@@ -231,5 +237,6 @@ private const val BACK_PROGRESS_SPEED = 2f
 private const val MAX_BLUR_RADIUS_DP = 16f
 private const val TINT_ALPHA = 0.1f
 private const val FALLBACK_TINT_ALPHA = 0.6f
+private const val ALPHA_FADE_VISIBILITY = 0.5f
 private const val SCREEN_WIDTH_THRESHOLD_DP = 500
 private const val SIDE_PADDING_DP = 40
