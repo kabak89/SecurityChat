@@ -6,10 +6,12 @@ plugins {
     alias(libs.plugins.googleServices)
 }
 
+val javaVersion = JavaVersion.toVersion(libs.versions.javaVersion.get())
+
 kotlin {
     target {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
         }
     }
 
@@ -82,7 +84,7 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
 }
