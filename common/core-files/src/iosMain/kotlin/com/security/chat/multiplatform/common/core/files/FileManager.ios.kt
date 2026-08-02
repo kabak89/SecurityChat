@@ -4,6 +4,7 @@ import com.security.chat.multiplatform.common.core.files.error.TranscodeExceptio
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.BooleanVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
@@ -92,7 +93,8 @@ internal class FileManagerIos(
         directoryName: String,
     ): String {
         return withContext(dispatcherProvider.IO) {
-            val destinationPath = "${getDirectoryPath(directoryName)}/${NSUUID.UUID().UUIDString}"
+            val directoryPath = getCacheDirectoryPath(directoryName)
+            val destinationPath = "$directoryPath/${NSUUID.UUID().UUIDString}"
             val typeIdentifiers = fileSource.itemProvider.registeredTypeIdentifiers
                 .filterIsInstance<String>()
 
@@ -112,7 +114,7 @@ internal class FileManagerIos(
     }
 
     @OptIn(ExperimentalForeignApi::class)
-    override suspend fun getDirectoryPath(name: String): String {
+    override suspend fun getCacheDirectoryPath(name: String): String {
         return withContext(dispatcherProvider.IO) {
             val directoryPath = "$cacheDirectoryPath/$name"
             createDirectory(directoryPath)
@@ -163,15 +165,38 @@ internal class FileManagerIos(
         }
     }
 
+    /** The single-argument overload also reports directories, which are not files. */
     @OptIn(ExperimentalForeignApi::class)
-    override suspend fun clearDirectory(name: String) {
+    override suspend fun fileExists(path: String): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            memScoped {
+                val isDirectory = alloc<BooleanVar>()
+                val exists = NSFileManager.defaultManager.fileExistsAtPath(
+                    path = path,
+                    isDirectory = isDirectory.ptr,
+                )
+                exists && !isDirectory.value
+            }
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    override suspend fun clearCacheDirectory(name: String) {
         withContext(dispatcherProvider.IO) {
-            val directoryPath = "$cacheDirectoryPath/$name"
             NSFileManager.defaultManager.removeItemAtPath(
-                path = directoryPath,
+                path = "$cacheDirectoryPath/$name",
                 error = null,
             )
-            createDirectory(directoryPath)
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    override suspend fun clearDataDirectory(name: String) {
+        withContext(dispatcherProvider.IO) {
+            NSFileManager.defaultManager.removeItemAtPath(
+                path = "$dataDirectoryPath/$name",
+                error = null,
+            )
         }
     }
 

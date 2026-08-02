@@ -53,7 +53,7 @@ internal class FileManagerJvm(
     ): String {
         return withContext(dispatcherProvider.IO) {
             val destinationFile = File(
-                getOrCreateDirectory(directoryName),
+                getOrCreateCacheDirectory(directoryName),
                 UUID.randomUUID().toString(),
             )
 
@@ -63,9 +63,9 @@ internal class FileManagerJvm(
         }
     }
 
-    override suspend fun getDirectoryPath(name: String): String {
+    override suspend fun getCacheDirectoryPath(name: String): String {
         return withContext(dispatcherProvider.IO) {
-            getOrCreateDirectory(name).absolutePath
+            getOrCreateCacheDirectory(name).absolutePath
         }
     }
 
@@ -84,6 +84,10 @@ internal class FileManagerJvm(
             val source = File(sourcePath)
             val destination = File(destinationPath)
             destination.parentFile?.mkdirs()
+
+            /** A rename is atomic, but only works while both paths stay on the same filesystem. */
+            if (source.renameTo(destination)) return@withContext
+
             source.copyTo(destination, overwrite = true)
             source.delete()
         }
@@ -95,17 +99,25 @@ internal class FileManagerJvm(
         }
     }
 
-    override suspend fun clearDirectory(name: String) {
-        withContext(dispatcherProvider.IO) {
-            val directory = cacheDirectory.resolve(name)
-            directory.deleteRecursively()
-            check(directory.mkdirs()) {
-                "Cannot create cache directory: ${directory.absolutePath}"
-            }
+    override suspend fun fileExists(path: String): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            File(path).isFile
         }
     }
 
-    private fun getOrCreateDirectory(name: String): File {
+    override suspend fun clearCacheDirectory(name: String) {
+        withContext(dispatcherProvider.IO) {
+            cacheDirectory.resolve(name).deleteRecursively()
+        }
+    }
+
+    override suspend fun clearDataDirectory(name: String) {
+        withContext(dispatcherProvider.IO) {
+            dataDirectory.resolve(name).deleteRecursively()
+        }
+    }
+
+    private fun getOrCreateCacheDirectory(name: String): File {
         val directory = cacheDirectory.resolve(name)
         check(directory.isDirectory || directory.mkdirs()) {
             "Cannot create cache directory: ${directory.absolutePath}"

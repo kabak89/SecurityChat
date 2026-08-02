@@ -19,7 +19,6 @@ import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
-import com.security.chat.multiplatform.features.chat.data.entity.MessagesReceivedRequest
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
@@ -268,7 +267,6 @@ internal class ChatRepoImpl(
 
     override suspend fun subscribeToNewMessages(chatId: String) {
         val authorId = requireNotNull(userStorage.getUserId())
-        val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
 
         chatNetworkManager.getNewMessagesFlow(
             chatId = chatId,
@@ -276,50 +274,7 @@ internal class ChatRepoImpl(
         )
             .collect { chatMessage ->
                 runSuspendCatching {
-                    val storageModel: MessageSM = when (chatMessage) {
-                        is ChatMessageNM.Text -> MessageSM.Text(
-                            id = chatMessage.id,
-                            chatId = chatId,
-                            text = chatDataHelper.decryptText(
-                                text = chatMessage.text,
-                                privateKeyString = privateKey,
-                                key = chatMessage.key,
-                            ),
-                            authorId = chatMessage.authorId,
-                            status = Status.Received,
-                            timestamp = chatMessage.timestamp,
-                            recipients = listOf(authorId),
-                        )
-
-                        is ChatMessageNM.Image -> {
-                            val imageMessage = MessageSM.Image(
-                                id = chatMessage.id,
-                                chatId = chatId,
-                                fileId = chatMessage.fileId,
-                                key = chatDataHelper.decryptKey(
-                                    key = chatMessage.key,
-                                    privateKeyString = privateKey,
-                                ),
-                                isDownloaded = false,
-                                authorId = chatMessage.authorId,
-                                status = Status.Received,
-                                timestamp = chatMessage.timestamp,
-                                recipients = listOf(authorId),
-                            )
-
-                            chatDataHelper.downloadImage(imageMessage)
-                            imageMessage.copy(isDownloaded = true)
-                        }
-                    }
-                    chatStorage.saveMessage(storageModel)
-
-                    networkManager.runPost<MessagesReceivedRequest, Unit>(
-                        relativePath = "/messages/received",
-                        request = MessagesReceivedRequest(
-                            chatId = chatId,
-                            messageIds = listOf(chatMessage.id),
-                        ),
-                    )
+                    chatDataHelper.processNewMessage(message = chatMessage, chatId = chatId)
                 }
                     .onErr { error ->
                         val type = when (chatMessage) {

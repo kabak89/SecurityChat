@@ -66,7 +66,7 @@ public class PushRepositoryImpl(
         serializedMessages: String,
         chatId: String,
     ): NotificationInfo {
-        val messagesTexts = chatDataHelper.processNewMessages(
+        val messagesTexts = chatDataHelper.processPushPayload(
             serializedMessages = serializedMessages,
             chatId = chatId,
         )

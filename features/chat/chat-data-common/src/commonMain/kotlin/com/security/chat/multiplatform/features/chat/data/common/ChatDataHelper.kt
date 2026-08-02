@@ -18,6 +18,9 @@ import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
 import dev.whyoleg.cryptography.algorithms.RSA
 import dev.whyoleg.cryptography.algorithms.SHA512
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
@@ -28,10 +31,15 @@ import kotlin.io.encoding.Base64
 
 public interface ChatDataHelper {
     public suspend fun fetchAndSaveMessages(chatId: String)
-    public suspend fun processNewMessages(
+    public suspend fun processPushPayload(
         serializedMessages: String,
         chatId: String,
     ): List<String>
+
+    public suspend fun processNewMessage(
+        message: ChatMessageNM,
+        chatId: String,
+    )
 
     public suspend fun decryptText(
         text: String,
@@ -67,8 +75,6 @@ public interface ChatDataHelper {
     ): String
 
     public suspend fun getOneTimeEncryptionKey(): String
-
-    public suspend fun downloadImage(message: MessageSM.Image)
 }
 
 internal class ChatDataHelperImpl(
@@ -79,61 +85,34 @@ internal class ChatDataHelperImpl(
     private val dispatcherProvider: DispatcherProviderInterface,
 ) : ChatDataHelper {
 
+    private val downloadLocks: MutableMap<String, DownloadLock> = mutableMapOf()
+    private val downloadLocksGuard: Mutex = Mutex()
+
     override suspend fun fetchAndSaveMessages(chatId: String) {
         val messages = chatNetworkManager.getMessages(chatId = chatId)
-        if (messages.isEmpty()) return
-
-        val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
-        val recipients = listOf(checkNotNull(userStorage.getUserId()))
-
-        val messagesToStore = messages.mapNotNull {
-            it.toSMOrNull(
-                chatId = chatId,
-                privateKey = privateKey,
-                recipients = recipients,
-            )
-        }
-
-        chatStorage.saveMessages(messages = messagesToStore)
-
-        val messageIds = messagesToStore.map { it.id }
-
-        confirmReceivingMessages(
-            chatId = chatId,
-            messageIds = messageIds,
-        )
+        saveAndConfirmReceivingOfMessages(messages = messages, chatId = chatId)
     }
 
-    override suspend fun processNewMessages(
+    override suspend fun processPushPayload(
         serializedMessages: String,
         chatId: String,
     ): List<String> {
         val messages = chatNetworkManager.processNewMessages(serializedMessages)
-        val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
-        val recipients = listOf(checkNotNull(userStorage.getUserId()))
+        val storedMessages = saveAndConfirmReceivingOfMessages(messages = messages, chatId = chatId)
 
-        val messagesToStore = messages.mapNotNull {
-            it.toSMOrNull(
-                chatId = chatId,
-                privateKey = privateKey,
-                recipients = recipients,
-            )
-        }
-
-        chatStorage.saveMessages(messages = messagesToStore)
-        val messageIds = messagesToStore.map { it.id }
-
-        confirmReceivingMessages(
-            chatId = chatId,
-            messageIds = messageIds,
-        )
-
-        return messagesToStore.map { message ->
+        return storedMessages.map { message ->
             when (message) {
                 is MessageSM.Text -> message.text
                 is MessageSM.Image -> getString(StringRes.push_stub_image)
             }
         }
+    }
+
+    override suspend fun processNewMessage(
+        message: ChatMessageNM,
+        chatId: String,
+    ) {
+        saveAndConfirmReceivingOfMessages(messages = listOf(message), chatId = chatId)
     }
 
     override suspend fun decryptText(
@@ -278,35 +257,95 @@ internal class ChatDataHelperImpl(
         }
     }
 
+    private suspend fun saveAndConfirmReceivingOfMessages(
+        messages: List<ChatMessageNM>,
+        chatId: String,
+    ): List<MessageSM> {
+        if (messages.isEmpty()) return emptyList()
+
+        val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
+        val recipients = listOf(checkNotNull(userStorage.getUserId()))
+
+        val messagesToStore = messages.mapNotNull {
+            it.toSMOrNull(
+                chatId = chatId,
+                privateKey = privateKey,
+                recipients = recipients,
+            )
+        }
+
+        chatStorage.saveMessages(messages = messagesToStore)
+        val messageIds = messagesToStore.map { it.id }
+
+        confirmReceivingMessages(
+            chatId = chatId,
+            messageIds = messageIds,
+        )
+
+        return messagesToStore
+    }
+
     private suspend fun confirmReceivingMessages(
         chatId: String,
         messageIds: List<String>,
     ) {
+        if (messageIds.isEmpty()) return
+
         chatNetworkManager.confirmReceivingMessages(
             chatId = chatId,
             messageIds = messageIds,
         )
     }
 
-    override suspend fun downloadImage(message: MessageSM.Image) {
-        val encryptedDirectory =
-            fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
-        val encryptedFilePath = "$encryptedDirectory/${message.fileId}"
+    private suspend fun downloadImage(message: MessageSM.Image) {
+        withDownloadLock(message.fileId) {
+            val imagesDirectory = fileManager.getImagesDirectoryPath()
+            val destinationPath = "$imagesDirectory/${message.fileId}"
+            if (fileManager.fileExists(destinationPath)) return@withDownloadLock
 
-        chatNetworkManager.downloadFile(
-            fileId = message.fileId,
-            destinationPath = encryptedFilePath,
-        )
+            val stagingDirectory = fileManager.getCacheDirectoryPath(FileManager.DOWNLOADS_FOLDER)
+            val encryptedPath = "$stagingDirectory/${message.fileId}$ENCRYPTED_SUFFIX"
+            val decryptedPath = "$stagingDirectory/${message.fileId}"
 
-        val imagesDirectory = fileManager.getImagesDirectoryPath()
+            try {
+                chatNetworkManager.downloadFile(
+                    fileId = message.fileId,
+                    destinationPath = encryptedPath,
+                )
 
-        decryptFile(
-            sourcePath = encryptedFilePath,
-            destinationPath = "$imagesDirectory/${message.fileId}",
-            key = message.key,
-        )
+                decryptFile(
+                    sourcePath = encryptedPath,
+                    destinationPath = decryptedPath,
+                    key = message.key,
+                )
 
-        fileManager.deleteFile(path = encryptedFilePath)
+                fileManager.moveFile(
+                    sourcePath = decryptedPath,
+                    destinationPath = destinationPath,
+                )
+            } finally {
+                fileManager.deleteFile(path = encryptedPath)
+                fileManager.deleteFile(path = decryptedPath)
+            }
+        }
+    }
+
+    private suspend fun withDownloadLock(fileId: String, action: suspend () -> Unit) {
+        val lock = downloadLocksGuard.withLock {
+            downloadLocks.getOrPut(fileId) { DownloadLock() }.also { it.holderCount++ }
+        }
+
+        try {
+            lock.mutex.withLock { action() }
+        } finally {
+            /** Releasing suspends, so cancellation would otherwise keep the entry forever. */
+            withContext(NonCancellable) {
+                downloadLocksGuard.withLock {
+                    lock.holderCount--
+                    if (lock.holderCount == 0) downloadLocks.remove(fileId)
+                }
+            }
+        }
     }
 
     private suspend fun ChatMessageNM.toSMOrNull(
@@ -350,4 +389,12 @@ internal class ChatDataHelperImpl(
                 null
             }
     }
+
+    private class DownloadLock {
+        val mutex: Mutex = Mutex()
+        var holderCount: Int = 0
+    }
 }
+
+/** Keeps the still encrypted download apart from its decrypted result in the same directory. */
+private const val ENCRYPTED_SUFFIX = ".encrypted"

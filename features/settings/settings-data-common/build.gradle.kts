@@ -12,6 +12,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.koin.core)
 
+            implementation(projects.common.coreFiles)
             implementation(projects.common.coreNetwork)
 
             implementation(projects.features.settings.settingsDataStorage)
