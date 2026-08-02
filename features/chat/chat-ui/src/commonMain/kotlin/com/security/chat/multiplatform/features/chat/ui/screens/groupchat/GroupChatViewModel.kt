@@ -21,6 +21,7 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.groupChatErrorMapper
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.isNotImageError
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toUi
+import com.security.chat.multiplatform.features.push.domain.PushModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
@@ -31,6 +32,7 @@ import securitychat.common.localization.generated.resources.common_close
 internal class GroupChatViewModel(
     private val groupChatModel: GroupChatModel,
     private val params: GroupChatComponent,
+    private val pushModel: PushModel,
 ) : BaseViewModel<GroupChatState, GroupChatEvent>() {
 
     internal val messages: Flow<PagingData<MessageUM>> =
@@ -62,10 +64,13 @@ internal class GroupChatViewModel(
         viewActivable.activeFlow
             .onEach { active ->
                 if (active) {
+                    pushModel.clearNotificationsForChat(chatId = params.chatId)
                     groupChatModel.syncMessages.startOnSubscribe()
                     groupChatModel.onViewActive()
+                    pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
                 } else {
                     groupChatModel.onViewInactive()
+                    pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
                 }
             }
             .launchIn(viewModelScope)
