@@ -21,7 +21,7 @@ androidx-work = "2.11.2"
 
 #ios
 iosSqlCipher = "4.5.4"
-deploymentTarget = "14.0"
+deploymentTarget = "15.0"
 #ios
 
 appVersionCode = "23"
