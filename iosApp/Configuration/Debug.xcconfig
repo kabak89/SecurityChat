@@ -1,0 +1,6 @@
+// Build parameters forwarded to Gradle by the "Compile Kotlin Framework" build phase.
+// Accepted values and defaults live in build-logic ConventionBasePluginExtension.
+
+SERVER_ENV = dev
+IS_DEBUG = true
+ENABLE_LOGS = true

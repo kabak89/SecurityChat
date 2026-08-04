@@ -103,6 +103,12 @@ Build behavior is controlled by Gradle properties (defaults from
 - `-PisDebug=true|false` (default `true`)
 - `-PenableLogs=true|false` (default `true`)
 
+Defaults are declared in [gradle.properties](gradle.properties); `-P` on the command line overrides
+them. The values reach every target through BuildKonfig `defaultConfigs`, which generates into
+commonMain (`common/log` for `ENABLE_LOGS`, `common/core-network` for `IS_DEBUG` and `baseHost`), so
+no per-platform wiring is needed — only the Gradle invocation that produces the binary must carry
+the properties.
+
 ```bash
 # Release bundle, prod environment, no logs, no debug
 ./gradlew :androidApp:bundleRelease -PserverEnv=prod -PenableLogs=false -PisDebug=false
@@ -122,6 +128,9 @@ interop/compile errors), use:
 ./gradlew :shared:compileKotlinIosSimulatorArm64
 ```
 
+The JVM desktop app lives in `:shared` (Compose Desktop) and takes the properties directly, e.g.
+`./gradlew :shared:run -PserverEnv=prod -PisDebug=false -PenableLogs=false`.
+
 ## iOS specifics
 
 - **Entry point flow:** `iosApp/iosApp/iOSApp.swift` (`@main`, SwiftUI `WindowGroup`) →
@@ -138,6 +147,12 @@ interop/compile errors), use:
   `enableEdgeToEdge`;
   on iOS the status bar style is set globally via `UIApplication.setStatusBarStyle`, which requires
   `UIViewControllerBasedStatusBarAppearance = false` in `iosApp/iosApp/Info.plist`.
+- **Build parameters:** the `Compile Kotlin Framework` build phase passes `-PserverEnv`, `-PisDebug`
+  and `-PenableLogs` to Gradle, taking their values from the user-defined settings `SERVER_ENV`,
+  `IS_DEBUG` and `ENABLE_LOGS` in `iosApp/Configuration/Debug.xcconfig` and `Release.xcconfig`
+  (attached as base configurations of the project). Change the environment of an Xcode build there,
+  not in the shell script. Switching values invalidates the Gradle configuration cache and
+  regenerates BuildKonfig, so the framework is rebuilt from scratch.
 - **Kotlin/Native UIKit gotchas:** many `UIViewController` members (e.g. `preferredStatusBarStyle`)
   are `final` in the bindings and cannot be overridden by subclassing — prefer the global
   `UIApplication`/`UIWindow` APIs. Read-only Obj-C properties map to Kotlin `val`s; CGRect/struct
