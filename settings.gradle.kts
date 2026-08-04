@@ -40,6 +40,7 @@ include(
     ":common:app-lifecycle",
     ":common:log",
     ":common:crash-report",
+    ":common:analytics",
     ":common:error",
     ":common:device-info",
     ":common:platform-specific",

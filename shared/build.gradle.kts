@@ -22,6 +22,7 @@ kotlin {
             export(libs.essenty.lifecycle)
             export(libs.nsexception.kt.core)
             export(projects.common.crashReport)
+            export(projects.common.analytics)
             freeCompilerArgs += listOf(
                 "-Xoverride-konan-properties=" +
                         "osVersionMin.ios_arm64=$iosDeploymentTarget;" +
@@ -52,6 +53,7 @@ kotlin {
             implementation(projects.common.coreUi)
             implementation(projects.common.coreComponent)
             api(projects.common.crashReport)
+            api(projects.common.analytics)
             implementation(projects.common.coreFiles)
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)

@@ -16,6 +16,8 @@
 		AA0000000000000000000009 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000007 /* FirebaseCrashlytics */; };
 		AA000000000000000000000A /* NSExceptionKtCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000008 /* NSExceptionKtCrashlytics */; };
 		AA000000000000000000000C /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA000000000000000000000D /* FirebaseCore */; };
+		AA0000000000000000000012 /* AnalyticsReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000011 /* AnalyticsReporter.swift */; };
+		AA0000000000000000000013 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000014 /* FirebaseAnalytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +44,7 @@
 		AA0000000000000000000003 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA000000000000000000000E /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		AA000000000000000000000F /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		AA0000000000000000000011 /* AnalyticsReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsReporter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +53,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000000000000000000000C /* FirebaseCore in Frameworks */,
+				AA0000000000000000000013 /* FirebaseAnalytics in Frameworks */,
 				AA0000000000000000000009 /* FirebaseCrashlytics in Frameworks */,
 				AA000000000000000000000A /* NSExceptionKtCrashlytics in Frameworks */,
 			);
@@ -99,6 +103,7 @@
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
 				AA0000000000000000000001 /* CrashlyticsReporter.swift */,
+				AA0000000000000000000011 /* AnalyticsReporter.swift */,
 				AA0000000000000000000003 /* GoogleService-Info.plist */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
@@ -135,6 +140,7 @@
 			name = iosApp;
 			packageProductDependencies = (
 				AA000000000000000000000D /* FirebaseCore */,
+				AA0000000000000000000014 /* FirebaseAnalytics */,
 				AA0000000000000000000007 /* FirebaseCrashlytics */,
 				AA0000000000000000000008 /* NSExceptionKtCrashlytics */,
 			);
@@ -240,6 +246,7 @@
 			files = (
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				AA0000000000000000000002 /* CrashlyticsReporter.swift in Sources */,
+				AA0000000000000000000012 /* AnalyticsReporter.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -490,6 +497,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000000000000000000005 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		AA0000000000000000000014 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000005 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

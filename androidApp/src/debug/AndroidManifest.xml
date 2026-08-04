@@ -12,11 +12,17 @@
     <!--
         Keeps debug builds out of the Crashlytics dashboard. Disabling collection covers both
         fatal crashes caught by the SDK itself and non-fatal events reported through Log.e.
+        The analytics flag works the same way and also stops the automatic events the SDK
+        collects on its own, which a check inside our own wrapper could not suppress.
     -->
     <application>
 
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
+
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
             android:value="false" />
 
     </application>
