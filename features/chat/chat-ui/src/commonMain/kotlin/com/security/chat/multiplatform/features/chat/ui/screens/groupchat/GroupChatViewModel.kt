@@ -5,6 +5,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import com.security.chat.multiplatform.common.analytics.Analytics
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.localization.StringRes
@@ -33,6 +34,7 @@ internal class GroupChatViewModel(
     private val groupChatModel: GroupChatModel,
     private val params: GroupChatComponent,
     private val pushModel: PushModel,
+    private val analytics: Analytics,
 ) : BaseViewModel<GroupChatState, GroupChatEvent>() {
 
     internal val messages: Flow<PagingData<MessageUM>> =
@@ -123,10 +125,12 @@ internal class GroupChatViewModel(
     }
 
     fun onImagePicked(photo: PickedImage) {
+        analytics.logEvent("chat_image_sent")
         groupChatModel.sendImage.startOnSubscribe(photo)
     }
 
     fun onSendMessageClicked() {
+        analytics.logEvent("chat_message_sent")
         //TODO startOnSubscribe()
         groupChatModel.sendMessage.start()
     }

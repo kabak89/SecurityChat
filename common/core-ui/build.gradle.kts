@@ -31,6 +31,7 @@ kotlin {
             api(projects.common.log)
             api(projects.common.localization)
             api(projects.common.error)
+            api(projects.common.analytics)
         }
     }
 }

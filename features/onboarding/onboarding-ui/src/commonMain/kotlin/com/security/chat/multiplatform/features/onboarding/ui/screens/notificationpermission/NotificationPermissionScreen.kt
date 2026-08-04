@@ -50,7 +50,10 @@ import securitychat.common.localization.generated.resources.notification_permiss
 internal fun NotificationPermissionScreen(
     component: OnboardingMainComponent,
 ) {
-    Screen(component) { state: NotificationPermissionState, vm: NotificationPermissionViewModel ->
+    Screen(
+        component = component,
+        screenName = "NotificationPermissionScreen",
+    ) { state: NotificationPermissionState, vm: NotificationPermissionViewModel ->
         NotificationPermissionScreenContent(
             modifier = Modifier
                 .fillMaxSize()

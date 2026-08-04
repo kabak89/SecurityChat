@@ -51,7 +51,10 @@ import securitychat.common.localization.generated.resources.chat_list_title_not_
 public fun ChatListScreen(
     component: ChatListComponent,
 ) {
-    Screen(component) { state: ChatListState, vm: ChatListViewModel ->
+    Screen(
+        component = component,
+        screenName = "ChatListScreen",
+    ) { state: ChatListState, vm: ChatListViewModel ->
         ChatListContent(
             modifier = Modifier
                 .fillMaxSize(),

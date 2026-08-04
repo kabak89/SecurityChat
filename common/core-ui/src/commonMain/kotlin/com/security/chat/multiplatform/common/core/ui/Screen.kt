@@ -8,15 +8,18 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.security.chat.multiplatform.common.analytics.Analytics
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
 public inline fun <reified T, S : Any, C> Screen(
     component: C,
+    screenName: String,
     content: @Composable (state: S, vm: T) -> Unit,
 ) where T : BaseViewModel<S, *>,
         C : DiScopeHolder,
@@ -35,13 +38,26 @@ public inline fun <reified T, S : Any, C> Screen(
     )
 
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    /**
+     * Each `repeatOnLifecycle` gets its own coroutine: it returns only once the lifecycle is
+     * destroyed, so sequential calls would never reach the second one.
+     */
     LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            vm.onViewActive()
-            try {
-                awaitCancellation()
-            } finally {
-                vm.onViewInactive()
+        launch {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                val analytics: Analytics = component.getDiScope().get()
+                analytics.logScreenView(screenName)
+            }
+        }
+        launch {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.onViewActive()
+                try {
+                    awaitCancellation()
+                } finally {
+                    vm.onViewInactive()
+                }
             }
         }
     }

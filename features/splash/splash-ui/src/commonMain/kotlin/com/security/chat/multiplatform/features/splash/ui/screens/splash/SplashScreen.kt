@@ -19,7 +19,10 @@ import kotlinx.coroutines.flow.Flow
 public fun SplashScreen(
     component: SplashComponent,
 ) {
-    Screen(component) { state: SplashState, vm: SplashViewModel ->
+    Screen(
+        component = component,
+        screenName = "SplashScreen",
+    ) { state: SplashState, vm: SplashViewModel ->
         SplashContent(
             modifier = Modifier
                 .fillMaxSize(),

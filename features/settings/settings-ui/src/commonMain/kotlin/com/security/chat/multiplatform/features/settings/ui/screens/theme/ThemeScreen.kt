@@ -34,7 +34,10 @@ import securitychat.common.icons_kit.generated.resources.ic_back
 internal fun ThemeScreen(
     component: ThemeComponent,
 ) {
-    Screen(component) { state: ThemeState, vm: ThemeViewModel ->
+    Screen(
+        component = component,
+        screenName = "ThemeScreen",
+    ) { state: ThemeState, vm: ThemeViewModel ->
         ThemeScreenContent(
             modifier = Modifier
                 .fillMaxSize()

@@ -63,7 +63,10 @@ import securitychat.common.localization.generated.resources.create_chat_username
 public fun AddChatScreen(
     component: AddChatComponent,
 ) {
-    Screen(component) { state: AddChatState, vm: AddChatViewModel ->
+    Screen(
+        component = component,
+        screenName = "AddChatScreen",
+    ) { state: AddChatState, vm: AddChatViewModel ->
         AddChatContent(
             modifier = Modifier
                 .fillMaxSize(),

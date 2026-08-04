@@ -79,7 +79,10 @@ import securitychat.common.icons_kit.generated.resources.ic_send
 internal fun GroupChatScreen(
     component: GroupChatComponent,
 ) {
-    Screen(component) { state: GroupChatState, vm: GroupChatViewModel ->
+    Screen(
+        component = component,
+        screenName = "GroupChatScreen",
+    ) { state: GroupChatState, vm: GroupChatViewModel ->
         val messages = vm.messages.collectAsLazyPagingItems()
 
         GroupChatContent(

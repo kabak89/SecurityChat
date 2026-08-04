@@ -19,6 +19,7 @@ kotlin {
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)
+            implementation(projects.common.analytics)
 
             api(projects.features.chat.chatComponentApi)
 

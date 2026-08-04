@@ -48,6 +48,10 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<!-- Screen views are reported explicitly from the Screen composable; the automatic reporting
+	     would only ever name the single view controller hosting Compose. -->
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
         <dict>
             <key>NSAllowsArbitraryLoads</key>

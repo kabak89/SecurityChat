@@ -77,7 +77,10 @@ import securitychat.common.localization.generated.resources.profile_update
 internal fun ProfileMainScreen(
     component: ProfileMainComponent,
 ) {
-    Screen(component) { state: ProfileMainState, vm: ProfileMainViewModel ->
+    Screen(
+        component = component,
+        screenName = "ProfileMainScreen",
+    ) { state: ProfileMainState, vm: ProfileMainViewModel ->
         ProfileMainScreenContent(
             modifier = Modifier
                 .fillMaxSize()

@@ -37,7 +37,10 @@ import securitychat.common.icons_kit.generated.resources.ic_back
 internal fun SettingsMainScreen(
     component: SettingsMainComponent,
 ) {
-    Screen(component) { state: SettingsMainState, vm: SettingsMainViewModel ->
+    Screen(
+        component = component,
+        screenName = "SettingsMainScreen",
+    ) { state: SettingsMainState, vm: SettingsMainViewModel ->
         SettingsMainScreenContent(
             modifier = Modifier
                 .fillMaxSize()

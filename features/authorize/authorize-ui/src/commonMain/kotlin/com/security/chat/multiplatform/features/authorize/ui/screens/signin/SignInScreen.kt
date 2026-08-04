@@ -35,7 +35,10 @@ import kotlinx.coroutines.flow.emptyFlow
 internal fun SignInScreen(
     component: SignInComponent,
 ) {
-    Screen(component) { state: SignInState, vm: SignInViewModel ->
+    Screen(
+        component = component,
+        screenName = "SignInScreen",
+    ) { state: SignInState, vm: SignInViewModel ->
         SignInContent(
             modifier = Modifier
                 .fillMaxSize(),

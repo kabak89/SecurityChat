@@ -39,7 +39,10 @@ import securitychat.common.localization.generated.resources.sign_up_username_pla
 internal fun SignUpScreen(
     component: SignUpComponent,
 ) {
-    Screen(component) { state: SignUpState, vm: SignUpViewModel ->
+    Screen(
+        component = component,
+        screenName = "SignUpScreen",
+    ) { state: SignUpState, vm: SignUpViewModel ->
         SignUpContent(
             modifier = Modifier
                 .fillMaxSize(),

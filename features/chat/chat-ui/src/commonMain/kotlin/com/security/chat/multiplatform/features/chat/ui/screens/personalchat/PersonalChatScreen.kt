@@ -76,7 +76,10 @@ import securitychat.common.icons_kit.generated.resources.ic_send
 internal fun PersonalChatScreen(
     component: PersonalChatComponent,
 ) {
-    Screen(component) { state: PersonalChatState, vm: PersonalChatViewModel ->
+    Screen(
+        component = component,
+        screenName = "PersonalChatScreen",
+    ) { state: PersonalChatState, vm: PersonalChatViewModel ->
         val messages = vm.messages.collectAsLazyPagingItems()
         PersonalChatContent(
             modifier = Modifier

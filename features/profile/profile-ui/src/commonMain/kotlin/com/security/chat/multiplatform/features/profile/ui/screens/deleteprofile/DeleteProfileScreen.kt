@@ -83,7 +83,10 @@ import kotlin.random.Random
 internal fun DeleteProfileScreen(
     component: DeleteProfileComponent,
 ) {
-    Screen(component) { state: DeleteProfileState, vm: DeleteProfileViewModel ->
+    Screen(
+        component = component,
+        screenName = "DeleteProfileScreen",
+    ) { state: DeleteProfileState, vm: DeleteProfileViewModel ->
         DeleteProfileScreenContent(
             modifier = Modifier
                 .fillMaxSize()

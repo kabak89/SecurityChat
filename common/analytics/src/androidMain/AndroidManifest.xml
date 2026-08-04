@@ -5,4 +5,17 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!--
+        Screen views are reported explicitly from the Screen composable. The automatic reporting
+        would only ever name the single Activity hosting Compose, so it adds noise to the same
+        event and is turned off.
+    -->
+    <application>
+
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
+
+    </application>
+
 </manifest>
