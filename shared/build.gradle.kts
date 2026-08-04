@@ -20,6 +20,8 @@ kotlin {
             isStatic = true
             export(libs.decompose)
             export(libs.essenty.lifecycle)
+            export(libs.nsexception.kt.core)
+            export(projects.common.crashReport)
             freeCompilerArgs += listOf(
                 "-Xoverride-konan-properties=" +
                         "osVersionMin.ios_arm64=$iosDeploymentTarget;" +
@@ -49,6 +51,7 @@ kotlin {
 
             implementation(projects.common.coreUi)
             implementation(projects.common.coreComponent)
+            api(projects.common.crashReport)
             implementation(projects.common.coreFiles)
             implementation(projects.common.settings)
             implementation(projects.common.coreNetwork)
@@ -81,6 +84,10 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
+        }
+        iosMain.dependencies {
+            /** Exported: the NSExceptionKt Swift package extends the class this library defines. */
+            api(libs.nsexception.kt.core)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -1,3 +1,6 @@
+import FirebaseCore
+import FirebaseCrashlytics
+import NSExceptionKtCrashlytics
 import SwiftUI
 import shared
 
@@ -20,6 +23,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        FirebaseApp.configure()
+        #if DEBUG
+        let isCrashReportingEnabled = false
+        #else
+        let isCrashReportingEnabled = true
+        #endif
+        // Crashlytics persists this flag, so it is set on every launch rather than only turned off
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(isCrashReportingEnabled)
+        // Reports unhandled Kotlin exceptions with a readable stack trace instead of a bare SIGABRT
+        NSExceptionKt.addReporter(.crashlytics(causedByStrategy: .append))
+        IosCrashReporterBridgeKt.setIosCrashReporterBridge(bridge: CrashlyticsReporter())
         KoinInitializerIosKt.doInitKoin()
         return true
     }

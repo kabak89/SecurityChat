@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.network.di.coreNetworkModule
 import com.security.chat.multiplatform.common.core.network.di.networkEngineModule
 import com.security.chat.multiplatform.common.core.threading.di.coreThreadingModule
 import com.security.chat.multiplatform.common.core.time.di.coreTimeModule
+import com.security.chat.multiplatform.common.crash.report.di.crashReportModule
 import com.security.chat.multiplatform.common.device.info.di.deviceInfoModule
 import com.security.chat.multiplatform.common.permission.di.permissionModule
 import com.security.chat.multiplatform.common.settings.di.settingsModule
@@ -25,6 +26,7 @@ import org.koin.core.module.Module
 internal val commonAppDiModules: List<Module> =
     listOf(
         sharedModule,
+        crashReportModule,
         coreThreadingModule,
         coreDbModule,
         coreFilesModule,

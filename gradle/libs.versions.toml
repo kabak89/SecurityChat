@@ -15,6 +15,7 @@ android-targetSdk = "37"
 activityCompose = "1.13.0"
 firebase-bom = "34.17.0"
 google-services = "4.5.0"
+firebase-crashlytics-plugin = "3.0.7"
 androidx-core = "1.19.0"
 androidx-work = "2.11.2"
 #android
@@ -22,6 +23,7 @@ androidx-work = "2.11.2"
 #ios
 iosSqlCipher = "4.5.4"
 deploymentTarget = "15.0"
+nsexceptionKt = "1.0.11"
 #ios
 
 appVersionCode = "23"
@@ -137,6 +139,9 @@ paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pag
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+
+nsexception-kt-core = { module = "com.rickclephas.kmp:nsexception-kt-core", version.ref = "nsexceptionKt" }
 
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 
@@ -171,3 +176,4 @@ sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services" }
+firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin" }

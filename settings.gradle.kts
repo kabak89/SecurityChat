@@ -39,6 +39,7 @@ include(
     ":common:ui-kit",
     ":common:app-lifecycle",
     ":common:log",
+    ":common:crash-report",
     ":common:error",
     ":common:device-info",
     ":common:platform-specific",

@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.di
 
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.crash.report.initCrashReporting
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
@@ -14,6 +15,8 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 public fun initDI(appDeclaration: KoinAppDeclaration = {}) {
+    initCrashReporting()
+
     initKoin(appDeclaration = appDeclaration)
 
     val coroutineScopeModule = module {

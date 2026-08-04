@@ -9,4 +9,16 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 
+    <!--
+        Keeps debug builds out of the Crashlytics dashboard. Disabling collection covers both
+        fatal crashes caught by the SDK itself and non-fatal events reported through Log.e.
+    -->
+    <application>
+
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
+
+    </application>
+
 </manifest>

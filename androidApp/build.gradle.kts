@@ -1,9 +1,11 @@
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 val javaVersion = JavaVersion.toVersion(libs.versions.javaVersion.get())
@@ -80,6 +82,14 @@ android {
             isShrinkResources = true
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName(variantNameRelease)
+            }
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = true
+            }
+        }
+        getByName("debug") {
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
             }
         }
     }
