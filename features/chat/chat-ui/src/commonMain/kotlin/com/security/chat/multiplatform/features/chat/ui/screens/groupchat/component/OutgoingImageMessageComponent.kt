@@ -1,6 +1,12 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,24 +24,52 @@ import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun OutgoingImageMessageComponent(
     modifier: Modifier = Modifier,
     message: MessageUM.Outgoing.Image,
+    onClicked: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    isFullscreenVisible: Boolean = false,
 ) {
     Column(
         modifier = modifier
             .padding(all = 16.dp),
         horizontalAlignment = Alignment.End,
     ) {
-        ImageComponent(
-            modifier = Modifier
-                .widthIn(min = 120.dp, max = 260.dp)
-                .heightIn(min = 120.dp, max = 340.dp)
-                .clip(AppTheme.shapes.roundedRectangle8),
-            filePath = message.filePath,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        if (sharedTransitionScope != null) {
+            AnimatedVisibility(
+                visible = !isFullscreenVisible,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                with(sharedTransitionScope) {
+                    ImageComponent(
+                        modifier = Modifier
+                            .widthIn(min = 120.dp, max = 260.dp)
+                            .heightIn(min = 120.dp, max = 340.dp)
+                            .sharedElement(
+                                sharedContentState = rememberSharedContentState(key = message.id),
+                                animatedVisibilityScope = this@AnimatedVisibility,
+                            )
+                            .clickable(onClick = onClicked)
+                            .clip(AppTheme.shapes.roundedRectangle8),
+                        filePath = message.filePath,
+                    )
+                }
+            }
+        } else {
+            ImageComponent(
+                modifier = Modifier
+                    .widthIn(min = 120.dp, max = 260.dp)
+                    .heightIn(min = 120.dp, max = 340.dp)
+                    .clickable(onClick = onClicked)
+                    .clip(AppTheme.shapes.roundedRectangle8),
+                filePath = message.filePath,
+            )
+        }
+        Spacer(modifier.height(8.dp))
         Text(
             modifier = Modifier,
             text = message.datetimeText,
@@ -59,6 +93,7 @@ internal fun OutgoingOutgoingImageMessageComponentPreview() {
                 datetimeText = "12:10",
                 filePath = "",
             ),
+            onClicked = {},
         )
     }
 }

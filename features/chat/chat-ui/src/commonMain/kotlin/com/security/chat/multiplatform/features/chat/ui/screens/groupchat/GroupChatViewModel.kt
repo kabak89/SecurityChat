@@ -13,11 +13,13 @@ import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.core.ui.mappers.toUiLceState
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.GroupChatModel
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.FullscreenImageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.groupChatErrorMapper
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.isNotImageError
@@ -117,6 +119,7 @@ internal class GroupChatViewModel(
             message = "",
             syncState = UiLceState.NotStarted,
             alertDialogDescriptor = null,
+            fullscreenImage = null,
         )
     }
 
@@ -137,5 +140,35 @@ internal class GroupChatViewModel(
 
     fun onSyncClicked() {
         groupChatModel.syncMessages.startOnSubscribe()
+    }
+
+    fun onImageClicked(message: MessageUM) {
+        analytics.logEvent("image_clicked")
+
+        val filePath = when (message) {
+            is MessageUM.Incoming.Text,
+            is MessageUM.Nothing,
+            is MessageUM.Outgoing.Text,
+                -> {
+                Log.e("not image message: ${message::class}")
+                return
+            }
+
+            is MessageUM.Incoming.Image -> message.filePath
+            is MessageUM.Outgoing.Image -> message.filePath
+        }
+
+        updateState {
+            it.copy(
+                fullscreenImage = FullscreenImageUM(
+                    messageId = message.id,
+                    filePath = filePath,
+                ),
+            )
+        }
+    }
+
+    fun onFullscreenImageDismissed() {
+        updateState { it.copy(fullscreenImage = null) }
     }
 }

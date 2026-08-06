@@ -1,14 +1,17 @@
 package com.security.chat.multiplatform.common.analytics
 
+import com.security.chat.multiplatform.common.log.Log
 import kotlin.concurrent.Volatile
 
 internal class AnalyticsIos : Analytics {
 
     override fun logEvent(name: String, params: Map<String, String>) {
+        Log.d { "logEvent: name: $name, params: $params" }
         bridgeOrWarn()?.logEvent(name, params)
     }
 
     override fun logScreenView(screenName: String, screenClass: String?) {
+        Log.d { "logScreenView: screenName: $screenName, screenClass: $screenClass" }
         bridgeOrWarn()?.logScreenView(screenName, screenClass)
     }
 

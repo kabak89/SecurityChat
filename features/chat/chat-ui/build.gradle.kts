@@ -16,6 +16,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.autolinktext)
             implementation(libs.coil.compose)
+            implementation(libs.zoomimage.compose.coil3)
+            implementation(libs.navigationevent.compose)
 
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)

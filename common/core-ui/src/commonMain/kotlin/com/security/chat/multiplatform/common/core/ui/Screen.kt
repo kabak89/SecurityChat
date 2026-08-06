@@ -14,6 +14,7 @@ import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.error.ClosedScopeException
 import org.koin.core.parameter.parametersOf
 
 @Composable
@@ -46,8 +47,14 @@ public inline fun <reified T, S : Any, C> Screen(
     LaunchedEffect(lifecycleOwner) {
         launch {
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                val analytics: Analytics = component.getDiScope().get()
-                analytics.logScreenView(screenName)
+                try {
+                    val scope = component.getDiScope()
+                    if (scope.closed) return@repeatOnLifecycle
+                    val analytics: Analytics = scope.get()
+                    analytics.logScreenView(screenName)
+                } catch (_: ClosedScopeException) {
+                    // Scope may already be closed while leaving the screen.
+                }
             }
         }
         launch {

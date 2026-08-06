@@ -1,6 +1,13 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.groupchat
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,9 +43,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -55,6 +66,7 @@ import com.security.chat.multiplatform.features.chat.component.api.GroupChatComp
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.FullscreenImageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingImageMessageComponent
@@ -97,10 +109,13 @@ internal fun GroupChatScreen(
             onImagePicked = vm::onImagePicked,
             onSendMessageClicked = vm::onSendMessageClicked,
             onSyncClicked = vm::onSyncClicked,
+            onImageClicked = vm::onImageClicked,
+            onFullscreenImageDismissed = vm::onFullscreenImageDismissed,
         )
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun GroupChatContent(
     modifier: Modifier,
@@ -112,6 +127,8 @@ private fun GroupChatContent(
     onImagePicked: (PickedImage) -> Unit,
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
+    onImageClicked: (message: MessageUM) -> Unit,
+    onFullscreenImageDismissed: () -> Unit,
 ) {
     val photoPickerLauncher = rememberPhotoPickerLauncher(
         onImagePicked = onImagePicked,
@@ -130,88 +147,131 @@ private fun GroupChatContent(
             ),
         )
     }
-    Box(
+    val fullscreenImage = state.fullscreenImage
+    if (fullscreenImage != null && !LocalInspectionMode.current) {
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            isBackEnabled = true,
+            onBackCompleted = onFullscreenImageDismissed,
+        )
+    }
+    SharedTransitionLayout(
         modifier = modifier
             .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize(),
     ) {
-        var toolbarHeight by remember { mutableStateOf(0) }
-        var editMessageComponentHeight by remember { mutableStateOf(0) }
-        val localDensity = LocalDensity.current
-        val lazyListState = rememberLazyListState()
-        StickToNewestMessageEffect(
-            lazyListState = lazyListState,
-            messages = messages,
-        )
-        MessagesComponent(
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSource(state = hazeState),
-            state = state,
-            toolbarHeight = with(localDensity) { toolbarHeight.toDp() },
-            editMessageComponentHeight = with(localDensity) { editMessageComponentHeight.toDp() },
-            messages = messages,
-            lazyListState = lazyListState,
-        )
-        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        Toolbar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .hazeEffect(
-                    state = hazeState,
-                    style = hazeStyle,
-                )
-                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                .onGloballyPositioned {
-                    val topPaddingInPixels = with(localDensity) {
-                        statusBarHeight.toPx()
-                    }.toInt()
-                    toolbarHeight = it.size.height + topPaddingInPixels
+        Box(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            var toolbarHeight by remember { mutableStateOf(0) }
+            var editMessageComponentHeight by remember { mutableStateOf(0) }
+            val localDensity = LocalDensity.current
+            val lazyListState = rememberLazyListState()
+
+            StickToNewestMessageEffect(
+                lazyListState = lazyListState,
+                messages = messages,
+            )
+            MessagesComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeSource(state = hazeState),
+                toolbarHeight = with(localDensity) { toolbarHeight.toDp() },
+                editMessageComponentHeight = with(localDensity) {
+                    editMessageComponentHeight.toDp()
                 },
-            state = state,
-            onBackClicked = onBackClicked,
-            onSyncClicked = onSyncClicked,
-        )
-        val isImeVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() != 0.dp
-        val editPanelBottomPadding = if (isImeVisible) {
-            0.dp
-        } else {
-            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                messages = messages,
+                lazyListState = lazyListState,
+                onImageClicked = onImageClicked,
+                sharedTransitionScope = this@SharedTransitionLayout,
+                fullscreenMessageId = fullscreenImage?.messageId,
+            )
+            val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+            Toolbar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .hazeEffect(
+                        state = hazeState,
+                        style = hazeStyle,
+                    )
+                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                    .onGloballyPositioned {
+                        val topPaddingInPixels = with(localDensity) {
+                            statusBarHeight.toPx()
+                        }.toInt()
+                        toolbarHeight = it.size.height + topPaddingInPixels
+                    },
+                state = state,
+                onBackClicked = onBackClicked,
+                onSyncClicked = onSyncClicked,
+            )
+            val isImeVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() != 0.dp
+            val editPanelBottomPadding = if (isImeVisible) {
+                0.dp
+            } else {
+                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            }
+            val animatedPadding by animateDpAsState(
+                targetValue = editPanelBottomPadding,
+                label = "editPanelBottomPadding",
+            )
+            EditMessageComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .hazeEffect(
+                        state = hazeState,
+                        style = hazeStyle,
+                    )
+                    .background(AppTheme.colors.backgroundSecondary.copy(alpha = 0.5f))
+                    .padding(bottom = animatedPadding)
+                    .onGloballyPositioned {
+                        val bottomPaddingInPixels = with(localDensity) {
+                            editPanelBottomPadding.toPx()
+                        }.toInt()
+                        editMessageComponentHeight = it.size.height + bottomPaddingInPixels
+                    },
+                message = state.message,
+                onMessageEdited = onMessageEdited,
+                onAttachClicked = photoPickerLauncher::launch,
+                onSendMessageClicked = onSendMessageClicked,
+            )
+            AnimatedContent(
+                targetState = fullscreenImage,
+                modifier = Modifier
+                    .fillMaxSize(),
+                label = "fullscreenImage",
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                },
+            ) { image ->
+                if (image != null) {
+                    FullscreenImageComponent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .sharedElement(
+                                sharedContentState = rememberSharedContentState(
+                                    key = image.messageId,
+                                ),
+                                animatedVisibilityScope = this@AnimatedContent,
+                            )
+                            .background(AppTheme.colors.backgroundPrimary),
+                        filePath = image.filePath,
+                        enableZoom = !this@SharedTransitionLayout.isTransitionActive,
+                        onDismiss = onFullscreenImageDismissed,
+                    )
+                }
+            }
+            if (state.alertDialogDescriptor != null) {
+                AlertDialogComponent(
+                    content = state.alertDialogDescriptor.content,
+                    onDismissRequest = state.alertDialogDescriptor.dismissAction,
+                    onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
+                    onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+                    hazeState = hazeState,
+                )
+            }
         }
-        val animatedPadding by animateDpAsState(
-            targetValue = editPanelBottomPadding,
-            label = "editPanelBottomPadding",
-        )
-        EditMessageComponent(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .hazeEffect(
-                    state = hazeState,
-                    style = hazeStyle,
-                )
-                .background(AppTheme.colors.backgroundSecondary.copy(alpha = 0.5f))
-                .padding(bottom = animatedPadding)
-                .onGloballyPositioned {
-                    val bottomPaddingInPixels = with(localDensity) {
-                        editPanelBottomPadding.toPx()
-                    }.toInt()
-                    editMessageComponentHeight = it.size.height + bottomPaddingInPixels
-                },
-            message = state.message,
-            onMessageEdited = onMessageEdited,
-            onAttachClicked = photoPickerLauncher::launch,
-            onSendMessageClicked = onSendMessageClicked,
-        )
-    }
-    if (state.alertDialogDescriptor != null) {
-        AlertDialogComponent(
-            content = state.alertDialogDescriptor.content,
-            onDismissRequest = state.alertDialogDescriptor.dismissAction,
-            onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
-            onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
-            hazeState = hazeState,
-        )
     }
 }
 
@@ -240,14 +300,17 @@ private fun Toolbar(
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MessagesComponent(
     modifier: Modifier = Modifier,
-    state: GroupChatState,
     toolbarHeight: Dp,
     editMessageComponentHeight: Dp,
     messages: LazyPagingItems<MessageUM>,
     lazyListState: LazyListState,
+    onImageClicked: (message: MessageUM) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    fullscreenMessageId: String?,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -293,6 +356,9 @@ private fun MessagesComponent(
                                     modifier = Modifier.fillMaxWidth(),
                                     message = message,
                                     showSenderName = showSenderName,
+                                    onClicked = { onImageClicked(message) },
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    isFullscreenVisible = fullscreenMessageId == message.id,
                                 )
                             }
                         }
@@ -306,6 +372,9 @@ private fun MessagesComponent(
                     is MessageUM.Outgoing.Image -> OutgoingImageMessageComponent(
                         modifier = Modifier.fillMaxWidth(),
                         message = message,
+                        onClicked = { onImageClicked(message) },
+                        sharedTransitionScope = sharedTransitionScope,
+                        isFullscreenVisible = fullscreenMessageId == message.id,
                     )
 
                     is MessageUM.Nothing -> {
@@ -435,6 +504,7 @@ internal fun GroupChatScreenPreview() {
                 message = "",
                 syncState = UiLceState.NotStarted,
                 alertDialogDescriptor = null,
+                fullscreenImage = null,
             ),
             messages = previewMessages,
             events = emptyFlow(),
@@ -443,6 +513,8 @@ internal fun GroupChatScreenPreview() {
             onImagePicked = {},
             onSendMessageClicked = {},
             onSyncClicked = {},
+            onImageClicked = {},
+            onFullscreenImageDismissed = {},
         )
     }
 }
