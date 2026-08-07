@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
@@ -25,6 +26,7 @@ public interface MainComponent : BackHandlerOwner {
 
     public fun openPrivateChat(chatId: String)
     public fun openGroupChat(chatId: String)
+    public fun handleSendText(text: String)
 
     public val childStack: Value<ChildStack<*, Child>>
 
@@ -37,6 +39,7 @@ public interface MainComponent : BackHandlerOwner {
     public sealed interface Params {
         public data class PrivateChat(val chatId: String) : Params
         public data class GroupChat(val chatId: String) : Params
+        public data class ShareText(val text: String) : Params
     }
 }
 
@@ -47,6 +50,8 @@ public class MainComponentImpl(
 ) : MainComponent, ComponentContext by componentContext {
 
     private val navigation = StackNavigation<Params>()
+
+    private var pendingSharedText: String? = null
 
     override val childStack: Value<ChildStack<*, MainComponent.Child>> =
         childStack(
@@ -68,6 +73,11 @@ public class MainComponentImpl(
                                 Params.PrivateChatParams(chatId = params.chatId),
                             )
                         }
+
+                        is MainComponent.Params.ShareText -> {
+                            pendingSharedText = params.text
+                            listOf(Params.ChatsParams)
+                        }
                     }
                 } else {
                     listOf(Params.ChatsParams)
@@ -79,6 +89,11 @@ public class MainComponentImpl(
 
     override fun onBackClicked() {
         navigation.pop()
+    }
+
+    override fun handleSendText(text: String) {
+        pendingSharedText = text
+        navigation.replaceAll(Params.ChatsParams)
     }
 
     override fun openPrivateChat(chatId: String) {
@@ -157,7 +172,9 @@ public class MainComponentImpl(
                         onPublicChatClicked = { chatId ->
                             val configuration = Params.PrivateChatParams(
                                 chatId = chatId,
+                                initialText = pendingSharedText,
                             )
+                            pendingSharedText = null
                             navigation.push(configuration = configuration)
                         },
                         onSettingsClicked = {
@@ -166,7 +183,9 @@ public class MainComponentImpl(
                         onGroupChatClicked = { chatId ->
                             val configuration = Params.GroupChatParams(
                                 chatId = chatId,
+                                initialText = pendingSharedText,
                             )
+                            pendingSharedText = null
                             navigation.push(configuration = configuration)
                         },
                     ),
@@ -188,7 +207,10 @@ public class MainComponentImpl(
                     component = ChatComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
-                        params = ChatComponent.Params.PersonalChat(params.chatId),
+                        params = ChatComponent.Params.PersonalChat(
+                            value = params.chatId,
+                            initialText = params.initialText,
+                        ),
                     ),
                 )
             }
@@ -198,7 +220,10 @@ public class MainComponentImpl(
                     component = ChatComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
-                        params = ChatComponent.Params.GroupChatId(params.chatId),
+                        params = ChatComponent.Params.GroupChatId(
+                            value = params.chatId,
+                            initialText = params.initialText,
+                        ),
                     ),
                 )
             }
@@ -217,11 +242,13 @@ public class MainComponentImpl(
         @Serializable
         data class PrivateChatParams(
             val chatId: String,
+            val initialText: String? = null,
         ) : Params
 
         @Serializable
         data class GroupChatParams(
             val chatId: String,
+            val initialText: String? = null,
         ) : Params
     }
 }

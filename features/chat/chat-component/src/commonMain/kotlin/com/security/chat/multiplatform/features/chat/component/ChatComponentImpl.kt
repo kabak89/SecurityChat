@@ -35,12 +35,14 @@ public class ChatComponentImpl(
                     is ChatComponent.Params.GroupChatId -> {
                         Params.GroupChatParams(
                             chatId = params.value,
+                            initialText = params.initialText,
                         )
                     }
 
                     is ChatComponent.Params.PersonalChat -> {
                         Params.PersonalChatParams(
                             chatId = params.value,
+                            initialText = params.initialText,
                         )
                     }
                 }
@@ -76,6 +78,7 @@ public class ChatComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
                         chatId = params.chatId,
+                        initialText = params.initialText,
                     ),
                 )
             }
@@ -86,6 +89,7 @@ public class ChatComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
                         chatId = params.chatId,
+                        initialText = params.initialText,
                     ),
                 )
             }
@@ -98,11 +102,13 @@ public class ChatComponentImpl(
         @Serializable
         data class PersonalChatParams(
             val chatId: String,
+            val initialText: String? = null,
         ) : Params()
 
         @Serializable
         data class GroupChatParams(
             val chatId: String,
+            val initialText: String? = null,
         ) : Params()
 
     }

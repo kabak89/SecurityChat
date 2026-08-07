@@ -168,6 +168,11 @@ public class RootComponentImpl(
                 val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
                 activeMain?.component?.openGroupChat(chatId = link.chatId)
             }
+
+            is RootComponent.DeepLink.SendText -> {
+                val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
+                activeMain?.component?.handleSendText(text = link.text)
+            }
         }
     }
 
@@ -216,6 +221,10 @@ public class RootComponentImpl(
 
             is RootComponent.DeepLink.OpenPrivateChat -> {
                 MainComponent.Params.PrivateChat(chatId = deeplinkParams.chatId)
+            }
+
+            is RootComponent.DeepLink.SendText -> {
+                MainComponent.Params.ShareText(text = deeplinkParams.text)
             }
 
             null -> null

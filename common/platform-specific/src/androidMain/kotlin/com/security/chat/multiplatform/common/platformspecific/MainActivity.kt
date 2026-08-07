@@ -63,6 +63,11 @@ public class MainActivity : ComponentActivity() {
 }
 
 private fun Intent.toDeepLink(): RootComponent.DeepLink? {
+    if (action == Intent.ACTION_SEND && type == "text/plain") {
+        val sharedText = getStringExtra(Intent.EXTRA_TEXT) ?: return null
+        return RootComponent.DeepLink.SendText(text = sharedText)
+    }
+
     val chatId = getStringExtra(IntentBuilderContract.EXTRA_CHAT_ID) ?: return null
 
     return when (action) {

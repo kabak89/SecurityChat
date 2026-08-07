@@ -5,7 +5,6 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
-import kotlin.jvm.JvmInline
 
 public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
 
@@ -21,10 +20,17 @@ public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner 
     }
 
     public sealed interface Params {
-        @JvmInline
-        public value class PersonalChat(public val value: String) : Params
+        public val value: String
+        public val initialText: String?
 
-        @JvmInline
-        public value class GroupChatId(public val value: String) : Params
+        public data class PersonalChat(
+            override val value: String,
+            override val initialText: String? = null,
+        ) : Params
+
+        public data class GroupChatId(
+            override val value: String,
+            override val initialText: String? = null,
+        ) : Params
     }
 }

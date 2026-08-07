@@ -8,6 +8,7 @@ import com.security.chat.multiplatform.features.chat.domain.GroupChatModel
 
 public class GroupChatComponentImpl(
     override val chatId: String,
+    private val initialText: String? = null,
     private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : GroupChatComponent,
@@ -20,6 +21,9 @@ public class GroupChatComponentImpl(
         doOnCreate {
             val groupChatModel: GroupChatModel = getKoin().get()
             groupChatModel.start(parentScope = componentCoroutineScope)
+            if (initialText != null) {
+                groupChatModel.setCurrentMessageText(initialText)
+            }
         }
     }
 

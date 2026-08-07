@@ -8,6 +8,7 @@ import com.security.chat.multiplatform.features.chat.domain.PersonalChatModel
 
 public class PersonalChatComponentImpl(
     override val chatId: String,
+    private val initialText: String? = null,
     private val onExit: () -> Unit,
     componentContext: ComponentContext,
 ) : PersonalChatComponent,
@@ -20,6 +21,9 @@ public class PersonalChatComponentImpl(
         doOnCreate {
             val personalChatModel: PersonalChatModel = getKoin().get()
             personalChatModel.start(parentScope = componentCoroutineScope)
+            if (initialText != null) {
+                personalChatModel.setCurrentMessageText(initialText)
+            }
         }
     }
 
