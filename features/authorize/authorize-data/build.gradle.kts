@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.coreNetwork)
+            implementation(projects.common.deviceInfo)
 
             implementation(projects.features.authorize.authorizeDomain)
             implementation(projects.features.user.userDataStorage)

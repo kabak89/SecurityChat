@@ -8,4 +8,5 @@ internal data class RegisterDeviceTokenRequest(
     @SerialName("userId") val userId: String,
     @SerialName("token") val token: String,
     @SerialName("platform") val platform: String,
+    @SerialName("deviceId") val deviceId: String,
 )

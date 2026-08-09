@@ -15,6 +15,8 @@ public interface UserStorage {
     public suspend fun getUserName(): String?
     public suspend fun saveOnboardingPassed()
     public suspend fun getIsOnboardingPassed(): Boolean
+    public suspend fun saveDeviceId(id: String)
+    public suspend fun getDeviceId(): String?
     public suspend fun clearAll()
 }
 
@@ -104,6 +106,21 @@ internal class UserStorageImpl(
         }
     }
 
+    override suspend fun saveDeviceId(id: String) {
+        withContext(dispatcherProvider.IO) {
+            encryptedSettings.putString(
+                key = KEY_DEVICE_ID,
+                value = id,
+            )
+        }
+    }
+
+    override suspend fun getDeviceId(): String? {
+        return withContext(dispatcherProvider.IO) {
+            encryptedSettings.getString(KEY_DEVICE_ID)
+        }
+    }
+
     override suspend fun clearAll() {
         withContext(dispatcherProvider.IO) {
             encryptedSettings.putString(
@@ -126,6 +143,10 @@ internal class UserStorageImpl(
                 key = KEY_IS_ONBOARDING_PASSED,
                 value = null,
             )
+            encryptedSettings.putString(
+                key = KEY_DEVICE_ID,
+                value = null,
+            )
         }
     }
 }
@@ -135,3 +156,4 @@ private const val KEY_PUBLIC_KEY = "KEY_PUBLIC_KEY"
 private const val KEY_PRIVATE_KEY = "KEY_PRIVATE_KEY"
 private const val KEY_USER_NAME = "KEY_USER_NAME"
 private const val KEY_IS_ONBOARDING_PASSED = "KEY_IS_ONBOARDING_PASSED"
+private const val KEY_DEVICE_ID = "KEY_DEVICE_ID"

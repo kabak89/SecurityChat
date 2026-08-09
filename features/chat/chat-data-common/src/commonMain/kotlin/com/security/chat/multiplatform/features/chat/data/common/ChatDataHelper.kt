@@ -266,6 +266,10 @@ internal class ChatDataHelperImpl(
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
         val recipients = listOf(checkNotNull(userStorage.getUserId()))
 
+        val userId = userStorage.getUserId()
+
+        Log.d { "userId = $userId" }
+
         val messagesToStore = messages.mapNotNull {
             it.toSMOrNull(
                 chatId = chatId,
@@ -290,10 +294,12 @@ internal class ChatDataHelperImpl(
         messageIds: List<String>,
     ) {
         if (messageIds.isEmpty()) return
+        val deviceId = requireNotNull(userStorage.getDeviceId())
 
         chatNetworkManager.confirmReceivingMessages(
             chatId = chatId,
             messageIds = messageIds,
+            deviceId = deviceId,
         )
     }
 
@@ -378,12 +384,14 @@ internal class ChatDataHelperImpl(
             }
         }
             .getOrElse { error ->
+                val userId = userStorage.getUserId()
+
                 val type = when (this) {
                     is ChatMessageNM.Text -> "text"
                     is ChatMessageNM.Image -> "image"
                 }
                 val message =
-                    "Skipped $type message: id=$id, authorId=$authorId, timestamp=$timestamp"
+                    "Skipped $type message: id=$id, authorId=$authorId, timestamp=$timestamp. userId = $userId"
 
                 Log.e(error, message)
                 null

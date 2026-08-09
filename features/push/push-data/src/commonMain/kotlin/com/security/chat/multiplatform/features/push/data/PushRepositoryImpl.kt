@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.push.data
 
 import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.getOr
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import com.security.chat.multiplatform.common.core.network.NetworkManager
@@ -44,9 +45,11 @@ public class PushRepositoryImpl(
     }
 
     override suspend fun registerCurrentToken() {
-        val token = runCatching { getToken() }
-            .onFailure { Log.e(error = it, message = "Failed to retrieve push token") }
-            .getOrNull()
+        if (!userStorage.isUserAuthorized()) return
+
+        val token = runSuspendCatching { getToken() }
+            .onErr { Log.e(error = it, message = "Failed to retrieve push token") }
+            .getOr(null)
             ?: return
 
         //TODO check push token after profile auth
@@ -154,12 +157,18 @@ public class PushRepositoryImpl(
     }
 
     private suspend fun sendToken(userId: String, token: String) {
+        val deviceId = userStorage.getDeviceId() ?: run {
+            Log.e("deviceId == null")
+            return
+        }
+
         networkManager.runPost<RegisterDeviceTokenRequest, Unit>(
             relativePath = "/devices/token",
             request = RegisterDeviceTokenRequest(
                 userId = userId,
                 token = token,
                 platform = deviceInfoManager.getPlatform().platformName,
+                deviceId = deviceId,
             ),
         )
     }

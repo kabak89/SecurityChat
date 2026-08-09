@@ -93,8 +93,8 @@ internal class ChatRepoImpl(
         val userId = checkNotNull(userStorage.getUserId())
 
         val recipients = when (chat) {
-            is ChatSM.GroupChat -> chat.members + chat.authorId - userId
-            is ChatSM.PersonalChat -> listOf(chat.interlocutorId)
+            is ChatSM.GroupChat -> (chat.members + chat.authorId).distinct()
+            is ChatSM.PersonalChat -> listOf(chat.interlocutorId, userId).distinct()
         }
 
         val timestamp = timeProvider.now().toEpochMilliseconds()
@@ -267,10 +267,12 @@ internal class ChatRepoImpl(
 
     override suspend fun subscribeToNewMessages(chatId: String) {
         val authorId = requireNotNull(userStorage.getUserId())
+        val deviceId = requireNotNull(userStorage.getDeviceId())
 
         chatNetworkManager.getNewMessagesFlow(
             chatId = chatId,
             authorId = authorId,
+            deviceId = deviceId,
         )
             .collect { chatMessage ->
                 runSuspendCatching {
@@ -397,13 +399,19 @@ internal class ChatRepoImpl(
             destinationPath = "$imagesDirectory/$fileId",
         )
 
-        val currentUserId = checkNotNull(userStorage.getUserId())
-        val chat = requireNotNull(chatsStorage.getGroupChat(chatId))
+        val userId = checkNotNull(userStorage.getUserId())
+        val chat = chatsStorage.getPersonalChat(chatId) ?: chatsStorage.getGroupChat(chatId)
+        checkNotNull(chat)
+
+        val recipients = when (chat) {
+            is ChatSM.GroupChat -> (chat.members + chat.authorId).distinct()
+            is ChatSM.PersonalChat -> listOf(chat.interlocutorId, userId).distinct()
+        }
 
         return ImageMessageDescriptor(
             fileId = fileId,
             key = key,
-            recipients = chat.members + chat.authorId - currentUserId,
+            recipients = recipients,
         )
     }
 

@@ -7,17 +7,20 @@ import com.security.chat.multiplatform.common.core.network.entity.AccessToken
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.RefreshToken
 import com.security.chat.multiplatform.common.core.network.entity.Tokens
+import com.security.chat.multiplatform.common.device.info.DeviceInfoManager
 import com.security.chat.multiplatform.features.authorize.data.entity.SignInRequest
 import com.security.chat.multiplatform.features.authorize.data.entity.SignInResponse
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignInRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
+import kotlin.uuid.Uuid
 
 internal class SignInRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
     private val userStorage: UserStorage,
     private val networkConfig: NetworkConfig,
     private val tokenManager: TokenManager,
+    private val deviceInfoManager: DeviceInfoManager,
 ) : SignInRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -28,10 +31,15 @@ internal class SignInRepoImpl(
     }
 
     override suspend fun signIn(privateKey: String) {
+        val deviceId = Uuid.random().toString()
+        userStorage.saveDeviceId(id = deviceId)
+
         val response: SignInResponse = networkManager.runPost(
             relativePath = "/sign-in",
             request = SignInRequest(
                 privateKeyHash = sha256Hash(privateKey),
+                deviceId = deviceId,
+                deviceName = deviceInfoManager.getDeviceName(),
             ),
         )
 

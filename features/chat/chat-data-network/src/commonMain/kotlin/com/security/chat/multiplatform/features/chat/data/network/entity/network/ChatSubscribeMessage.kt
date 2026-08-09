@@ -7,4 +7,5 @@ import kotlinx.serialization.Serializable
 internal data class ChatSubscribeMessage(
     @SerialName("chatId") val chatId: String,
     @SerialName("authorId") val authorId: String,
+    @SerialName("deviceId") val deviceId: String,
 )

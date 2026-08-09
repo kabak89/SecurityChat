@@ -16,10 +16,18 @@ import kotlinx.serialization.json.Json
 
 public interface ChatNetworkManager {
     public suspend fun getMessages(chatId: String): List<ChatMessageNM>
-    public suspend fun getNewMessagesFlow(chatId: String, authorId: String): Flow<ChatMessageNM>
+
+    public suspend fun getNewMessagesFlow(
+        chatId: String,
+        authorId: String,
+        deviceId: String,
+    ): Flow<ChatMessageNM>
+
     public suspend fun processNewMessages(serializedMessages: String): List<ChatMessageNM>
+
     public suspend fun confirmReceivingMessages(
         chatId: String,
+        deviceId: String,
         messageIds: List<String>,
     )
 
@@ -52,10 +60,12 @@ internal class ChatNetworkManagerImpl(
     override suspend fun getNewMessagesFlow(
         chatId: String,
         authorId: String,
+        deviceId: String,
     ): Flow<ChatMessageNM> {
         val subscribeMessage = ChatSubscribeMessage(
             chatId = chatId,
             authorId = authorId,
+            deviceId = deviceId,
         )
 
         return liveEventsManager
@@ -73,6 +83,7 @@ internal class ChatNetworkManagerImpl(
 
     override suspend fun confirmReceivingMessages(
         chatId: String,
+        deviceId: String,
         messageIds: List<String>,
     ) {
         networkManager.runPost<MessagesReceivedRequest, Unit>(
@@ -80,6 +91,7 @@ internal class ChatNetworkManagerImpl(
             request = MessagesReceivedRequest(
                 chatId = chatId,
                 messageIds = messageIds,
+                deviceId = deviceId,
             ),
         )
     }
