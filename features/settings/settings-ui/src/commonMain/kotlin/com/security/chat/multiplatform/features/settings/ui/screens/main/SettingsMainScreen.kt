@@ -51,7 +51,6 @@ internal fun SettingsMainScreen(
             onItemClicked = vm::onItemClicked,
             onDismissDialog = vm::onDismissDialogClicked,
             onDialogActionClicked = vm::onDialogActionClicked,
-            onUserLogOuted = component::onUserLogOuted,
             onOnGoToThemeClicked = component::onGoToThemeClicked,
             onOnGoToProfileClicked = component::onGoToProfileClicked,
         )
@@ -67,7 +66,6 @@ private fun SettingsMainScreenContent(
     onItemClicked: (item: SettingItem) -> Unit,
     onDismissDialog: () -> Unit,
     onDialogActionClicked: (action: DialogData.ButtonAction) -> Unit,
-    onUserLogOuted: () -> Unit,
     onOnGoToThemeClicked: () -> Unit,
     onOnGoToProfileClicked: () -> Unit,
 ) {
@@ -75,7 +73,6 @@ private fun SettingsMainScreenContent(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                SettingsMainEvent.UserLogOuted -> onUserLogOuted()
                 SettingsMainEvent.GoToTheme -> onOnGoToThemeClicked()
                 SettingsMainEvent.GoToProfile -> onOnGoToProfileClicked()
             }
@@ -172,7 +169,6 @@ internal fun SettingsMainScreenPreview() {
             onItemClicked = {},
             onDismissDialog = {},
             onDialogActionClicked = {},
-            onUserLogOuted = {},
             onOnGoToThemeClicked = {},
             onOnGoToProfileClicked = {},
         )
@@ -204,7 +200,6 @@ internal fun SettingsMainScreenPreviewWithDialog() {
             onItemClicked = {},
             onDismissDialog = {},
             onDialogActionClicked = {},
-            onUserLogOuted = {},
             onOnGoToThemeClicked = {},
             onOnGoToProfileClicked = {},
         )

@@ -15,9 +15,6 @@ import com.security.chat.multiplatform.features.chats.component.ChatsComponentIm
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
 import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Chat
 import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Chats
-import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Settings
-import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
-import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import kotlinx.serialization.Serializable
 
 public interface MainComponent : BackHandlerOwner {
@@ -32,7 +29,6 @@ public interface MainComponent : BackHandlerOwner {
 
     public sealed interface Child {
         public class Chats(public val component: ChatsComponent) : Child
-        public class Settings(public val component: SettingsComponent) : Child
         public class Chat(public val component: ChatComponent) : Child
     }
 
@@ -44,7 +40,6 @@ public interface MainComponent : BackHandlerOwner {
 }
 
 public class MainComponentImpl(
-    private val onLogout: () -> Unit,
     params: MainComponent.Params? = null,
     componentContext: ComponentContext,
 ) : MainComponent, ComponentContext by componentContext {
@@ -121,10 +116,6 @@ public class MainComponentImpl(
             }
 
             is Chats -> navigation.push(Params.PrivateChatParams(chatId = chatId))
-            is Settings -> {
-                navigation.pop()
-                navigation.push(Params.PrivateChatParams(chatId = chatId))
-            }
         }
     }
 
@@ -153,10 +144,6 @@ public class MainComponentImpl(
             }
 
             is Chats -> navigation.push(Params.GroupChatParams(chatId = chatId))
-            is Settings -> {
-                navigation.pop()
-                navigation.push(Params.GroupChatParams(chatId = chatId))
-            }
         }
     }
 
@@ -177,9 +164,6 @@ public class MainComponentImpl(
                             pendingSharedText = null
                             navigation.push(configuration = configuration)
                         },
-                        onSettingsClicked = {
-                            navigation.push(configuration = Params.SettingsParams)
-                        },
                         onGroupChatClicked = { chatId ->
                             val configuration = Params.GroupChatParams(
                                 chatId = chatId,
@@ -188,16 +172,6 @@ public class MainComponentImpl(
                             pendingSharedText = null
                             navigation.push(configuration = configuration)
                         },
-                    ),
-                )
-            }
-
-            is Params.SettingsParams -> {
-                Settings(
-                    component = SettingsComponentImpl(
-                        componentContext = componentContext,
-                        onExit = navigation::pop,
-                        onLogout = onLogout,
                     ),
                 )
             }
@@ -235,9 +209,6 @@ public class MainComponentImpl(
 
         @Serializable
         data object ChatsParams : Params
-
-        @Serializable
-        data object SettingsParams : Params
 
         @Serializable
         data class PrivateChatParams(

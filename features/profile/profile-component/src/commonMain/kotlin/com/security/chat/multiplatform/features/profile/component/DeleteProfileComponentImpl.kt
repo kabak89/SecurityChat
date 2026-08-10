@@ -9,7 +9,6 @@ import com.security.chat.multiplatform.features.profile.domain.DeleteProfileMode
 internal class DeleteProfileComponentImpl(
     componentContext: ComponentContext,
     private val onExit: () -> Unit,
-    private val onProfileDeletion: () -> Unit,
 ) : DeleteProfileComponent,
     BaseComponentImpl(
         componentContext = componentContext,
@@ -25,10 +24,6 @@ internal class DeleteProfileComponentImpl(
 
     override fun onBackClicked() {
         onExit()
-    }
-
-    override fun onProfileDeleted() {
-        onProfileDeletion()
     }
 }
 

@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 
 public interface ChatsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
 
@@ -15,5 +16,6 @@ public interface ChatsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner
     public sealed interface Child {
         public class ChatList(public val component: ChatListComponent) : Child
         public class AddChat(public val component: AddChatComponent) : Child
+        public class Settings(public val component: SettingsComponent) : Child
     }
 }

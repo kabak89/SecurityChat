@@ -8,7 +8,6 @@ import com.security.chat.multiplatform.features.settings.domain.SettingsModel
 
 internal class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
-    private val onLogout: () -> Unit,
     private val onGoToTheme: () -> Unit,
     private val onGoToProfile: () -> Unit,
     componentContext: ComponentContext,
@@ -27,10 +26,6 @@ internal class SettingsMainComponentImpl(
 
     override fun onExitClicked() {
         onExit()
-    }
-
-    override fun onUserLogOuted() {
-        onLogout()
     }
 
     override fun onGoToThemeClicked() {

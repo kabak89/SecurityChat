@@ -9,6 +9,8 @@ conventionBasePlugin {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.common.coreNetwork)
+
             implementation(projects.features.profile.profileDomain)
             implementation(projects.features.profile.profileDataStorage)
             implementation(projects.features.user.userDataStorage)

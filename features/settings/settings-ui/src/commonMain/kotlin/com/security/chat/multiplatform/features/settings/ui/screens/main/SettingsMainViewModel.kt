@@ -9,7 +9,6 @@ import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import ru.kode.remo.successResults
 
 internal class SettingsMainViewModel(
     private val settingsModel: SettingsModel,
@@ -22,12 +21,6 @@ internal class SettingsMainViewModel(
             .onEach { state ->
                 val isInProgress = state.isLoading
                 updateState { it.copy(requestInProgress = isInProgress) }
-            }
-            .launchIn(viewModelScope)
-
-        settingsModel.logout.jobFlow.successResults()
-            .onEach {
-                sendEvent(SettingsMainEvent.UserLogOuted)
             }
             .launchIn(viewModelScope)
     }

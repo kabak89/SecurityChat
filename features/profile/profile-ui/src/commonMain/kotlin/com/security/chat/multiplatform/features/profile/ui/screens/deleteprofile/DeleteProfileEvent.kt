@@ -1,5 +1,3 @@
 package com.security.chat.multiplatform.features.profile.ui.screens.deleteprofile
 
-internal sealed interface DeleteProfileEvent {
-    object ProfileDeleted : DeleteProfileEvent
-}
+internal sealed interface DeleteProfileEvent

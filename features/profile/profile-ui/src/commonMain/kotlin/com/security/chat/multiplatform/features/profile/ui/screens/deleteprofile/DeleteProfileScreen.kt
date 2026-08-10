@@ -95,7 +95,6 @@ internal fun DeleteProfileScreen(
             events = vm.viewEvent,
             onBackClicked = component::onBackClicked,
             onConfirmDeleteClicked = vm::onConfirmDeleteClicked,
-            onProfileDeleted = component::onProfileDeleted,
         )
     }
 }
@@ -107,15 +106,10 @@ private fun DeleteProfileScreenContent(
     events: Flow<DeleteProfileEvent>,
     onBackClicked: () -> Unit,
     onConfirmDeleteClicked: () -> Unit,
-    onProfileDeleted: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
-        collector = { event ->
-            when (event) {
-                DeleteProfileEvent.ProfileDeleted -> onProfileDeleted()
-            }
-        },
+        collector = { },
     )
     val hazeState = rememberHazeState()
     Box(
@@ -475,7 +469,6 @@ internal fun DeleteProfileScreenPreview() {
             events = emptyFlow(),
             onBackClicked = {},
             onConfirmDeleteClicked = {},
-            onProfileDeleted = {},
         )
     }
 }

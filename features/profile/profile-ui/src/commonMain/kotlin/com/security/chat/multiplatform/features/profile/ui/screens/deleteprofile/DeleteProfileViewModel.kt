@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import ru.kode.remo.successResults
 import securitychat.common.localization.generated.resources.common_close
 import securitychat.common.localization.generated.resources.common_retry
 import kotlin.time.Duration.Companion.seconds
@@ -51,12 +50,6 @@ internal class DeleteProfileViewModel(
                     )
                     updateState { it.copy(alertDialogDescriptor = alertDialogDescriptor) }
                 }
-            }
-            .launchIn(viewModelScope)
-
-        deleteProfileModel.deleteProfile.jobFlow.successResults()
-            .onEach {
-                sendEvent(DeleteProfileEvent.ProfileDeleted)
             }
             .launchIn(viewModelScope)
     }

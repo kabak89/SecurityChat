@@ -21,7 +21,6 @@ import kotlinx.serialization.Serializable
 
 public class SettingsComponentImpl(
     private val onExit: () -> Unit,
-    private val onLogout: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsComponent,
     BaseComponentImpl(
@@ -66,7 +65,6 @@ public class SettingsComponentImpl(
                     component = SettingsMainComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
-                        onLogout = onLogout,
                         onGoToTheme = { navigation.push(Params.Theme) },
                         onGoToProfile = { navigation.push(Params.Profile) },
                     ),
@@ -87,7 +85,6 @@ public class SettingsComponentImpl(
                     ProfileComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
-                        onProfileDeletion = onLogout,
                     ),
                 )
             }

@@ -10,16 +10,18 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
+import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent.Child.AddChat
+import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent.Child.ChatList
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
 import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
+import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import com.security.chat.multiplatform.features.users.data.network.di.usersNetworkManager
 import kotlinx.serialization.Serializable
 
 public class ChatsComponentImpl(
     private val onPublicChatClicked: (chatId: String) -> Unit,
     private val onGroupChatClicked: (chatId: String) -> Unit,
-    private val onSettingsClicked: () -> Unit,
     componentContext: ComponentContext,
 ) : ChatsComponent,
     BaseComponentImpl(
@@ -61,19 +63,21 @@ public class ChatsComponentImpl(
     ): ChatsComponent.Child {
         return when (params) {
             is Params.ChatListParams -> {
-                ChatsComponent.Child.ChatList(
+                ChatList(
                     component = ChatListComponentImpl(
                         componentContext = componentContext,
                         onAdd = { navigation.push(Params.AddChatParams) },
                         onPersonalChatClick = onPublicChatClicked,
                         onGroupChatClick = onGroupChatClicked,
-                        onSettingsClick = onSettingsClicked,
+                        onSettingsClick = {
+                            navigation.push(configuration = Params.SettingsParams)
+                        },
                     ),
                 )
             }
 
             is Params.AddChatParams -> {
-                ChatsComponent.Child.AddChat(
+                AddChat(
                     component = AddChatComponentImpl(
                         componentContext = componentContext,
                         onBack = {
@@ -90,6 +94,15 @@ public class ChatsComponentImpl(
                     ),
                 )
             }
+
+            Params.SettingsParams -> {
+                ChatsComponent.Child.Settings(
+                    component = SettingsComponentImpl(
+                        componentContext = componentContext,
+                        onExit = navigation::pop,
+                    ),
+                )
+            }
         }
     }
 
@@ -102,8 +115,9 @@ public class ChatsComponentImpl(
         @Serializable
         data object AddChatParams : Params()
 
+        @Serializable
+        data object SettingsParams : Params()
     }
-
 }
 
 public const val SCOPE_ID_CHATS: String = "SCOPE_ID_CHATS"

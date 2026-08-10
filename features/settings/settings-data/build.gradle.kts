@@ -10,6 +10,8 @@ conventionBasePlugin {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.common.coreNetwork)
+
             implementation(projects.features.settings.settingsDomain)
             implementation(projects.features.settings.settingsDataCommon)
             implementation(projects.features.settings.settingsDataStorage)

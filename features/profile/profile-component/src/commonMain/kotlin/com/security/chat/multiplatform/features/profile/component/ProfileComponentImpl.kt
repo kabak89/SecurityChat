@@ -19,7 +19,6 @@ import kotlinx.serialization.Serializable
 
 public class ProfileComponentImpl(
     private val onExit: () -> Unit,
-    private val onProfileDeletion: () -> Unit,
     componentContext: ComponentContext,
 ) : ProfileComponent,
     BaseComponentImpl(
@@ -77,7 +76,6 @@ public class ProfileComponentImpl(
                     component = DeleteProfileComponentImpl(
                         componentContext = componentContext,
                         onExit = { navigation.pop() },
-                        onProfileDeletion = onProfileDeletion,
                     ),
                 )
             }

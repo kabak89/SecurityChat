@@ -14,7 +14,6 @@ kotlin {
 
             implementation(projects.features.chats.chatsComponent)
             implementation(projects.features.chat.chatComponent)
-            implementation(projects.features.settings.settingsComponent)
         }
     }
 }

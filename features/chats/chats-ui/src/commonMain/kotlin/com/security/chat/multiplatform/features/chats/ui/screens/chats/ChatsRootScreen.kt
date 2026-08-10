@@ -8,6 +8,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
 import com.security.chat.multiplatform.features.chats.ui.screens.addchat.AddChatScreen
 import com.security.chat.multiplatform.features.chats.ui.screens.chatlist.ChatListScreen
+import com.security.chat.multiplatform.features.settings.ui.screens.root.SettingsRootScreen
 
 @Composable
 public fun ChatsRootScreen(
@@ -24,6 +25,7 @@ public fun ChatsRootScreen(
             when (val child = it.instance) {
                 is ChatsComponent.Child.ChatList -> ChatListScreen(component = child.component)
                 is ChatsComponent.Child.AddChat -> AddChatScreen(component = child.component)
+                is ChatsComponent.Child.Settings -> SettingsRootScreen(component = child.component)
             }
         },
     )

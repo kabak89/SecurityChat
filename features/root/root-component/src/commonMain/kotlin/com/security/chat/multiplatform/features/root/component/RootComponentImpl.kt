@@ -234,7 +234,6 @@ public class RootComponentImpl(
 
         return MainComponentImpl(
             componentContext = componentContext,
-            onLogout = { navigation.replaceAll(Params.Authorize) },
             params = params,
         )
     }
