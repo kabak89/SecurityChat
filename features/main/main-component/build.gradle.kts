@@ -10,6 +10,7 @@ conventionBasePlugin {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.features.main.mainComponentApi)
             api(projects.common.coreComponent)
 
             implementation(projects.features.chats.chatsComponent)

@@ -13,7 +13,7 @@ kotlin {
 
             implementation(projects.features.splash.splashComponentApi)
             implementation(projects.features.authorize.authorizeComponentApi)
-            implementation(projects.features.main.mainComponent)
+            implementation(projects.features.main.mainComponentApi)
             implementation(projects.features.onboarding.onboardingComponentApi)
         }
     }

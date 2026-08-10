@@ -66,6 +66,7 @@ include(
 )
 include(
     ":features:main:main-component",
+    ":features:main:main-component-api",
     ":features:main:main-ui",
 )
 include(

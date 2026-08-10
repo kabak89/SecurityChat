@@ -9,7 +9,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.chat.ui.screens.root.ChatRootScreen
 import com.security.chat.multiplatform.features.chats.ui.screens.chats.ChatsRootScreen
-import com.security.chat.multiplatform.features.main.component.MainComponent
+import com.security.chat.multiplatform.features.main.component.api.MainComponent
 
 @Composable
 public fun MainScreen(

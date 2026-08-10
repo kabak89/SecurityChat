@@ -8,36 +8,13 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
-import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
-import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Chat
-import com.security.chat.multiplatform.features.main.component.MainComponent.Child.Chats
+import com.security.chat.multiplatform.features.main.component.api.MainComponent
+import com.security.chat.multiplatform.features.main.component.api.MainComponent.Child.Chat
+import com.security.chat.multiplatform.features.main.component.api.MainComponent.Child.Chats
 import kotlinx.serialization.Serializable
-
-public interface MainComponent : BackHandlerOwner {
-
-    public fun onBackClicked()
-
-    public fun openPrivateChat(chatId: String)
-    public fun openGroupChat(chatId: String)
-    public fun handleSendText(text: String)
-
-    public val childStack: Value<ChildStack<*, Child>>
-
-    public sealed interface Child {
-        public class Chats(public val component: ChatsComponent) : Child
-        public class Chat(public val component: ChatComponent) : Child
-    }
-
-    public sealed interface Params {
-        public data class PrivateChat(val chatId: String) : Params
-        public data class GroupChat(val chatId: String) : Params
-        public data class ShareText(val text: String) : Params
-    }
-}
 
 public class MainComponentImpl(
     params: MainComponent.Params? = null,

@@ -17,8 +17,8 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.authorize.component.AuthorizeComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
-import com.security.chat.multiplatform.features.main.component.MainComponent
 import com.security.chat.multiplatform.features.main.component.MainComponentImpl
+import com.security.chat.multiplatform.features.main.component.api.MainComponent
 import com.security.chat.multiplatform.features.onboarding.component.OnboardingComponentImpl
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent
 import com.security.chat.multiplatform.features.push.domain.PushModel
