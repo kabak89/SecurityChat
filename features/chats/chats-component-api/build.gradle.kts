@@ -12,6 +12,7 @@ kotlin {
             api(projects.common.coreComponent)
 
             implementation(projects.features.settings.settingsComponentApi)
+            api(projects.features.addChat.addChatComponentApi)
         }
     }
 }

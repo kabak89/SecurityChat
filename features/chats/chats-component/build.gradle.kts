@@ -17,6 +17,7 @@ kotlin {
             implementation(projects.features.chats.chatsData)
             implementation(projects.features.settings.settingsComponent)
             implementation(projects.features.users.usersDataNetwork)
+            implementation(projects.features.addChat.addChatComponent)
         }
     }
 }

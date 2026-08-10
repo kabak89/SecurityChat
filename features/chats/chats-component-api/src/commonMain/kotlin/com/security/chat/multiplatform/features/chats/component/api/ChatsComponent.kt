@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.add_chat.component.api.AddChatComponent
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 
 public interface ChatsComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {

@@ -15,6 +15,7 @@ import com.security.chat.multiplatform.features.chats.component.api.ChatsCompone
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
 import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
+import com.security.chat.multiplatform.features.add_chat.component.AddChatComponentImpl
 import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import com.security.chat.multiplatform.features.users.data.network.di.usersNetworkManager
 import kotlinx.serialization.Serializable

@@ -4,11 +4,6 @@ import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
-import com.security.chat.multiplatform.features.chats.data.entity.CreateChatRequest
-import com.security.chat.multiplatform.features.chats.data.entity.CreateChatResponse
-import com.security.chat.multiplatform.features.chats.data.entity.CreateGroupChatRequest
-import com.security.chat.multiplatform.features.chats.data.entity.CreateGroupChatResponse
-import com.security.chat.multiplatform.features.chats.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
 import com.security.chat.multiplatform.features.chats.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chats.data.mapper.toSM
@@ -16,8 +11,6 @@ import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.chats.domain.entity.Chat
 import com.security.chat.multiplatform.features.chats.domain.entity.ChatMember
-import com.security.chat.multiplatform.features.chats.domain.entity.CreateChatResult
-import com.security.chat.multiplatform.features.chats.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.chats.domain.repo.ChatsRepo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
@@ -46,40 +39,11 @@ internal class ChatsRepoImpl(
         )
     }
 
-    override suspend fun findUser(username: String): FindUserResult {
-        val response: FindUserResponse = networkManager.runGet(
-            relativePath = "/users/find",
-            request = mapOf(
-                "login" to username,
-            ),
-        )
-
-        return FindUserResult(
-            userId = response.userId,
-            login = response.login,
-            publicKey = response.publicKey,
-        )
-    }
-
-    override suspend fun createPersonalChat(secondUserId: String): CreateChatResult.PersonalChatCreated {
-        val firstUserId = userStorage.getUserId() ?: error("user id not found")
-
-        val result: CreateChatResponse = networkManager.runPost(
-            relativePath = "/chats",
-            request = CreateChatRequest(
-                firstUserId = firstUserId,
-                secondUserId = secondUserId,
-            ),
-        )
-
-        return CreateChatResult.PersonalChatCreated(
-            id = result.chatId,
-        )
-    }
-
     override fun getChatsListFlow(): Flow<List<Chat>> {
         return chatsStorage.getChatsFlow()
             .flatMapLatest { chatList ->
+                if (chatList.isEmpty()) return@flatMapLatest kotlinx.coroutines.flow.flowOf(emptyList())
+
                 val userFlows = chatList
                     .flatMap { chat ->
                         when (chat) {
@@ -227,25 +191,6 @@ internal class ChatsRepoImpl(
 
     override fun isConnectedToInternetFlow(): Flow<Boolean> {
         return connectivityObserver.isOnline
-    }
-
-    override suspend fun getUserId(): String {
-        return checkNotNull(userStorage.getUserId())
-    }
-
-    override suspend fun createGroupChat(members: List<String>): CreateChatResult.GroupChatCreated {
-        val response: CreateGroupChatResponse = networkManager.runPost(
-            relativePath = "/group-chats",
-            request = CreateGroupChatRequest(
-                participantIds = members,
-            ),
-        )
-
-        chatsStorage.saveChat(response.toSM())
-
-        return CreateChatResult.GroupChatCreated(
-            id = response.chatId,
-        )
     }
 
     private suspend fun getAndSaveUser(id: String): UserNM {

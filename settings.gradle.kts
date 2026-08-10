@@ -87,6 +87,13 @@ include(
     ":features:chat:chat-data-common",
 )
 include(
+    ":features:add-chat:add-chat-component",
+    ":features:add-chat:add-chat-component-api",
+    ":features:add-chat:add-chat-ui",
+    ":features:add-chat:add-chat-domain",
+    ":features:add-chat:add-chat-data",
+)
+include(
     ":features:users:users-data-storage",
     ":features:users:users-data-network",
 )

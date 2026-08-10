@@ -5,22 +5,19 @@ plugins {
 }
 
 conventionBasePlugin {
-    namespace = "com.security.chat.multiplatform.features.chats.ui"
+    namespace = "com.security.chat.multiplatform.features.add_chat.ui"
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.resources)
-
             implementation(projects.common.coreUi)
             implementation(projects.common.uiKit)
 
-            api(projects.features.chats.chatsComponentApi)
+            api(projects.features.addChat.addChatComponentApi)
 
-            implementation(projects.features.chats.chatsDomain)
-            implementation(projects.features.settings.settingsUi)
-            implementation(projects.features.addChat.addChatUi)
+            implementation(projects.features.addChat.addChatDomain)
         }
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)
