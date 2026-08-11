@@ -9,19 +9,18 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
+import com.security.chat.multiplatform.features.add_chat.component.AddChatComponentImpl
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent.Child.AddChat
 import com.security.chat.multiplatform.features.chats.component.api.ChatsComponent.Child.ChatList
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
 import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
-import com.security.chat.multiplatform.features.add_chat.component.AddChatComponentImpl
 import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import com.security.chat.multiplatform.features.users.data.network.di.usersNetworkManager
 import kotlinx.serialization.Serializable
 
 public class ChatsComponentImpl(
-    private val onPublicChatClicked: (chatId: String) -> Unit,
     private val onGroupChatClicked: (chatId: String) -> Unit,
     componentContext: ComponentContext,
 ) : ChatsComponent,
@@ -68,7 +67,6 @@ public class ChatsComponentImpl(
                     component = ChatListComponentImpl(
                         componentContext = componentContext,
                         onAdd = { navigation.push(Params.AddChatParams) },
-                        onPersonalChatClick = onPublicChatClicked,
                         onGroupChatClick = onGroupChatClicked,
                         onSettingsClick = {
                             navigation.push(configuration = Params.SettingsParams)
@@ -83,10 +81,6 @@ public class ChatsComponentImpl(
                         componentContext = componentContext,
                         onBack = {
                             navigation.pop()
-                        },
-                        onPersonalChatCreate = { chatId ->
-                            navigation.pop()
-                            onPublicChatClicked(chatId)
                         },
                         onGroupChatCreate = { chatId ->
                             navigation.pop()

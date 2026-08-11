@@ -3,6 +3,12 @@ package com.security.chat.multiplatform.features.add_chat.data.repoimpl
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
+import com.security.chat.multiplatform.features.add_chat.data.entity.CreateChatRequest
+import com.security.chat.multiplatform.features.add_chat.data.entity.CreateChatResponse
+import com.security.chat.multiplatform.features.add_chat.data.entity.CreateGroupChatRequest
+import com.security.chat.multiplatform.features.add_chat.data.entity.CreateGroupChatResponse
+import com.security.chat.multiplatform.features.add_chat.data.entity.FindUserResponse
+import com.security.chat.multiplatform.features.add_chat.data.entity.UserChatsResponse
 import com.security.chat.multiplatform.features.add_chat.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.add_chat.domain.entity.FindUserResult
 import com.security.chat.multiplatform.features.add_chat.domain.repo.AddChatRepo
@@ -13,8 +19,6 @@ import com.security.chat.multiplatform.features.users.data.network.UsersNetworkM
 import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 internal class AddChatRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -92,35 +96,15 @@ internal class AddChatRepoImpl(
             relativePath = "/chats",
         )
 
-        val personalChats = response.personalChats
-            .map { chatResponse ->
-                val userId = userStorage.getUserId() ?: error("user id not found")
-
-                val companionId = if (chatResponse.firstUserId == userId) {
-                    chatResponse.secondUserId
-                } else {
-                    chatResponse.firstUserId
-                }
-
-                // Ensure companion is in UsersStorage
-                if (usersStorage.getUser(companionId) == null) {
-                    getAndSaveUser(companionId)
-                }
-
-                ChatSM.PersonalChat(
-                    id = chatResponse.id,
-                    interlocutorId = companionId,
-                )
-            }
-
         val groupChats = response.groupChats
             .map { chatResponse ->
                 // Ensure members and author are in UsersStorage
-                (chatResponse.participantIds + chatResponse.authorId).distinct().forEach { memberId ->
-                    if (usersStorage.getUser(memberId) == null) {
-                        getAndSaveUser(memberId)
+                (chatResponse.participantIds + chatResponse.authorId).distinct()
+                    .forEach { memberId ->
+                        if (usersStorage.getUser(memberId) == null) {
+                            getAndSaveUser(memberId)
+                        }
                     }
-                }
 
                 ChatSM.GroupChat(
                     id = chatResponse.id,
@@ -129,8 +113,7 @@ internal class AddChatRepoImpl(
                 )
             }
 
-        val storageModels = personalChats + groupChats
-        chatsStorage.saveChats(chats = storageModels)
+        chatsStorage.saveChats(chats = groupChats)
     }
 
     private suspend fun getAndSaveUser(id: String): UserNM {
@@ -144,57 +127,4 @@ internal class AddChatRepoImpl(
         )
         return user
     }
-}
-
-@Serializable
-internal data class CreateChatRequest(
-    @SerialName("firstUserId") val firstUserId: String,
-    @SerialName("secondUserId") val secondUserId: String,
-)
-
-@Serializable
-internal data class CreateChatResponse(
-    @SerialName("firstUserId") val firstUserId: String,
-    @SerialName("secondUserId") val secondUserId: String,
-    @SerialName("chatId") val chatId: String,
-)
-
-@Serializable
-internal data class CreateGroupChatRequest(
-    @SerialName("participantIds") val participantIds: List<String>,
-)
-
-@Serializable
-internal data class CreateGroupChatResponse(
-    @SerialName("chatId") val chatId: String,
-    @SerialName("authorId") val authorId: String,
-    @SerialName("participantIds") val participantIds: List<String>,
-)
-
-@Serializable
-internal data class FindUserResponse(
-    @SerialName("userId") val userId: String,
-    @SerialName("login") val login: String,
-    @SerialName("publicKey") val publicKey: String,
-)
-
-@Serializable
-internal data class UserChatsResponse(
-    @SerialName("personalChats") val personalChats: List<PersonalChat>,
-    @SerialName("groupChats") val groupChats: List<GroupChat>,
-) {
-
-    @Serializable
-    internal data class PersonalChat(
-        @SerialName("id") val id: String,
-        @SerialName("firstUserId") val firstUserId: String,
-        @SerialName("secondUserId") val secondUserId: String,
-    )
-
-    @Serializable
-    internal data class GroupChat(
-        @SerialName("id") val id: String,
-        @SerialName("authorId") val authorId: String,
-        @SerialName("participantIds") val participantIds: List<String>,
-    )
 }

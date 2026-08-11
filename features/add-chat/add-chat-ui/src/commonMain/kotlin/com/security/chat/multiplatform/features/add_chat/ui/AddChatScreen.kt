@@ -1,16 +1,9 @@
 package com.security.chat.multiplatform.features.add_chat.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,7 +38,6 @@ import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.add_chat.component.api.AddChatComponent
 import com.security.chat.multiplatform.features.add_chat.ui.entity.AddedUser
 import com.security.chat.multiplatform.features.add_chat.ui.entity.ChatDescriptor
-import com.security.chat.multiplatform.features.add_chat.ui.entity.ChatType
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
@@ -56,8 +47,6 @@ import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.localization.generated.resources.create_chat_create_group_chat_button
 import securitychat.common.localization.generated.resources.create_chat_find_button
 import securitychat.common.localization.generated.resources.create_chat_title
-import securitychat.common.localization.generated.resources.create_chat_type_group
-import securitychat.common.localization.generated.resources.create_chat_type_personal
 import securitychat.common.localization.generated.resources.create_chat_username_placeholder
 
 @Composable
@@ -76,8 +65,6 @@ public fun AddChatScreen(
             onBackClicked = component::onBackClicked,
             onUsernameChanged = vm::onUsernameChanged,
             onFindClicked = vm::onFindClicked,
-            onPersonalChatCreated = component::onPersonalChatCreated,
-            onTypeSelected = vm::onTypeSelected,
             onCreateGroupChatClicked = vm::onCreateGroupChatClicked,
             onGroupChatCreated = component::onGroupChatCreated,
         )
@@ -92,16 +79,13 @@ private fun AddChatContent(
     onBackClicked: () -> Unit,
     onUsernameChanged: (String) -> Unit,
     onFindClicked: () -> Unit,
-    onPersonalChatCreated: (id: String) -> Unit,
     onGroupChatCreated: (id: String) -> Unit,
-    onTypeSelected: (ChatType) -> Unit,
     onCreateGroupChatClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
         collector = { event ->
             when (event) {
-                is AddChatEvent.PersonalChatCreated -> onPersonalChatCreated(event.id)
                 is AddChatEvent.GroupChatCreated -> onGroupChatCreated(event.id)
             }
         },
@@ -143,21 +127,12 @@ private fun AddChatContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    activeType = state.activeType,
-                    personalChat = state.personalChat,
                     groupChat = state.groupChat,
                     onUsernameChanged = onUsernameChanged,
                     onFindClicked = onFindClicked,
                     onCreateGroupChatClicked = onCreateGroupChatClicked,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                ChatTypeSelector(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally),
-                    selectedType = state.activeType,
-                    onTypeSelected = onTypeSelected,
-                )
-                Spacer(Modifier.height(16.dp))
             }
         }
     }
@@ -175,96 +150,18 @@ private fun AddChatContent(
 @Composable
 private fun ChatCreateComponent(
     modifier: Modifier = Modifier,
-    activeType: ChatType,
-    personalChat: ChatDescriptor.Personal,
     groupChat: ChatDescriptor.Group,
     onUsernameChanged: (String) -> Unit,
     onFindClicked: () -> Unit,
     onCreateGroupChatClicked: () -> Unit,
 ) {
-    AnimatedContent(
-        modifier = modifier,
-        targetState = activeType,
-        label = "PagerLikeTransition",
-        transitionSpec = {
-            if (targetState == ChatType.Personal) {
-                slideInHorizontally { width -> -width } + fadeIn() togetherWith
-                        slideOutHorizontally { width -> width } + fadeOut()
-            } else {
-                slideInHorizontally { width -> width } + fadeIn() togetherWith
-                        slideOutHorizontally { width -> -width } + fadeOut()
-            }
-        },
-    ) { chatType ->
-        Box(
-            modifier = Modifier,
-        ) {
-            if (chatType == ChatType.Personal) {
-                PersonalChat(
-                    modifier = Modifier,
-                    state = personalChat,
-                    onUsernameTextChanged = onUsernameChanged,
-                    onFindClicked = onFindClicked,
-                )
-            } else {
-                GroupChat(
-                    modifier = Modifier,
-                    state = groupChat,
-                    onUsernameTextChanged = onUsernameChanged,
-                    onFindClicked = onFindClicked,
-                    onCreateClicked = onCreateGroupChatClicked,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PersonalChat(
-    modifier: Modifier = Modifier,
-    state: ChatDescriptor.Personal,
-    onUsernameTextChanged: (String) -> Unit,
-    onFindClicked: () -> Unit,
-) {
-    Column(
-        modifier = modifier,
-    ) {
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            value = state.username,
-            onValueChange = onUsernameTextChanged,
-            placeholder = {
-                Text(
-                    text = stringResource(StringRes.create_chat_username_placeholder),
-                    style = AppTheme.typography.body,
-                    color = AppTheme.colors.textSuppressed,
-                )
-            },
-            enabled = !state.isLoading,
-            maxLines = 1,
-            textStyle = AppTheme.typography.body,
-        )
-        Spacer(Modifier.weight(1f))
-        if (state.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(alignment = Alignment.CenterHorizontally),
-            )
-        } else {
-            ButtonPrimary(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                content = ButtonContent.Text(
-                    text = stringResource(StringRes.create_chat_find_button),
-                ),
-                onClicked = onFindClicked,
-                enabled = state.isFindButtonEnabled,
-            )
-        }
-    }
+    GroupChat(
+        modifier = Modifier,
+        state = groupChat,
+        onUsernameTextChanged = onUsernameChanged,
+        onFindClicked = onFindClicked,
+        onCreateClicked = onCreateGroupChatClicked,
+    )
 }
 
 @Composable
@@ -351,30 +248,6 @@ private fun GroupChat(
     }
 }
 
-
-@Composable
-private fun ChatTypeSelector(
-    modifier: Modifier = Modifier,
-    selectedType: ChatType,
-    onTypeSelected: (ChatType) -> Unit,
-) {
-    Row(modifier = modifier) {
-        SelectorText(
-            modifier = Modifier,
-            text = stringResource(StringRes.create_chat_type_personal),
-            selected = selectedType == ChatType.Personal,
-            onClicked = { onTypeSelected(ChatType.Personal) },
-        )
-        Spacer(Modifier.width(16.dp))
-        SelectorText(
-            modifier = Modifier,
-            text = stringResource(StringRes.create_chat_type_group),
-            selected = selectedType == ChatType.Group,
-            onClicked = { onTypeSelected(ChatType.Group) },
-        )
-    }
-}
-
 @Composable
 private fun SelectorText(
     modifier: Modifier = Modifier,
@@ -416,47 +289,11 @@ private fun SelectorText(
 
 @Preview
 @Composable
-internal fun AddChatContentPersonalPreview() {
-    AppTheme {
-        AddChatContent(
-            modifier = Modifier.fillMaxSize(),
-            state = AddChatState(
-                personalChat = ChatDescriptor.Personal(
-                    username = "personal_user",
-                    isLoading = false,
-                ),
-                groupChat = ChatDescriptor.Group(
-                    username = "",
-                    searchInProgress = false,
-                    creationInProgress = false,
-                    addedUsers = emptyList(),
-                ),
-                activeType = ChatType.Personal,
-                dialogDescriptor = null,
-            ),
-            events = emptyFlow(),
-            onBackClicked = {},
-            onUsernameChanged = {},
-            onFindClicked = {},
-            onPersonalChatCreated = {},
-            onGroupChatCreated = {},
-            onTypeSelected = {},
-            onCreateGroupChatClicked = {},
-        )
-    }
-}
-
-@Preview
-@Composable
 internal fun AddChatContentGroupPreview() {
     AppTheme {
         AddChatContent(
             modifier = Modifier.fillMaxSize(),
             state = AddChatState(
-                personalChat = ChatDescriptor.Personal(
-                    username = "",
-                    isLoading = false,
-                ),
                 groupChat = ChatDescriptor.Group(
                     username = "group_user",
                     searchInProgress = false,
@@ -466,16 +303,13 @@ internal fun AddChatContentGroupPreview() {
                         AddedUser(id = "2", username = "User 2"),
                     ),
                 ),
-                activeType = ChatType.Group,
                 dialogDescriptor = null,
             ),
             events = emptyFlow(),
             onBackClicked = {},
             onUsernameChanged = {},
             onFindClicked = {},
-            onPersonalChatCreated = {},
             onGroupChatCreated = {},
-            onTypeSelected = {},
             onCreateGroupChatClicked = {},
         )
     }

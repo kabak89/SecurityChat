@@ -24,7 +24,6 @@ public interface RootComponent : BackHandlerOwner, DiScopeHolder {
     }
 
     public sealed interface DeepLink {
-        public data class OpenPrivateChat(val chatId: String) : DeepLink
         public data class OpenGroupChat(val chatId: String) : DeepLink
         public data class SendText(val text: String) : DeepLink
     }

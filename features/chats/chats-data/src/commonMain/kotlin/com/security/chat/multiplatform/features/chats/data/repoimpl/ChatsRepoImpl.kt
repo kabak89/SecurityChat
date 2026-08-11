@@ -47,10 +47,6 @@ internal class ChatsRepoImpl(
                 val userFlows = chatList
                     .flatMap { chat ->
                         when (chat) {
-                            is ChatSM.PersonalChat -> {
-                                listOf(usersStorage.getUserFlow(chat.interlocutorId))
-                            }
-
                             is ChatSM.GroupChat -> {
                                 val members = chat.members + chat.authorId
                                 members.map { memberId ->
@@ -102,16 +98,6 @@ internal class ChatsRepoImpl(
                                         ),
                                     )
                                 }
-
-                                is ChatSM.PersonalChat -> {
-                                    val interlocutorId = chatSM.interlocutorId
-                                    val interlocutorName =
-                                        users.find { it?.id == interlocutorId }?.name ?: run {
-                                            val user = getAndSaveUser(interlocutorId)
-                                            user.name
-                                        }
-                                    chatSM.toDomain(interlocutorName = interlocutorName)
-                                }
                             }
                         }
                 }
@@ -123,27 +109,6 @@ internal class ChatsRepoImpl(
         val response: UserChatsResponse = networkManager.runGet(
             relativePath = "/chats",
         )
-
-        val personalChats = response.personalChats
-            .map { chatResponse ->
-                val userId = userStorage.getUserId() ?: error("user id not found")
-
-                val companionId = if (chatResponse.firstUserId == userId) {
-                    chatResponse.secondUserId
-                } else {
-                    chatResponse.firstUserId
-                }
-
-                val companionName = usersStorage.getUser(companionId)?.name ?: run {
-                    val user = getAndSaveUser(companionId)
-                    user.name
-                }
-
-                chatResponse.toDomain(
-                    companionName = companionName,
-                    companionId = companionId,
-                )
-            }
 
         val groupChats = response.groupChats
             .map { chatResponse ->
@@ -184,9 +149,9 @@ internal class ChatsRepoImpl(
                     author = author,
                 )
             }
+            .map { it.toSM() }
 
-        val storageModels = personalChats.map { it.toSM() } + groupChats.map { it.toSM() }
-        chatsStorage.saveChats(chats = storageModels)
+        chatsStorage.saveChats(chats = groupChats)
     }
 
     override fun isConnectedToInternetFlow(): Flow<Boolean> {

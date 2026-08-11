@@ -63,7 +63,6 @@ public fun ChatListScreen(
             onAddClicked = component::onAddClicked,
             onSettingsClicked = component::onSettingsClicked,
             onRefreshChatsTriggered = vm::onRefreshChatsTriggered,
-            onPersonalChatClicked = component::onPersonalChatClicked,
             onCloseErrorDialogClicked = vm::onCloseErrorDialogClicked,
             onReloadChatsClicked = vm::onReloadChatsClicked,
             onGroupChatClicked = component::onGroupChatClicked,
@@ -79,7 +78,6 @@ private fun ChatListContent(
     onAddClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     onRefreshChatsTriggered: () -> Unit,
-    onPersonalChatClicked: (chatId: String) -> Unit,
     onGroupChatClicked: (chatId: String) -> Unit,
     onCloseErrorDialogClicked: () -> Unit,
     onReloadChatsClicked: () -> Unit,
@@ -130,10 +128,7 @@ private fun ChatListContent(
                             modifier = Modifier.fillMaxWidth(),
                             chat = chat,
                             onChatClicked = {
-                                when (chat.type) {
-                                    ChatItem.Type.Personal -> onPersonalChatClicked(chat.id)
-                                    ChatItem.Type.Group -> onGroupChatClicked(chat.id)
-                                }
+                                onGroupChatClicked(chat.id)
                             },
                         )
                         if (index != lastIndex) {
@@ -231,13 +226,11 @@ internal fun ChatListContentPreview() {
                             id = "id-1",
                             text = "user_1",
                             abbreviation = "U1",
-                            type = ChatItem.Type.Personal,
                         ),
                         ChatItem(
                             id = "id-2",
                             text = "user_2",
                             abbreviation = "U2",
-                            type = ChatItem.Type.Group,
                         ),
                     ),
                 ),
@@ -248,7 +241,6 @@ internal fun ChatListContentPreview() {
             onAddClicked = {},
             onSettingsClicked = {},
             onRefreshChatsTriggered = {},
-            onPersonalChatClicked = {},
             onCloseErrorDialogClicked = {},
             onReloadChatsClicked = {},
             onGroupChatClicked = {},
@@ -272,7 +264,6 @@ internal fun ChatListContentLoadingPreview() {
             onAddClicked = {},
             onSettingsClicked = {},
             onRefreshChatsTriggered = {},
-            onPersonalChatClicked = {},
             onCloseErrorDialogClicked = {},
             onReloadChatsClicked = {},
             onGroupChatClicked = {},

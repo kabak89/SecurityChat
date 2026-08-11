@@ -8,7 +8,6 @@ import com.security.chat.multiplatform.features.chats.domain.ChatsModel
 
 public class ChatListComponentImpl(
     private val onAdd: () -> Unit,
-    private val onPersonalChatClick: (chatId: String) -> Unit,
     private val onGroupChatClick: (chatId: String) -> Unit,
     private val onSettingsClick: () -> Unit,
     componentContext: ComponentContext,
@@ -27,10 +26,6 @@ public class ChatListComponentImpl(
 
     override fun onAddClicked() {
         onAdd()
-    }
-
-    override fun onPersonalChatClicked(chatId: String) {
-        onPersonalChatClick(chatId)
     }
 
     override fun onGroupChatClicked(chatId: String) {

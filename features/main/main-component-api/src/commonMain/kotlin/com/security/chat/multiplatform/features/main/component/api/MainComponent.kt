@@ -9,8 +9,6 @@ import com.security.chat.multiplatform.features.chats.component.api.ChatsCompone
 public interface MainComponent : BackHandlerOwner {
 
     public fun onBackClicked()
-
-    public fun openPrivateChat(chatId: String)
     public fun openGroupChat(chatId: String)
     public fun handleSendText(text: String)
 
@@ -22,7 +20,6 @@ public interface MainComponent : BackHandlerOwner {
     }
 
     public sealed interface Params {
-        public data class PrivateChat(val chatId: String) : Params
         public data class GroupChat(val chatId: String) : Params
         public data class ShareText(val text: String) : Params
     }

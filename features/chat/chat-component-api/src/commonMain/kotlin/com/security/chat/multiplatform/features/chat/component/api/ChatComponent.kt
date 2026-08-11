@@ -15,18 +15,12 @@ public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner 
     public val childStack: Value<ChildStack<*, Child>>
 
     public sealed interface Child {
-        public class PersonalChat(public val component: PersonalChatComponent) : Child
         public class GroupChat(public val component: GroupChatComponent) : Child
     }
 
     public sealed interface Params {
         public val value: String
         public val initialText: String?
-
-        public data class PersonalChat(
-            override val value: String,
-            override val initialText: String? = null,
-        ) : Params
 
         public data class GroupChatId(
             override val value: String,

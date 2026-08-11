@@ -39,13 +39,6 @@ public class MainComponentImpl(
                             )
                         }
 
-                        is MainComponent.Params.PrivateChat -> {
-                            listOf(
-                                Params.ChatsParams,
-                                Params.PrivateChatParams(chatId = params.chatId),
-                            )
-                        }
-
                         is MainComponent.Params.ShareText -> {
                             pendingSharedText = params.text
                             listOf(Params.ChatsParams)
@@ -68,34 +61,6 @@ public class MainComponentImpl(
         navigation.replaceAll(Params.ChatsParams)
     }
 
-    override fun openPrivateChat(chatId: String) {
-        val top = childStack.value.active.instance
-
-        when (top) {
-            is Chat -> {
-                val params = top.component.params
-
-                when (params) {
-                    is ChatComponent.Params.PersonalChat -> {
-                        if (params.value == chatId) {
-                            //do nothing
-                        } else {
-                            navigation.pop()
-                            navigation.push(Params.PrivateChatParams(chatId = chatId))
-                        }
-                    }
-
-                    is ChatComponent.Params.GroupChatId -> {
-                        navigation.pop()
-                        navigation.push(Params.PrivateChatParams(chatId = chatId))
-                    }
-                }
-            }
-
-            is Chats -> navigation.push(Params.PrivateChatParams(chatId = chatId))
-        }
-    }
-
     override fun openGroupChat(chatId: String) {
         val top = childStack.value.active.instance
 
@@ -111,11 +76,6 @@ public class MainComponentImpl(
                             navigation.pop()
                             navigation.push(Params.GroupChatParams(chatId = chatId))
                         }
-                    }
-
-                    is ChatComponent.Params.PersonalChat -> {
-                        navigation.pop()
-                        navigation.push(Params.GroupChatParams(chatId = chatId))
                     }
                 }
             }
@@ -133,14 +93,6 @@ public class MainComponentImpl(
                 Chats(
                     component = ChatsComponentImpl(
                         componentContext = componentContext,
-                        onPublicChatClicked = { chatId ->
-                            val configuration = Params.PrivateChatParams(
-                                chatId = chatId,
-                                initialText = pendingSharedText,
-                            )
-                            pendingSharedText = null
-                            navigation.push(configuration = configuration)
-                        },
                         onGroupChatClicked = { chatId ->
                             val configuration = Params.GroupChatParams(
                                 chatId = chatId,
@@ -149,19 +101,6 @@ public class MainComponentImpl(
                             pendingSharedText = null
                             navigation.push(configuration = configuration)
                         },
-                    ),
-                )
-            }
-
-            is Params.PrivateChatParams -> {
-                Chat(
-                    component = ChatComponentImpl(
-                        componentContext = componentContext,
-                        onExit = navigation::pop,
-                        params = ChatComponent.Params.PersonalChat(
-                            value = params.chatId,
-                            initialText = params.initialText,
-                        ),
                     ),
                 )
             }
@@ -186,12 +125,6 @@ public class MainComponentImpl(
 
         @Serializable
         data object ChatsParams : Params
-
-        @Serializable
-        data class PrivateChatParams(
-            val chatId: String,
-            val initialText: String? = null,
-        ) : Params
 
         @Serializable
         data class GroupChatParams(

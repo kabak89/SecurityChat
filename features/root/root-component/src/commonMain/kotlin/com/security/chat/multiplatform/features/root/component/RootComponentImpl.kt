@@ -159,11 +159,6 @@ public class RootComponentImpl(
 
     override fun handleDeepLink(link: RootComponent.DeepLink) {
         when (link) {
-            is RootComponent.DeepLink.OpenPrivateChat -> {
-                val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
-                activeMain?.component?.openPrivateChat(chatId = link.chatId)
-            }
-
             is RootComponent.DeepLink.OpenGroupChat -> {
                 val activeMain = childStack.value.active.instance as? RootComponent.Child.Main
                 activeMain?.component?.openGroupChat(chatId = link.chatId)
@@ -217,10 +212,6 @@ public class RootComponentImpl(
         val params = when (deeplinkParams) {
             is RootComponent.DeepLink.OpenGroupChat -> {
                 MainComponent.Params.GroupChat(chatId = deeplinkParams.chatId)
-            }
-
-            is RootComponent.DeepLink.OpenPrivateChat -> {
-                MainComponent.Params.PrivateChat(chatId = deeplinkParams.chatId)
             }
 
             is RootComponent.DeepLink.SendText -> {

@@ -60,11 +60,6 @@ public class PushRepositoryImpl(
         sendIfNeeded(token = token, force = true)
     }
 
-    override suspend fun getInterlocutorName(chatId: String): String? {
-        val interlocutorId = chatsStorage.getPersonalChat(chatId)?.interlocutorId ?: return null
-        return usersStorage.getUser(interlocutorId)?.name
-    }
-
     override suspend fun processNewMessages(
         serializedMessages: String,
         chatId: String,
@@ -74,37 +69,24 @@ public class PushRepositoryImpl(
             chatId = chatId,
         )
 
-        val personalChat = chatsStorage.getPersonalChat(chatId)
         val groupChat = chatsStorage.getGroupChat(chatId)
-        val chat = personalChat ?: groupChat
 
-        val title = when (chat) {
+        val title = when (groupChat) {
             is ChatSM.GroupChat -> {
-                (listOf(chat.authorId) + chat.members)
+                (listOf(groupChat.authorId) + groupChat.members)
                     .mapNotNull {
                         usersStorage.getUser(it)?.name
                     }
                     .joinToString(separator = ", ")
             }
 
-            is ChatSM.PersonalChat -> {
-                usersStorage.getUser(chat.interlocutorId)?.name ?: ""
-            }
-
             //TODO chat could not be in cache
             null -> ""
-        }
-
-        val chatType = when {
-            groupChat != null -> NotificationInfo.ChatType.Group
-            personalChat != null -> NotificationInfo.ChatType.Personal
-            else -> error("Something gone wrong")
         }
 
         return NotificationInfo(
             title = title,
             description = messagesTexts.joinToString(separator = "\n"),
-            chatType = chatType,
         )
     }
 

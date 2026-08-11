@@ -19,14 +19,11 @@ import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
-import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
-import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.RecipientCiphertext
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.entity.TextMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
-import com.security.chat.multiplatform.features.chat.data.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
@@ -35,7 +32,6 @@ import com.security.chat.multiplatform.features.chat.data.storage.entity.Message
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.domain.entity.FileDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.ImageMessageDescriptor
-import com.security.chat.multiplatform.features.chat.domain.entity.Interlocutor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
@@ -43,18 +39,12 @@ import com.security.chat.multiplatform.features.chat.domain.entity.error.NotImag
 import com.security.chat.multiplatform.features.chat.domain.entity.toFileSource
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
-import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.serialization.json.Json
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -87,15 +77,9 @@ internal class ChatRepoImpl(
         message: String,
         chatId: String,
     ) {
-        val chat = chatsStorage.getPersonalChat(chatId) ?: chatsStorage.getGroupChat(chatId)
-        checkNotNull(chat)
-
+        val chat = checkNotNull(chatsStorage.getGroupChat(chatId))
         val userId = checkNotNull(userStorage.getUserId())
-
-        val recipients = when (chat) {
-            is ChatSM.GroupChat -> (chat.members + chat.authorId).distinct()
-            is ChatSM.PersonalChat -> listOf(chat.interlocutorId, userId).distinct()
-        }
+        val recipients = (chat.members + chat.authorId).distinct()
 
         val timestamp = timeProvider.now().toEpochMilliseconds()
         val messageId = Uuid.random().toString()
@@ -293,46 +277,6 @@ internal class ChatRepoImpl(
             }
     }
 
-    override suspend fun fetchCompanionInfo(chatId: String) {
-        val chat = requireNotNull(chatsStorage.getPersonalChat(chatId))
-        val companionId = chat.interlocutorId
-        val userNM = usersNetworkManager.getUser(companionId)
-        usersStorage.saveUser(user = userNM.toSM())
-    }
-
-    override fun getInterlocutorInfoFlow(chatId: String): Flow<Interlocutor?> {
-        return chatsStorage.getPersonalChatFlow(chatId)
-            .flatMapLatest { chat ->
-                chat ?: return@flatMapLatest flowOf(null)
-
-                val subscribeMessage = OnlineStatusSubscribeMessage(
-                    targetUserId = chat.interlocutorId,
-                )
-
-                val onlineStatusFlow = liveEventsManager
-                    .subscribe<OnlineInfoMessage, OnlineStatusSubscribeMessage>(
-                        subscribeMessage = subscribeMessage,
-                        type = "online_status_receive",
-                    )
-                    .map { it.isOnline }
-                    .onStart { emit(false) }
-
-                combine(
-                    usersStorage.getUserFlow(chat.interlocutorId),
-                    onlineStatusFlow,
-                ) { userSM, isOnline ->
-                    userSM ?: return@combine null
-
-                    Interlocutor(
-                        id = userSM.id,
-                        name = userSM.name,
-                        isOnline = isOnline,
-                    )
-                }
-                    .distinctUntilChanged()
-            }
-    }
-
     override suspend fun setUserOnline() {
         val userId = checkNotNull(userStorage.getUserId())
         val subscribeMessage = OnlineStatusPublisherMessage(
@@ -399,14 +343,8 @@ internal class ChatRepoImpl(
             destinationPath = "$imagesDirectory/$fileId",
         )
 
-        val userId = checkNotNull(userStorage.getUserId())
-        val chat = chatsStorage.getPersonalChat(chatId) ?: chatsStorage.getGroupChat(chatId)
-        checkNotNull(chat)
-
-        val recipients = when (chat) {
-            is ChatSM.GroupChat -> (chat.members + chat.authorId).distinct()
-            is ChatSM.PersonalChat -> listOf(chat.interlocutorId, userId).distinct()
-        }
+        val chat = checkNotNull(chatsStorage.getGroupChat(chatId))
+        val recipients = (chat.members + chat.authorId).distinct()
 
         return ImageMessageDescriptor(
             fileId = fileId,

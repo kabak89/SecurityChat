@@ -5,7 +5,6 @@ import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
-import com.security.chat.multiplatform.features.chats.data.storage.mapper.toSM
 import com.security.chat.multiplatform.features.chats.data.storage.mapper.toTable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -17,10 +16,8 @@ import kotlinx.coroutines.withContext
 
 public interface ChatsStorage {
     public suspend fun saveChats(chats: List<ChatSM>)
-    public suspend fun getPersonalChat(id: String): ChatSM.PersonalChat?
     public suspend fun getGroupChat(id: String): ChatSM.GroupChat?
     public fun getChatsFlow(): Flow<List<ChatSM>>
-    public fun getPersonalChatFlow(id: String): Flow<ChatSM.PersonalChat?>
     public suspend fun clearAll()
     public suspend fun saveChat(chat: ChatSM)
 }
@@ -52,13 +49,6 @@ internal class ChatsStorageImpl(
                 db.groupChatTableQueries.removeAll()
 
                 chats
-                    .filterIsInstance<ChatSM.PersonalChat>()
-                    .forEach { chat ->
-                        val table = chat.toTable()
-                        db.personalChatTableQueries.insert(table)
-                    }
-
-                chats
                     .filterIsInstance<ChatSM.GroupChat>()
                     .forEach { chat ->
                         val table = chat.toTable()
@@ -75,12 +65,6 @@ internal class ChatsStorageImpl(
                             }
                     }
             }
-        }
-    }
-
-    override suspend fun getPersonalChat(id: String): ChatSM.PersonalChat? {
-        return withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().personalChatTableQueries.getById(id).executeAsOneOrNull()?.toSM()
         }
     }
 
@@ -115,11 +99,6 @@ internal class ChatsStorageImpl(
 
             db.transaction {
                 when (chat) {
-                    is ChatSM.PersonalChat -> {
-                        val table = chat.toTable()
-                        db.personalChatTableQueries.insert(table)
-                    }
-
                     is ChatSM.GroupChat -> {
                         val table = chat.toTable()
                         db.groupChatTableQueries.insert(table)
@@ -142,15 +121,7 @@ internal class ChatsStorageImpl(
     override fun getChatsFlow(): Flow<List<ChatSM>> {
         return dbCreator.dbFlow
             .flatMapLatest { db ->
-                val personalChatsFlow = db.personalChatTableQueries.getAll()
-                    .asFlow()
-                    .map { query ->
-                        query.executeAsList()
-                            .map { table -> table.toSM() }
-                    }
-                    .flowOn(dispatcherProvider.IO)
-
-                val groupChatsFlow = db.groupChatTableQueries.getAll()
+                db.groupChatTableQueries.getAll()
                     .asFlow()
                     .map { it.executeAsList() }
                     .flatMapLatest { groupChatIds ->
@@ -172,25 +143,6 @@ internal class ChatsStorageImpl(
                                 }
                             combine(chatFlows) { it.toList() }
                         }
-                    }
-                    .flowOn(dispatcherProvider.IO)
-
-                combine(
-                    personalChatsFlow,
-                    groupChatsFlow,
-                ) { personalChats, groupChats ->
-                    personalChats + groupChats
-                }
-            }
-    }
-
-    override fun getPersonalChatFlow(id: String): Flow<ChatSM.PersonalChat?> {
-        return dbCreator.dbFlow
-            .flatMapLatest { db ->
-                db.personalChatTableQueries.getById(id)
-                    .asFlow()
-                    .map { query ->
-                        query.executeAsOneOrNull()?.toSM()
                     }
                     .flowOn(dispatcherProvider.IO)
             }

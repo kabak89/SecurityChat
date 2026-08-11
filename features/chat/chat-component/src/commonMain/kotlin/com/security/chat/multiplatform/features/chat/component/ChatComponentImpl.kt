@@ -38,13 +38,6 @@ public class ChatComponentImpl(
                             initialText = params.initialText,
                         )
                     }
-
-                    is ChatComponent.Params.PersonalChat -> {
-                        Params.PersonalChatParams(
-                            chatId = params.value,
-                            initialText = params.initialText,
-                        )
-                    }
                 }
             },
             handleBackButton = true,
@@ -72,17 +65,6 @@ public class ChatComponentImpl(
         componentContext: ComponentContext,
     ): ChatComponent.Child {
         return when (params) {
-            is Params.PersonalChatParams -> {
-                ChatComponent.Child.PersonalChat(
-                    component = PersonalChatComponentImpl(
-                        componentContext = componentContext,
-                        onExit = onExit,
-                        chatId = params.chatId,
-                        initialText = params.initialText,
-                    ),
-                )
-            }
-
             is Params.GroupChatParams -> {
                 ChatComponent.Child.GroupChat(
                     component = GroupChatComponentImpl(
@@ -100,19 +82,11 @@ public class ChatComponentImpl(
     private sealed class Params {
 
         @Serializable
-        data class PersonalChatParams(
-            val chatId: String,
-            val initialText: String? = null,
-        ) : Params()
-
-        @Serializable
         data class GroupChatParams(
             val chatId: String,
             val initialText: String? = null,
         ) : Params()
-
     }
-
 }
 
 public const val SCOPE_ID_CHAT: String = "SCOPE_ID_CHAT"

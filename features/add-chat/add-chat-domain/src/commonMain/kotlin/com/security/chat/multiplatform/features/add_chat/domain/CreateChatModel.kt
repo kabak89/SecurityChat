@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.update
 import ru.kode.remo.Task0
 
 public interface CreateChatModel : ScopedModel {
-    public val createPersonalChat: Task0<CreateChatResult.PersonalChatCreated>
     public val findUserForGroupChat: Task0<Unit>
     public val createGroupChat: Task0<CreateChatResult.GroupChatCreated>
 
@@ -35,16 +34,6 @@ internal class CreateChatModelImpl(
     ) {
 
     private val stateFlow = MutableStateFlow(State())
-
-    override val createPersonalChat: Task0<CreateChatResult.PersonalChatCreated> =
-        task { ->
-            val username = stateFlow.value.personalChatUsername.trim()
-            val result = addChatRepo.findUser(username = username)
-            val createChatResult = addChatRepo.createPersonalChat(secondUserId = result.userId)
-            stateFlow.update { it.copy(personalChatUsername = "") }
-            addChatRepo.refreshChatsList()
-            createChatResult
-        }
 
     override val findUserForGroupChat: Task0<Unit> =
         task { ->

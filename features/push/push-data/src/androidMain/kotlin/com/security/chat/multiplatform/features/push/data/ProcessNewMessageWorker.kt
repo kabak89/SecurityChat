@@ -18,7 +18,6 @@ import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
-import com.security.chat.multiplatform.features.push.domain.entity.NotificationInfo
 import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilder
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
@@ -107,21 +106,10 @@ internal class ProcessNewMessageWorker(
             chatId = chatId,
         )
 
-        val intent = when (notificationInfo.chatType) {
-            NotificationInfo.ChatType.Personal -> {
-                intentBuilder.getOpenPersonalChatIntent(
-                    context = applicationContext,
-                    chatId = chatId,
-                )
-            }
-
-            NotificationInfo.ChatType.Group -> {
-                intentBuilder.getOpenGroupChatIntent(
-                    context = applicationContext,
-                    chatId = chatId,
-                )
-            }
-        }
+        val intent = intentBuilder.getOpenGroupChatIntent(
+            context = applicationContext,
+            chatId = chatId,
+        )
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(
             /* context = */

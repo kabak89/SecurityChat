@@ -75,10 +75,6 @@ private fun Intent.toDeepLink(): RootComponent.DeepLink? {
             RootComponent.DeepLink.OpenGroupChat(chatId = chatId)
         }
 
-        IntentBuilderContract.ACTION_OPEN_PERSONAL_CHAT -> {
-            RootComponent.DeepLink.OpenPrivateChat(chatId = chatId)
-        }
-
         else -> null
     }
 }

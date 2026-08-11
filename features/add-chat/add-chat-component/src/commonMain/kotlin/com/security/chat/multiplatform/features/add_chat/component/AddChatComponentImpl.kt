@@ -11,7 +11,6 @@ import com.security.chat.multiplatform.features.add_chat.ui.di.addChatUiModule
 
 public class AddChatComponentImpl(
     private val onBack: () -> Unit,
-    private val onPersonalChatCreate: (chatId: String) -> Unit,
     private val onGroupChatCreate: (chatId: String) -> Unit,
     componentContext: ComponentContext,
 ) : AddChatComponent,
@@ -37,10 +36,6 @@ public class AddChatComponentImpl(
 
     override fun onBackClicked() {
         onBack()
-    }
-
-    override fun onPersonalChatCreated(chatId: String) {
-        onPersonalChatCreate(chatId)
     }
 
     override fun onGroupChatCreated(chatId: String) {

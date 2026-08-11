@@ -8,16 +8,6 @@ import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilde
 
 internal class IntentBuilderImpl : IntentBuilder {
 
-    override fun getOpenPersonalChatIntent(
-        context: Context,
-        chatId: String,
-    ): Intent {
-        return mainActivityIntent(context).apply {
-            action = IntentBuilderContract.ACTION_OPEN_PERSONAL_CHAT
-            putExtra(IntentBuilderContract.EXTRA_CHAT_ID, chatId)
-        }
-    }
-
     override fun getOpenGroupChatIntent(
         context: Context,
         chatId: String,
