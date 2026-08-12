@@ -16,6 +16,8 @@ kotlin {
             implementation(projects.features.main.mainComponentApi)
             implementation(projects.features.chats.chatsUi)
             implementation(projects.features.chat.chatUi)
+            implementation(projects.features.settings.settingsUi)
+            implementation(projects.features.addChat.addChatUi)
         }
     }
 }

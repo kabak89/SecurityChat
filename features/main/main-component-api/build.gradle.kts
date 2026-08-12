@@ -13,6 +13,8 @@ kotlin {
 
             implementation(projects.features.chats.chatsComponentApi)
             implementation(projects.features.chat.chatComponentApi)
+            implementation(projects.features.settings.settingsComponentApi)
+            implementation(projects.features.addChat.addChatComponentApi)
         }
     }
 }

@@ -8,12 +8,14 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
+import com.security.chat.multiplatform.features.add_chat.component.AddChatComponentImpl
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
 import com.security.chat.multiplatform.features.main.component.api.MainComponent
 import com.security.chat.multiplatform.features.main.component.api.MainComponent.Child.Chat
 import com.security.chat.multiplatform.features.main.component.api.MainComponent.Child.Chats
+import com.security.chat.multiplatform.features.settings.component.SettingsComponentImpl
 import kotlinx.serialization.Serializable
 
 public class MainComponentImpl(
@@ -62,25 +64,26 @@ public class MainComponentImpl(
     }
 
     override fun openGroupChat(chatId: String) {
+        val configuration = Params.GroupChatParams(
+            chatId = chatId,
+            initialText = pendingSharedText,
+        )
+        pendingSharedText = null
+
         val top = childStack.value.active.instance
 
         when (top) {
             is Chat -> {
                 val params = top.component.params
-
-                when (params) {
-                    is ChatComponent.Params.GroupChatId -> {
-                        if (params.value == chatId) {
-                            //do nothing
-                        } else {
-                            navigation.pop()
-                            navigation.push(Params.GroupChatParams(chatId = chatId))
-                        }
-                    }
+                if (params is ChatComponent.Params.GroupChatId && params.value == chatId) {
+                    // do nothing
+                } else {
+                    navigation.pop()
+                    navigation.push(configuration)
                 }
             }
 
-            is Chats -> navigation.push(Params.GroupChatParams(chatId = chatId))
+            else -> navigation.push(configuration)
         }
     }
 
@@ -93,13 +96,12 @@ public class MainComponentImpl(
                 Chats(
                     component = ChatsComponentImpl(
                         componentContext = componentContext,
-                        onGroupChatClicked = { chatId ->
-                            val configuration = Params.GroupChatParams(
-                                chatId = chatId,
-                                initialText = pendingSharedText,
-                            )
-                            pendingSharedText = null
-                            navigation.push(configuration = configuration)
+                        onGroupChatClicked = ::openGroupChat,
+                        onSettingsClicked = {
+                            navigation.push(Params.SettingsParams)
+                        },
+                        onAddChatClicked = {
+                            navigation.push(Params.AddChatParams)
                         },
                     ),
                 )
@@ -117,6 +119,28 @@ public class MainComponentImpl(
                     ),
                 )
             }
+
+            Params.SettingsParams -> {
+                MainComponent.Child.Settings(
+                    component = SettingsComponentImpl(
+                        componentContext = componentContext,
+                        onExit = navigation::pop,
+                    ),
+                )
+            }
+
+            Params.AddChatParams -> {
+                MainComponent.Child.AddChat(
+                    component = AddChatComponentImpl(
+                        componentContext = componentContext,
+                        onBack = navigation::pop,
+                        onGroupChatCreate = { chatId ->
+                            navigation.pop()
+                            openGroupChat(chatId)
+                        },
+                    ),
+                )
+            }
         }
     }
 
@@ -125,6 +149,12 @@ public class MainComponentImpl(
 
         @Serializable
         data object ChatsParams : Params
+
+        @Serializable
+        data object SettingsParams : Params
+
+        @Serializable
+        data object AddChatParams : Params
 
         @Serializable
         data class GroupChatParams(
