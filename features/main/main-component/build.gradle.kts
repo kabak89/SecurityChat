@@ -15,6 +15,7 @@ kotlin {
 
             implementation(projects.features.chats.chatsComponent)
             implementation(projects.features.chat.chatComponent)
+            implementation(projects.features.chatInfo.chatInfoComponent)
             implementation(projects.features.settings.settingsComponent)
             implementation(projects.features.addChat.addChatComponent)
         }

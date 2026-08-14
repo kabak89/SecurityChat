@@ -7,4 +7,6 @@ public interface GroupChatComponent : BaseComponent, DiScopeHolder {
     public val chatId: String
 
     public fun onExitClicked()
+
+    public fun onMoreClicked()
 }

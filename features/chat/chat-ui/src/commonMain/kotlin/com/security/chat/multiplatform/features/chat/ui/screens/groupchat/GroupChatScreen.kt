@@ -58,6 +58,7 @@ import androidx.paging.compose.itemKey
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
@@ -85,6 +86,7 @@ import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_attach
 import securitychat.common.icons_kit.generated.resources.ic_back
+import securitychat.common.icons_kit.generated.resources.ic_info
 import securitychat.common.icons_kit.generated.resources.ic_send
 
 @Composable
@@ -109,6 +111,7 @@ internal fun GroupChatScreen(
             onImagePicked = vm::onImagePicked,
             onSendMessageClicked = vm::onSendMessageClicked,
             onSyncClicked = vm::onSyncClicked,
+            onMoreClicked = component::onMoreClicked,
             onImageClicked = vm::onImageClicked,
             onFullscreenImageDismissed = vm::onFullscreenImageDismissed,
         )
@@ -127,6 +130,7 @@ private fun GroupChatContent(
     onImagePicked: (PickedImage) -> Unit,
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
+    onMoreClicked: () -> Unit,
     onImageClicked: (message: MessageUM) -> Unit,
     onFullscreenImageDismissed: () -> Unit,
 ) {
@@ -204,6 +208,7 @@ private fun GroupChatContent(
                 state = state,
                 onBackClicked = onBackClicked,
                 onSyncClicked = onSyncClicked,
+                onMoreClicked = onMoreClicked,
             )
             val isImeVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() != 0.dp
             val editPanelBottomPadding = if (isImeVisible) {
@@ -281,6 +286,7 @@ private fun Toolbar(
     state: GroupChatState,
     onBackClicked: () -> Unit,
     onSyncClicked: () -> Unit,
+    onMoreClicked: () -> Unit,
 ) {
     ToolbarComponent(
         modifier = modifier,
@@ -291,10 +297,16 @@ private fun Toolbar(
         centerContent = null,
         endContent = SideContent.Custom(
             content = {
-                SyncComponent(
-                    syncState = state.syncState,
-                    onSyncClicked = onSyncClicked,
-                )
+                Row {
+                    SyncComponent(
+                        syncState = state.syncState,
+                        onSyncClicked = onSyncClicked,
+                    )
+                    ButtonContent(
+                        icon = DrawableRes.ic_info,
+                        onClicked = onMoreClicked,
+                    )
+                }
             },
         ),
     )
@@ -513,6 +525,7 @@ internal fun GroupChatScreenPreview() {
             onImagePicked = {},
             onSendMessageClicked = {},
             onSyncClicked = {},
+            onMoreClicked = {},
             onImageClicked = {},
             onFullscreenImageDismissed = {},
         )

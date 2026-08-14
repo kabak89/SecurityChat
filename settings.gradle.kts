@@ -89,6 +89,11 @@ include(
     ":features:chat:chat-data-common",
 )
 include(
+    ":features:chat-info:chat-info-component",
+    ":features:chat-info:chat-info-component-api",
+    ":features:chat-info:chat-info-ui",
+)
+include(
     ":features:add-chat:add-chat-component",
     ":features:add-chat:add-chat-component-api",
     ":features:add-chat:add-chat-ui",

@@ -17,6 +17,7 @@ import kotlinx.serialization.Serializable
 public class ChatComponentImpl(
     override val params: ChatComponent.Params,
     private val onExit: () -> Unit,
+    private val onMore: (chatId: String) -> Unit,
     componentContext: ComponentContext,
 ) : ChatComponent,
     BaseComponentImpl(
@@ -72,6 +73,9 @@ public class ChatComponentImpl(
                         onExit = onExit,
                         chatId = params.chatId,
                         initialText = params.initialText,
+                        onMore = {
+                            onMore(params.chatId)
+                        },
                     ),
                 )
             }

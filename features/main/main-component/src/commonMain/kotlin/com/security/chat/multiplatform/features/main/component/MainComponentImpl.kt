@@ -11,6 +11,7 @@ import com.arkivanov.decompose.value.Value
 import com.security.chat.multiplatform.features.add_chat.component.AddChatComponentImpl
 import com.security.chat.multiplatform.features.chat.component.ChatComponentImpl
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
+import com.security.chat.multiplatform.features.chat_info.component.ChatInfoComponentImpl
 import com.security.chat.multiplatform.features.chats.component.ChatsComponentImpl
 import com.security.chat.multiplatform.features.main.component.api.MainComponent
 import com.security.chat.multiplatform.features.main.component.api.MainComponent.Child.Chat
@@ -112,10 +113,23 @@ public class MainComponentImpl(
                     component = ChatComponentImpl(
                         componentContext = componentContext,
                         onExit = navigation::pop,
+                        onMore = { chatId ->
+                            navigation.push(Params.ChatInfoParams(chatId = chatId))
+                        },
                         params = ChatComponent.Params.GroupChatId(
                             value = params.chatId,
                             initialText = params.initialText,
                         ),
+                    ),
+                )
+            }
+
+            is Params.ChatInfoParams -> {
+                MainComponent.Child.ChatInfo(
+                    component = ChatInfoComponentImpl(
+                        chatId = params.chatId,
+                        onBack = navigation::pop,
+                        componentContext = componentContext,
                     ),
                 )
             }
@@ -160,6 +174,11 @@ public class MainComponentImpl(
         data class GroupChatParams(
             val chatId: String,
             val initialText: String? = null,
+        ) : Params
+
+        @Serializable
+        data class ChatInfoParams(
+            val chatId: String,
         ) : Params
     }
 }
