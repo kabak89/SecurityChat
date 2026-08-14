@@ -8,6 +8,8 @@ import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.RefreshToken
 import com.security.chat.multiplatform.common.core.network.entity.Tokens
 import com.security.chat.multiplatform.common.device.info.DeviceInfoManager
+import com.security.chat.multiplatform.common.encryption.generateKeysPair
+import com.security.chat.multiplatform.common.encryption.sha256Hash
 import com.security.chat.multiplatform.features.authorize.data.entity.SignUpRequest
 import com.security.chat.multiplatform.features.authorize.data.entity.SignUpResponse
 import com.security.chat.multiplatform.features.authorize.domain.repo.SignUpRepo

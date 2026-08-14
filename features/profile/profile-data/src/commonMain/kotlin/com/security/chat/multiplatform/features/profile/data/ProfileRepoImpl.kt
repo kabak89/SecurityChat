@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.profile.data
 
 import com.security.chat.multiplatform.common.core.network.LogoutErrorAlerter
+import com.security.chat.multiplatform.common.encryption.RsaSqueezer
 import com.security.chat.multiplatform.features.profile.domain.entity.Profile
 import com.security.chat.multiplatform.features.profile.domain.entity.UpdateProfileParams
 import com.security.chat.multiplatform.features.profile.domain.repo.ProfileRepo
@@ -26,7 +27,7 @@ internal class ProfileRepoImpl(
 
         return Profile(
             name = name,
-            privateKey = privateKey,
+            privateKey = RsaSqueezer.squeeze(privateKey),
         )
     }
 

@@ -23,6 +23,7 @@ kotlin {
             implementation(projects.common.coreThreading)
             implementation(projects.common.coreFiles)
             implementation(projects.common.log)
+            implementation(projects.common.encryption)
 
             implementation(projects.features.chat.chatDataNetwork)
             implementation(projects.features.chat.chatDataStorage)

@@ -1,6 +1,6 @@
-package com.security.chat.multiplatform.features.authorize.data.repoimpl
+package com.security.chat.multiplatform.common.encryption
 
-import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
+import com.security.chat.multiplatform.common.encryption.entity.CryptoKeys
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.DelicateCryptographyApi
 import dev.whyoleg.cryptography.algorithms.RSA
@@ -8,9 +8,10 @@ import dev.whyoleg.cryptography.algorithms.SHA512
 import dev.whyoleg.cryptography.operations.KeyGenerator
 import org.kotlincrypto.hash.sha2.SHA256
 import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
-@OptIn(DelicateCryptographyApi::class)
-internal suspend fun generateKeysPair(): CryptoKeys {
+@OptIn(DelicateCryptographyApi::class, ExperimentalEncodingApi::class)
+public suspend fun generateKeysPair(): CryptoKeys {
     val provider = CryptographyProvider.Default
     val rsa = provider.get(RSA.RAW)
     val keyPairGenerator: KeyGenerator<RSA.RAW.KeyPair> = rsa.keyPairGenerator()
@@ -26,11 +27,12 @@ internal suspend fun generateKeysPair(): CryptoKeys {
     )
 }
 
-internal fun sha256Hash(input: String): String {
+public fun sha256Hash(input: String): String {
     return SHA256().digest(input.encodeToByteArray()).toHexString()
 }
 
-internal suspend fun derivePublicKey(privateKey: String): String {
+@OptIn(ExperimentalEncodingApi::class)
+public suspend fun derivePublicKey(privateKey: String): String {
     val privateKeyBytes = Base64.decode(privateKey)
     val publicKeyBytes = try {
         val provider = CryptographyProvider.Default

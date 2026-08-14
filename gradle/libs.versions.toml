@@ -64,6 +64,7 @@ kotlinResult = "2.3.1"
 autolinktext = "2.0.2"
 coil = "3.5.0"
 zoomimage = "1.6.0"
+bignum = "0.3.10"
 
 [libraries]
 # Version is aligned by the androidx.compose.ui atomic group pulled in by Compose Multiplatform
@@ -160,11 +161,13 @@ navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:nav
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 
 kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "kotlinResult" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 autolinktext = { module = "sh.calvin.autolinktext:autolinktext", version.ref = "autolinktext" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 zoomimage-compose-coil3 = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version.ref = "zoomimage" }
+bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -16,5 +16,8 @@ kotlin {
             api(projects.common.coreThreading)
             api(projects.common.log)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
     }
 }

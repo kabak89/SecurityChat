@@ -12,12 +12,10 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.common.coreNetwork)
             implementation(projects.common.deviceInfo)
+            implementation(projects.common.encryption)
 
             implementation(projects.features.authorize.authorizeDomain)
             implementation(projects.features.user.userDataStorage)
-
-            implementation(libs.sha2)
-            implementation(libs.cryptography.core)
         }
     }
 }

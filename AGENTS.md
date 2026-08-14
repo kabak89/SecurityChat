@@ -76,6 +76,8 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
   `dbCreator.getDb()` and wrap every read/write query execution in
   `withContext(dispatcherProvider.IO)`; expose reactive queries through `dbCreator.dbFlow` with
   `.flowOn(dispatcherProvider.IO)`.
+- **Test naming:** test methods must not start with the "test" prefix. Use descriptive names
+  enclosed in backticks, e.g. `` `compression works correctly` ``.
 - **String mapping fallbacks:** when mapping a type to/from its string representation (enum or
   sealed-type discriminators, `*SM` storage mappers, etc.), any unknown or unrecognized value must
   be logged via `Log.e` before returning `null`. Never swallow it silently — an unmapped value means

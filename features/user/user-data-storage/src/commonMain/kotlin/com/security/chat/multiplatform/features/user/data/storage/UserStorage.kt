@@ -1,8 +1,8 @@
 package com.security.chat.multiplatform.features.user.data.storage
 
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.encryption.entity.CryptoKeys
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
-import com.security.chat.multiplatform.features.user.data.storage.entity.CryptoKeys
 import kotlinx.coroutines.withContext
 
 public interface UserStorage {

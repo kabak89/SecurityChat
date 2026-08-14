@@ -10,6 +10,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.coreNetwork)
+            implementation(projects.common.encryption)
 
             implementation(projects.features.profile.profileDomain)
             implementation(projects.features.profile.profileDataStorage)

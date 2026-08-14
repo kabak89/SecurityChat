@@ -14,6 +14,7 @@ kotlin {
 
             implementation(projects.common.settings)
             implementation(projects.common.coreThreading)
+            implementation(projects.common.encryption)
         }
     }
 }
