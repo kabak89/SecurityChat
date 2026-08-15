@@ -1,27 +1,32 @@
 package com.security.chat.multiplatform.features.chat_info.ui.screens.chatinfo
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
+import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
-import com.security.chat.multiplatform.features.chat_info.component.api.ChatInfoComponent
+import com.security.chat.multiplatform.features.chat_info.component.api.ChatInfoMainComponent
+import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
+import securitychat.common.localization.generated.resources.chat_info_add_members
 
 @Composable
 public fun ChatInfoScreen(
-    component: ChatInfoComponent,
+    component: ChatInfoMainComponent,
 ) {
     Screen(
         component = component,
@@ -30,6 +35,7 @@ public fun ChatInfoScreen(
         ChatInfoContent(
             state = state,
             onBackClicked = component::onBackClicked,
+            onAddMembersClicked = component::onAddMembersClicked,
         )
     }
 }
@@ -38,8 +44,9 @@ public fun ChatInfoScreen(
 private fun ChatInfoContent(
     state: ChatInfoState,
     onBackClicked: () -> Unit,
+    onAddMembersClicked: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(AppTheme.colors.backgroundPrimary),
@@ -54,12 +61,14 @@ private fun ChatInfoContent(
             ),
             centerContent = CenterContent.Title(text = state.title),
         )
-
-        Text(
-            modifier = Modifier.align(Alignment.Center),
-            text = "Chat Information Screen",
-            style = AppTheme.typography.body,
-            color = AppTheme.colors.textPrimary,
+        ButtonPrimary(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            onClicked = onAddMembersClicked,
+            content = ButtonContent.Text(
+                text = stringResource(StringRes.chat_info_add_members),
+            ),
         )
     }
 }
@@ -73,6 +82,7 @@ internal fun ChatInfoScreenPreview() {
                 title = "Chat Info: 12345",
             ),
             onBackClicked = {},
+            onAddMembersClicked = {},
         )
     }
 }

@@ -122,6 +122,9 @@ flowchart LR
    stack — [SettingsRootScreen.kt](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/root/SettingsRootScreen.kt);
    for the first screen — the `State` / `Event` / `ViewModel` / `Screen` pattern —
    directory [screens/main/](features/settings/settings-ui/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/ui/screens/main/).
+   **Important**: When using `Screen(...) { state, vm -> ... }`, always provide the explicit type
+   for the ViewModel parameter even if it's unused (e.g., `_ : MyViewModel`), otherwise Koin
+   reification will fail with `NoDefinitionFoundException` for `BaseViewModel`.
 7. **component-api**: root interface with
    `Child` — [SettingsComponent.kt](features/settings/settings-component-api/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/api/SettingsComponent.kt).
 8. **component**: implementation with `childStack`, `@Serializable` sealed `Params`, child

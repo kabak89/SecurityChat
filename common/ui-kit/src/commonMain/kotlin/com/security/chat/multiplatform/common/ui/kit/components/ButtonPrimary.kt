@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,6 +81,14 @@ public fun ButtonPrimary(
                     style = AppTheme.typography.body,
                 )
             }
+
+            ButtonContent.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center),
+                    color = AppTheme.colors.element,
+                )
+            }
         }
     }
 }
@@ -89,6 +98,8 @@ public sealed interface ButtonContent {
     public data class Text(
         val text: String,
     ) : ButtonContent
+
+    public data object Loading : ButtonContent
 
     public data class Custom(
         val content: @Composable () -> Unit,
@@ -139,8 +150,20 @@ private fun Previews() {
         )
         ButtonPrimary(
             modifier = Modifier.fillMaxWidth(),
-            content = ButtonContent.Text("Long long long long long long long long long long long long long text"),
+            content = ButtonContent.Text("Long long long long long long long long long long long long long text long long long long long long long long long long text"),
             enabled = true,
+            onClicked = {},
+        )
+        ButtonPrimary(
+            modifier = Modifier.fillMaxWidth(),
+            content = ButtonContent.Loading,
+            enabled = true,
+            onClicked = {},
+        )
+        ButtonPrimary(
+            modifier = Modifier.fillMaxWidth(),
+            content = ButtonContent.Loading,
+            enabled = false,
             onClicked = {},
         )
         ButtonPrimary(

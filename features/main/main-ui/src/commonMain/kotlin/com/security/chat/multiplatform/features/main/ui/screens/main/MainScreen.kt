@@ -18,7 +18,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.security.chat.multiplatform.features.add_chat.ui.AddChatScreen
 import com.security.chat.multiplatform.features.chat.ui.screens.root.ChatRootScreen
-import com.security.chat.multiplatform.features.chat_info.ui.screens.chatinfo.ChatInfoScreen
+import com.security.chat.multiplatform.features.chat_info.ui.screens.root.ChatInfoRootScreen
 import com.security.chat.multiplatform.features.chats.ui.screens.chats.ChatsRootScreen
 import com.security.chat.multiplatform.features.main.component.api.MainComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.root.SettingsRootScreen
@@ -86,7 +86,7 @@ public fun MainScreen(
                             }
 
                             is MainComponent.Child.ChatInfo -> {
-                                ChatInfoScreen(component = child.component)
+                                ChatInfoRootScreen(component = child.component)
                             }
 
                             is MainComponent.Child.Settings -> {
