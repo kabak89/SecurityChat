@@ -11,7 +11,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.features.chatInfo.chatInfoComponentApi)
+
             implementation(projects.features.chatInfo.chatInfoUi)
+            implementation(projects.features.chatInfo.chatInfoDomain)
+            implementation(projects.features.chatInfo.chatInfoData)
         }
     }
 }

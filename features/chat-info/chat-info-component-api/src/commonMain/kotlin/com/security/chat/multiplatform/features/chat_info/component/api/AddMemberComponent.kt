@@ -7,4 +7,5 @@ public interface AddMemberComponent : BaseComponent, DiScopeHolder {
     public val chatId: String
 
     public fun onBackClicked()
+    public fun onMembersAdded()
 }

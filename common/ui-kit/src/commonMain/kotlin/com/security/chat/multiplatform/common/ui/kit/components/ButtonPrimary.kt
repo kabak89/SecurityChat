@@ -85,6 +85,7 @@ public fun ButtonPrimary(
             ButtonContent.Loading -> {
                 CircularProgressIndicator(
                     modifier = Modifier
+                        .size(30.dp)
                         .align(alignment = Alignment.Center),
                     color = AppTheme.colors.element,
                 )

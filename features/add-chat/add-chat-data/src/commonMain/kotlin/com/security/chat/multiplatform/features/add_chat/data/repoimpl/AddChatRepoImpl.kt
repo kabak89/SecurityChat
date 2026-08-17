@@ -3,11 +3,11 @@ package com.security.chat.multiplatform.features.add_chat.data.repoimpl
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
+import com.security.chat.multiplatform.features.add_chat.data.common.AddChatDataHelper
 import com.security.chat.multiplatform.features.add_chat.data.entity.CreateChatRequest
 import com.security.chat.multiplatform.features.add_chat.data.entity.CreateChatResponse
 import com.security.chat.multiplatform.features.add_chat.data.entity.CreateGroupChatRequest
 import com.security.chat.multiplatform.features.add_chat.data.entity.CreateGroupChatResponse
-import com.security.chat.multiplatform.features.add_chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.add_chat.data.entity.UserChatsResponse
 import com.security.chat.multiplatform.features.add_chat.domain.entity.CreateChatResult
 import com.security.chat.multiplatform.features.add_chat.domain.entity.FindUserResult
@@ -27,6 +27,7 @@ internal class AddChatRepoImpl(
     private val chatsStorage: ChatsStorage,
     private val usersStorage: UsersStorage,
     private val usersNetworkManager: UsersNetworkManager,
+    private val addChatDataHelper: AddChatDataHelper,
 ) : AddChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -37,17 +38,14 @@ internal class AddChatRepoImpl(
     }
 
     override suspend fun findUser(username: String): FindUserResult {
-        val response: FindUserResponse = networkManager.runGet(
-            relativePath = "/users/find",
-            request = mapOf(
-                "login" to username,
-            ),
-        )
-
-        return FindUserResult(
-            userId = response.userId,
-            login = response.login,
-        )
+        return addChatDataHelper
+            .findUser(username = username)
+            .let {
+                FindUserResult(
+                    userId = it.userId,
+                    login = it.login,
+                )
+            }
     }
 
     override suspend fun createPersonalChat(secondUserId: String): CreateChatResult.PersonalChatCreated {

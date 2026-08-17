@@ -84,4 +84,8 @@
     <string name="add_member_textfield_placeholder">Username</string>
     <string name="add_member_find">Find</string>
     <string name="add_member_add">Add</string>
+    <string name="add_member_user_already_in_chat_error_title">User is already in chat</string>
+    <string name="add_member_user_already_in_chat_error_description">You can not add user twice</string>
+    <string name="add_member_user_already_in_list_error_title">User is already in list</string>
+    <string name="add_member_user_already_in_list_error_description">You have already added this user to the list</string>
 </resources>

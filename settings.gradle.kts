@@ -77,6 +77,7 @@ include(
     ":features:chats:chats-domain",
     ":features:chats:chats-data",
     ":features:chats:chats-data-storage",
+    ":features:chats:chats-data-common",
 )
 include(
     ":features:chat:chat-component",
@@ -92,6 +93,8 @@ include(
     ":features:chat-info:chat-info-component",
     ":features:chat-info:chat-info-component-api",
     ":features:chat-info:chat-info-ui",
+    ":features:chat-info:chat-info-domain",
+    ":features:chat-info:chat-info-data",
 )
 include(
     ":features:add-chat:add-chat-component",
@@ -99,10 +102,12 @@ include(
     ":features:add-chat:add-chat-ui",
     ":features:add-chat:add-chat-domain",
     ":features:add-chat:add-chat-data",
+    ":features:add-chat:add-chat-data-common",
 )
 include(
     ":features:users:users-data-storage",
     ":features:users:users-data-network",
+    ":features:users:users-data-common",
 )
 include(
     ":features:settings:settings-component",

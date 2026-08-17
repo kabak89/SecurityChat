@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.features.addChat.addChatDomain)
+            implementation(projects.features.addChat.addChatDataCommon)
             implementation(projects.common.coreNetwork)
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.chats.chatsDataStorage)

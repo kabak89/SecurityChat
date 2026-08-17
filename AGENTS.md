@@ -31,6 +31,7 @@ Each feature is split into layered modules with the Gradle path
 |------------------------|--------------------------------------------------------------|
 | `{name}-domain`        | Repository interfaces, domain entities, `ScopedModel`        |
 | `{name}-data`          | `RepoImpl`, data mappers                                     |
+| `{name}-data-common`   | Shared data logic, helpers (must NOT depend on `domain`)     |
 | `{name}-data-storage`  | Storage, `*SM` entities, storage mappers                     |
 | `{name}-ui`            | Compose screens, `State`/`Event`/`ViewModel` (`viewModelOf`) |
 | `{name}-component-api` | Decompose root contract + `Child` (sealed)                   |
@@ -50,7 +51,8 @@ Where a Koin module is registered depends on how many places consume it:
   [SettingsComponentImpl.kt](features/settings/settings-component/src/commonMain/kotlin/com/security/chat/multiplatform/features/settings/component/SettingsComponentImpl.kt).
 - **Used in several features / app-wide:** move it into the `commonAppDiModules` list in
   [CommonAppDiModules.kt](shared/src/commonMain/kotlin/com/security/chat/multiplatform/di/CommonAppDiModules.kt).
-  These modules are loaded once at Koin startup and stay for the whole app lifetime.
+  These modules are loaded once at Koin startup and stay for the whole app lifetime. `*-data-common`
+  modules are typically registered here.
 
 Rule of thumb: keep a module component-scoped for as long as it has a single consumer; promote it to
 `commonAppDiModules` only once a second place needs it.
@@ -63,8 +65,15 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
 - Every module applies `id("securitychat.convention.base")` and sets
   `conventionBasePlugin { namespace = "..." }`.
 - Decompose child-component contracts live in the `...component.api` package.
-- Apply `kotlinxSerialization` only where navigation config / payload serialization is needed.
+- **Serialization:** Apply `kotlinxSerialization` plugin in `build.gradle.kts` of every module that
+  contains classes annotated with `@Serializable` or performs serialization/deserialization (e.g.,
+  using `NetworkManager` with typed responses).
 - Do not cross layer boundaries (e.g. `ui` must not depend on `data`; `domain` depends on neither).
+- **Common data modules:** `*-data-common` modules provide helpers and logic shared between features
+  or consumed by `shared`. They **must NOT depend on any `{feature}-domain` module** to avoid
+  circular dependencies and domain logic leakage. If they need to return data that corresponds to
+  domain entities, they must use their own simple data classes (e.g. `SearchResult`) and let the
+  consumer (`RepoImpl`) map them to domain types.
 - **UI state stability:** in `{name}-ui` modules the screen `State` and every class it references
   (nested entities, list element types) must be annotated with `@Immutable`
   (`androidx.compose.runtime.Immutable`) so Compose can skip recompositions. Such entities live in

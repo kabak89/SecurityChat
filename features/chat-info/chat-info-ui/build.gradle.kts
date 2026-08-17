@@ -18,6 +18,7 @@ kotlin {
             implementation(projects.common.analytics)
 
             api(projects.features.chatInfo.chatInfoComponentApi)
+            implementation(projects.features.chatInfo.chatInfoDomain)
         }
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)

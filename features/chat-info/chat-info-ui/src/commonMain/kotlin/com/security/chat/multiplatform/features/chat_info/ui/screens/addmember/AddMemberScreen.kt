@@ -36,9 +36,12 @@ import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat_info.component.api.AddMemberComponent
 import com.security.chat.multiplatform.features.chat_info.ui.screens.addmember.entity.FoundMember
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
@@ -76,101 +79,118 @@ private fun AddMemberContent(
     onRemoveMemberClicked: (memberId: String) -> Unit,
     onAddClicked: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.backgroundPrimary)
-            .navigationBarsPadding()
-            .imePadding(),
+    val hazeState = rememberHazeState()
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
-        ToolbarComponent(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding(),
-            startContent = SideContent.Button(
-                icon = DrawableRes.ic_back,
-                onClicked = onBackClicked,
-            ),
-            centerContent = CenterContent.Title(
-                text = stringResource(StringRes.add_member_title),
-            ),
-        )
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            value = state.username,
-            onValueChange = onUsernameTextChanged,
-            placeholder = {
-                Text(
-                    text = stringResource(StringRes.add_member_textfield_placeholder),
-                    style = AppTheme.typography.body,
-                    color = AppTheme.colors.textSuppressed,
-                )
-            },
-            enabled = !state.smthIsLoading,
-            maxLines = 1,
-            textStyle = AppTheme.typography.body,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                focusedIndicatorColor = AppTheme.colors.accent,
-                unfocusedIndicatorColor = AppTheme.colors.element,
-            ),
-        )
-        Spacer(Modifier.height(16.dp))
-        ButtonPrimary(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            onClicked = onFindClicked,
-            content = if (state.searchInProgress) {
-                ButtonContent.Loading
-            } else {
-                ButtonContent.Text(
-                    text = stringResource(StringRes.add_member_find),
-                )
-            },
-        )
-        Spacer(Modifier.height(16.dp))
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .fillMaxSize()
+                .background(AppTheme.colors.backgroundPrimary)
+                .navigationBarsPadding()
+                .imePadding()
+                .hazeSource(hazeState),
         ) {
-            items(
-                items = state.foundMembers,
-                key = { it.id },
-            ) { member ->
-                FoundMemberComponent(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    member = member,
-                    onRemoveClicked = {
-                        onRemoveMemberClicked(member.id)
-                    },
-                )
+            ToolbarComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding(),
+                startContent = SideContent.Button(
+                    icon = DrawableRes.ic_back,
+                    onClicked = onBackClicked,
+                ),
+                centerContent = CenterContent.Title(
+                    text = stringResource(StringRes.add_member_title),
+                ),
+            )
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = state.username,
+                onValueChange = onUsernameTextChanged,
+                placeholder = {
+                    Text(
+                        text = stringResource(StringRes.add_member_textfield_placeholder),
+                        style = AppTheme.typography.body,
+                        color = AppTheme.colors.textSuppressed,
+                    )
+                },
+                enabled = !state.smthIsLoading,
+                maxLines = 1,
+                textStyle = AppTheme.typography.body,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = AppTheme.colors.accent,
+                    unfocusedIndicatorColor = AppTheme.colors.element,
+                ),
+            )
+            Spacer(Modifier.height(16.dp))
+            ButtonPrimary(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClicked = onFindClicked,
+                content = if (state.searchInProgress) {
+                    ButtonContent.Loading
+                } else {
+                    ButtonContent.Text(
+                        text = stringResource(StringRes.add_member_find),
+                    )
+                },
+                enabled = state.searchEnabled,
+            )
+            Spacer(Modifier.height(16.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(
+                    items = state.foundMembers,
+                    key = { it.id },
+                ) { member ->
+                    FoundMemberComponent(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        member = member,
+                        onRemoveClicked = {
+                            onRemoveMemberClicked(member.id)
+                        },
+                    )
+                }
             }
+            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(16.dp))
+            ButtonPrimary(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClicked = onAddClicked,
+                content = if (state.addingInProgress) {
+                    ButtonContent.Loading
+                } else {
+                    ButtonContent.Text(
+                        text = stringResource(StringRes.add_member_add),
+                    )
+                },
+                enabled = state.addingIsEnabled,
+            )
+            Spacer(Modifier.height(16.dp))
         }
-        Spacer(Modifier.weight(1f))
-        Spacer(Modifier.height(16.dp))
-        ButtonPrimary(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            onClicked = onAddClicked,
-            content = if (state.addingInProgress) {
-                ButtonContent.Loading
-            } else {
-                ButtonContent.Text(
-                    text = stringResource(StringRes.add_member_add),
-                )
-            },
-            enabled = state.addingIsEnabled,
-        )
-        Spacer(Modifier.height(16.dp))
+
+        if (state.alertDialogDescriptor != null) {
+            AlertDialogComponent(
+                content = state.alertDialogDescriptor.content,
+                hazeState = hazeState,
+                onDismissRequest = state.alertDialogDescriptor.dismissAction,
+                onPositiveButtonClicked = state.alertDialogDescriptor.positiveAction,
+                onNegativeButtonClicked = state.alertDialogDescriptor.negativeAction,
+            )
+        }
     }
 }
 
@@ -222,6 +242,7 @@ internal fun AddMemberScreenPreview() {
                         name = "member_1",
                     ),
                 ),
+                alertDialogDescriptor = null,
             ),
             onBackClicked = {},
             onUsernameTextChanged = {},

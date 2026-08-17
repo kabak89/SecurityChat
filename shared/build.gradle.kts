@@ -70,7 +70,10 @@ kotlin {
             implementation(projects.features.root.rootComponent)
             implementation(projects.features.root.rootUi)
 
+            implementation(projects.features.addChat.addChatDataCommon)
+            implementation(projects.features.chats.chatsDataCommon)
             implementation(projects.features.chat.chatDataCommon)
+            implementation(projects.features.users.usersDataCommon)
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.users.usersDataStorage)
             implementation(projects.features.chats.chatsDataStorage)

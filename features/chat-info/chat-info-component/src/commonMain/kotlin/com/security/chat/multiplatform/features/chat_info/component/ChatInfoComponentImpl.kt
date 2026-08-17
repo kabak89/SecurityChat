@@ -10,6 +10,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.chat_info.component.api.ChatInfoComponent
+import com.security.chat.multiplatform.features.chat_info.data.di.chatInfoDataModule
 import com.security.chat.multiplatform.features.chat_info.ui.di.chatInfoUiModule
 import kotlinx.serialization.Serializable
 
@@ -36,6 +37,7 @@ public class ChatInfoComponentImpl(
 
     init {
         val featureModules = listOf(
+            chatInfoDataModule,
             chatInfoUiModule,
         )
         getKoin().loadModules(featureModules)

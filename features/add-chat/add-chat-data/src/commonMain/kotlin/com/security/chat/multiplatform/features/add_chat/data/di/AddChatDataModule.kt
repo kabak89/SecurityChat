@@ -14,6 +14,7 @@ public val addChatDataModule: Module = module {
             chatsStorage = get(),
             usersStorage = get(),
             usersNetworkManager = get(),
+            addChatDataHelper = get(),
         )
     }
 }

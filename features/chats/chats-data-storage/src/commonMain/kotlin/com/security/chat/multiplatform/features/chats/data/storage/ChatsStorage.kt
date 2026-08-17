@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 public interface ChatsStorage {
     public suspend fun saveChats(chats: List<ChatSM>)
     public suspend fun getGroupChat(id: String): ChatSM.GroupChat?
+    public fun getChatFlow(id: String): Flow<ChatSM?>
     public fun getChatsFlow(): Flow<List<ChatSM>>
     public suspend fun clearAll()
     public suspend fun saveChat(chat: ChatSM)
@@ -83,6 +84,32 @@ internal class ChatsStorageImpl(
                 authorId = groupChatTable.authorId,
             )
         }
+    }
+
+    override fun getChatFlow(id: String): Flow<ChatSM?> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.groupChatTableQueries.getById(id)
+                    .asFlow()
+                    .map { it.executeAsOneOrNull() }
+                    .flatMapLatest { groupChatTable ->
+                        if (groupChatTable == null) {
+                            flowOf(null)
+                        } else {
+                            db.groupChatMemberTableQueries
+                                .getUserIdsByGroupChatId(groupChatTable.id)
+                                .asFlow()
+                                .map { membersQuery ->
+                                    ChatSM.GroupChat(
+                                        id = groupChatTable.id,
+                                        authorId = groupChatTable.authorId,
+                                        members = membersQuery.executeAsList(),
+                                    )
+                                }
+                        }
+                    }
+            }
+            .flowOn(dispatcherProvider.IO)
     }
 
     override suspend fun clearAll() {

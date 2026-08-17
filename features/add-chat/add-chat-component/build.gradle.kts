@@ -14,6 +14,7 @@ kotlin {
             implementation(projects.features.addChat.addChatUi)
             implementation(projects.features.addChat.addChatDomain)
             implementation(projects.features.addChat.addChatData)
+            implementation(projects.features.addChat.addChatDataCommon)
         }
     }
 }
