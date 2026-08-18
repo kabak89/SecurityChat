@@ -1,7 +1,6 @@
 package com.security.chat.multiplatform.features.add_chat.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,8 +18,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.localization.StringRes
@@ -123,14 +120,14 @@ private fun AddChatContent(
                     .align(Alignment.CenterHorizontally),
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
-                ChatCreateComponent(
+                GroupChat(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    groupChat = state.groupChat,
-                    onUsernameChanged = onUsernameChanged,
+                    state = state.groupChat,
+                    onUsernameTextChanged = onUsernameChanged,
                     onFindClicked = onFindClicked,
-                    onCreateGroupChatClicked = onCreateGroupChatClicked,
+                    onCreateClicked = onCreateGroupChatClicked,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -145,23 +142,6 @@ private fun AddChatContent(
             onNegativeButtonClicked = state.dialogDescriptor.negativeAction,
         )
     }
-}
-
-@Composable
-private fun ChatCreateComponent(
-    modifier: Modifier = Modifier,
-    groupChat: ChatDescriptor.Group,
-    onUsernameChanged: (String) -> Unit,
-    onFindClicked: () -> Unit,
-    onCreateGroupChatClicked: () -> Unit,
-) {
-    GroupChat(
-        modifier = Modifier,
-        state = groupChat,
-        onUsernameTextChanged = onUsernameChanged,
-        onFindClicked = onFindClicked,
-        onCreateClicked = onCreateGroupChatClicked,
-    )
 }
 
 @Composable
@@ -246,45 +226,6 @@ private fun GroupChat(
             )
         }
     }
-}
-
-@Composable
-private fun SelectorText(
-    modifier: Modifier = Modifier,
-    text: String,
-    selected: Boolean,
-    onClicked: () -> Unit,
-) {
-    val color = if (selected) {
-        AppTheme.colors.textPrimary
-    } else {
-        AppTheme.colors.textSecondary
-    }
-    val background = if (selected) {
-        AppTheme.colors.backgroundSecondary
-    } else {
-        Color.Transparent
-    }
-    Text(
-        modifier = modifier
-            .clip(AppTheme.shapes.roundedRectangle16)
-            .then(
-                if (selected) {
-                    Modifier
-                } else {
-                    Modifier.clickable(onClick = onClicked)
-                },
-            )
-            .background(
-                color = background,
-                shape = AppTheme.shapes.roundedRectangle16,
-            )
-            .padding(all = 8.dp)
-            .padding(horizontal = 8.dp),
-        text = text,
-        style = AppTheme.typography.title2,
-        color = color,
-    )
 }
 
 @Preview
