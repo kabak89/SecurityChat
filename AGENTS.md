@@ -94,6 +94,25 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
   [ChatDataStorageMapper.kt](features/chat/chat-data-storage/src/commonMain/kotlin/com/security/chat/multiplatform/features/chat/data/storage/mapper/ChatDataStorageMapper.kt),
   which logs the unknown `type` before returning `null`.
 
+## Error handling
+
+We use a multi-layered approach to handle and display errors, keeping the business logic separated
+from the UI presentation:
+
+- **Domain Errors:** Define feature-specific errors in the `{name}-domain` module (under
+  `entity/errors`). They must inherit from `AppError`.
+- **Detection in Model:** In `{name}-domain` `ModelImpl`, use `task { ... }` blocks. Throw custom
+  errors when business rules are violated. `remo` will wrap them into `LceState.Error`.
+- **UI Mapping:** In the `{name}-ui` module, create an error mapper (e.g.,
+  `mapper/FeatureErrorMapper.kt`). It should map `Throwable` (including custom errors and
+  `NetworkError`) to `UiError` using localized strings from `StringRes`.
+- **ViewModel Orchestration:**
+    - Observe the task's `jobFlow`.
+    - Use `asLceState().map { it.toUiLceState(::featureErrorMapper) }`.
+    - On `UiLceState.Error`, update the screen's `State` with an `AlertDialogDescriptor`.
+- **Display:** The screen Composable observes the `alertDialogDescriptor` and shows the
+  `AlertDialogComponent`.
+
 ## Code style
 
 Code style is enforced by ktlint; all rules come from [.editorconfig](.editorconfig). Do not restate
