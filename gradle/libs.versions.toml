@@ -26,8 +26,8 @@ deploymentTarget = "15.0"
 nsexceptionKt = "1.0.11"
 #ios
 
-appVersionCode = "27"
-appVrersionName = "0.1.0"
+appVersionCode = "28"
+appVrersionName = "0.1.1"
 
 decompose = "3.5.0"
 essenty-lifecycle = "2.5.0"
