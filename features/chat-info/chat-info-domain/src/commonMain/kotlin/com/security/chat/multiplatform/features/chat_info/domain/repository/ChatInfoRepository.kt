@@ -9,4 +9,5 @@ public interface ChatInfoRepository {
     public suspend fun searchMember(username: String): ChatMember
     public suspend fun fetchChatInfo(chatId: String)
     public suspend fun addMembers(chatId: String, memberIds: List<String>)
+    public suspend fun isAddingMembersAllowed(chatId: String): Boolean
 }

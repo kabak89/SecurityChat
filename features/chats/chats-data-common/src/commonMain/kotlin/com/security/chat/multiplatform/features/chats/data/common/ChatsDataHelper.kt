@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.map
 public interface ChatsDataHelper {
 
     public suspend fun fetchChatInfo(chatId: String)
-    public fun getChatInfo(chatId: String): Flow<ChatInfo?>
+    public fun getChatInfoFlow(chatId: String): Flow<ChatInfo?>
+    public suspend fun getChatInfo(chatId: String): ChatInfo?
     public suspend fun saveChatInfo(chat: ChatInfo)
 }
 
@@ -46,7 +47,7 @@ internal class ChatsDataHelperImpl(
         )
     }
 
-    override fun getChatInfo(chatId: String): Flow<ChatInfo?> {
+    override fun getChatInfoFlow(chatId: String): Flow<ChatInfo?> {
         return chatsStorage.getChatFlow(chatId)
             .map { chat ->
                 when (chat) {
@@ -58,6 +59,17 @@ internal class ChatsDataHelperImpl(
 
                     null -> null
                 }
+            }
+    }
+
+    override suspend fun getChatInfo(chatId: String): ChatInfo? {
+        return chatsStorage.getChat(chatId)
+            ?.let { chat ->
+                ChatInfo(
+                    id = chat.id,
+                    authorId = chat.authorId,
+                    participantIds = chat.members,
+                )
             }
     }
 

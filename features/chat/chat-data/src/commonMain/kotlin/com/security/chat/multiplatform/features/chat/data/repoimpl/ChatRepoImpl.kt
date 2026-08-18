@@ -77,7 +77,7 @@ internal class ChatRepoImpl(
         message: String,
         chatId: String,
     ) {
-        val chat = checkNotNull(chatsStorage.getGroupChat(chatId))
+        val chat = checkNotNull(chatsStorage.getChat(chatId))
         val userId = checkNotNull(userStorage.getUserId())
         val recipients = (chat.members + chat.authorId).distinct()
 
@@ -343,7 +343,7 @@ internal class ChatRepoImpl(
             destinationPath = "$imagesDirectory/$fileId",
         )
 
-        val chat = checkNotNull(chatsStorage.getGroupChat(chatId))
+        val chat = checkNotNull(chatsStorage.getChat(chatId))
         val recipients = (chat.members + chat.authorId).distinct()
 
         return ImageMessageDescriptor(

@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -20,9 +22,11 @@ import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat_info.component.api.ChatInfoMainComponent
+import com.security.chat.multiplatform.features.chat_info.ui.screens.chatinfo.entity.ChatInfoUM
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.localization.generated.resources.chat_info_add_members
+import securitychat.common.localization.generated.resources.chat_info_title
 
 @Composable
 public fun ChatInfoScreen(
@@ -31,7 +35,7 @@ public fun ChatInfoScreen(
     Screen(
         component = component,
         screenName = "ChatInfoScreen",
-    ) { state: ChatInfoState, vm: ChatInfoViewModel ->
+    ) { state: ChatInfoState, _: ChatInfoViewModel ->
         ChatInfoContent(
             state = state,
             onBackClicked = component::onBackClicked,
@@ -59,17 +63,38 @@ private fun ChatInfoContent(
                 icon = DrawableRes.ic_back,
                 onClicked = onBackClicked,
             ),
-            centerContent = CenterContent.Title(text = state.title),
-        )
-        ButtonPrimary(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            onClicked = onAddMembersClicked,
-            content = ButtonContent.Text(
-                text = stringResource(StringRes.chat_info_add_members),
+            centerContent = CenterContent.Title(
+                text = stringResource(StringRes.chat_info_title),
             ),
         )
+
+        val chatInfo = state.chatInfo
+
+        when {
+            state.chatInfoIsLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally),
+                    color = AppTheme.colors.element,
+                )
+            }
+
+            chatInfo != null -> {
+                if (chatInfo.isAddMembersAllowed) {
+                    ButtonPrimary(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        onClicked = onAddMembersClicked,
+                        content = ButtonContent.Text(
+                            text = stringResource(StringRes.chat_info_add_members),
+                        ),
+                    )
+                }
+            }
+
+            else -> Unit
+        }
     }
 }
 
@@ -79,7 +104,29 @@ internal fun ChatInfoScreenPreview() {
     AppTheme {
         ChatInfoContent(
             state = ChatInfoState(
-                title = "Chat Info: 12345",
+                alertDialogDescriptor = null,
+                chatInfoIsLoading = false,
+                chatInfo = ChatInfoUM(
+                    isAddMembersAllowed = true,
+                ),
+            ),
+            onBackClicked = {},
+            onAddMembersClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun ChatInfoScreenPreviewLoading() {
+    AppTheme {
+        ChatInfoContent(
+            state = ChatInfoState(
+                alertDialogDescriptor = null,
+                chatInfoIsLoading = true,
+                chatInfo = ChatInfoUM(
+                    isAddMembersAllowed = true,
+                ),
             ),
             onBackClicked = {},
             onAddMembersClicked = {},

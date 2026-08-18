@@ -79,6 +79,9 @@
     <string name="group_chat_error_not_image_title">Невозможно отправить сообщение</string>
     <string name="group_chat_error_not_image_description">Возможна отправка только картинок</string>
 
+    <string name="chat_info_title">Информация о чате</string>
+    <string name="chat_info_add_members">Добавить участников</string>
+
     <string name="add_member_title">Добавить участников</string>
     <string name="add_member_textfield_placeholder">Имя пользователя</string>
     <string name="add_member_find">Найти</string>

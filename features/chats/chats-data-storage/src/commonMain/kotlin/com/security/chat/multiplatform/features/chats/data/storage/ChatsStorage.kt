@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 
 public interface ChatsStorage {
     public suspend fun saveChats(chats: List<ChatSM>)
-    public suspend fun getGroupChat(id: String): ChatSM.GroupChat?
+    public suspend fun getChat(id: String): ChatSM.GroupChat?
     public fun getChatFlow(id: String): Flow<ChatSM?>
     public fun getChatsFlow(): Flow<List<ChatSM>>
     public suspend fun clearAll()
@@ -69,7 +69,7 @@ internal class ChatsStorageImpl(
         }
     }
 
-    override suspend fun getGroupChat(id: String): ChatSM.GroupChat? {
+    override suspend fun getChat(id: String): ChatSM.GroupChat? {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
             val groupChatTable =

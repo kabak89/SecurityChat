@@ -69,7 +69,7 @@ public class PushRepositoryImpl(
             chatId = chatId,
         )
 
-        val groupChat = chatsStorage.getGroupChat(chatId)
+        val groupChat = chatsStorage.getChat(chatId)
 
         val title = when (groupChat) {
             is ChatSM.GroupChat -> {

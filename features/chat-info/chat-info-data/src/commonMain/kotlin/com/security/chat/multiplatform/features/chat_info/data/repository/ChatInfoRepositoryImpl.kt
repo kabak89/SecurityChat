@@ -10,6 +10,7 @@ import com.security.chat.multiplatform.features.chat_info.data.mapper.toData
 import com.security.chat.multiplatform.features.chat_info.domain.entity.ChatMember
 import com.security.chat.multiplatform.features.chat_info.domain.repository.ChatInfoRepository
 import com.security.chat.multiplatform.features.chats.data.common.ChatsDataHelper
+import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.common.UsersDataHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,6 +21,7 @@ internal class ChatInfoRepositoryImpl(
     private val usersDataHelper: UsersDataHelper,
     private val networkManagerFactory: NetworkManagerFactory,
     private val networkConfig: NetworkConfig,
+    private val userStorage: UserStorage,
 ) : ChatInfoRepository {
 
     private val networkManager: NetworkManager by lazy {
@@ -30,7 +32,7 @@ internal class ChatInfoRepositoryImpl(
     }
 
     override suspend fun getCurrentMembersFlow(chatId: String): Flow<List<ChatMember>> {
-        return chatsDataHelper.getChatInfo(chatId = chatId)
+        return chatsDataHelper.getChatInfoFlow(chatId = chatId)
             .map { chatInfo ->
                 if (chatInfo == null) return@map emptyList()
                 val memberIds = chatInfo.participantIds + chatInfo.authorId
@@ -72,5 +74,12 @@ internal class ChatInfoRepositoryImpl(
         )
 
         chatsDataHelper.saveChatInfo(result.toData())
+    }
+
+    override suspend fun isAddingMembersAllowed(chatId: String): Boolean {
+        chatsDataHelper.fetchChatInfo(chatId)
+        val chatInfo = requireNotNull(chatsDataHelper.getChatInfo(chatId))
+        val userId = requireNotNull(userStorage.getUserId())
+        return userId == chatInfo.authorId
     }
 }
