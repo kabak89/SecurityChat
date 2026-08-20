@@ -30,6 +30,7 @@ kotlin {
             implementation(projects.features.users.usersDataStorage)
             implementation(projects.features.users.usersDataNetwork)
             implementation(projects.features.chats.chatsDataStorage)
+            implementation(projects.features.chats.chatsDataCommon)
         }
     }
 }

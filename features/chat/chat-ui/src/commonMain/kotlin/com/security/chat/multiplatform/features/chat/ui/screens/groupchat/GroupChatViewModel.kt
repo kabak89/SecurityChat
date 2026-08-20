@@ -9,6 +9,7 @@ import com.security.chat.multiplatform.common.analytics.Analytics
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.localization.StringRes
+import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
@@ -19,6 +20,7 @@ import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.Aler
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.GroupChatModel
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.FullscreenImageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.groupChatErrorMapper
@@ -27,6 +29,8 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper
 import com.security.chat.multiplatform.features.push.domain.PushModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -37,6 +41,7 @@ internal class GroupChatViewModel(
     private val params: GroupChatComponent,
     private val pushModel: PushModel,
     private val analytics: Analytics,
+    private val dispatcherProvider: DispatcherProviderInterface,
 ) : BaseViewModel<GroupChatState, GroupChatEvent>() {
 
     internal val messages: Flow<PagingData<MessageUM>> =
@@ -112,6 +117,15 @@ internal class GroupChatViewModel(
                 updateState { it.copy(alertDialogDescriptor = alertDialogDescriptor) }
             }
             .launchIn(viewModelScope)
+
+        groupChatModel.getChatInfoFlow()
+            .filterNotNull()
+            .onEach { chatInfo ->
+                val chatInfoUM = chatInfo.toUi()
+                updateState { it.copy(chatInfo = chatInfoUM) }
+            }
+            .flowOn(dispatcherProvider.Default)
+            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): GroupChatState {
@@ -120,6 +134,7 @@ internal class GroupChatViewModel(
             syncState = UiLceState.NotStarted,
             alertDialogDescriptor = null,
             fullscreenImage = null,
+            chatInfo = ChatInfoUM.empty(),
         )
     }
 

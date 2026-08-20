@@ -19,7 +19,9 @@ import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
+import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
 import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
+import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.RecipientCiphertext
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.entity.TextMessageRequest
@@ -30,6 +32,7 @@ import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingS
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
+import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.FileDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.ImageMessageDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
@@ -38,13 +41,17 @@ import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.domain.entity.error.NotImageError
 import com.security.chat.multiplatform.features.chat.domain.entity.toFileSource
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
+import com.security.chat.multiplatform.features.chats.data.common.ChatsDataHelper
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
-import com.security.chat.multiplatform.features.users.data.network.UsersNetworkManager
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.serialization.json.Json
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -58,12 +65,12 @@ internal class ChatRepoImpl(
     private val timeProvider: TimeProvider,
     private val liveEventsManager: LiveEventsManager,
     private val networkConfig: NetworkConfig,
-    private val usersNetworkManager: UsersNetworkManager,
     private val dispatcherProvider: DispatcherProviderInterface,
     private val chatNetworkManager: ChatNetworkManager,
     private val chatDataHelper: ChatDataHelper,
     private val fileManager: FileManager,
     private val json: Json,
+    private val chatsDataHelper: ChatsDataHelper,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -351,6 +358,54 @@ internal class ChatRepoImpl(
             key = key,
             recipients = recipients,
         )
+    }
+
+    override fun getChatInfoFlow(chatId: String): Flow<ChatInfo?> {
+        return combine(
+            chatsDataHelper.getChatInfoFlow(chatId),
+            getInterlocutorInfoFlow(chatId),
+        ) { chatInfo, onlineCount ->
+            chatInfo ?: return@combine null
+            onlineCount ?: return@combine null
+
+            ChatInfo(
+                totalMembersCount = chatInfo.participantIds.size + 1,
+                onlineCount = onlineCount + 1,
+            )
+        }
+    }
+
+    fun getInterlocutorInfoFlow(chatId: String): Flow<Int?> {
+        return chatsDataHelper.getChatInfoFlow(chatId)
+            .flatMapLatest { chat ->
+                chat ?: return@flatMapLatest flowOf(null)
+
+                val userId = requireNotNull(userStorage.getUserId())
+                val targetUserIds = chat.participantIds + chat.authorId - userId
+
+
+                val subscribeMessages = targetUserIds
+                    .map { memberId ->
+                        OnlineStatusSubscribeMessage(
+                            targetUserId = memberId,
+                        )
+                    }
+
+                val isOnlineFlows = subscribeMessages
+                    .map { subscribeMessage ->
+                        liveEventsManager
+                            .subscribe<OnlineInfoMessage, OnlineStatusSubscribeMessage>(
+                                subscribeMessage = subscribeMessage,
+                                type = "online_status_receive",
+                            )
+                            .map { it.isOnline }
+                            .onStart { emit(false) }
+                    }
+
+                combine(isOnlineFlows) { onlineInfo ->
+                    onlineInfo.count { it }
+                }
+            }
     }
 
     private suspend fun resolveRecipientPublicKey(recipientId: String): String {

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
@@ -57,8 +58,11 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
+import com.security.chat.multiplatform.common.core.ui.entity.rawPrintableText
+import com.security.chat.multiplatform.common.core.ui.entity.resolve
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
+import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
@@ -73,6 +77,7 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compon
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -294,7 +299,16 @@ private fun Toolbar(
             icon = DrawableRes.ic_back,
             onClicked = onBackClicked,
         ),
-        centerContent = null,
+        centerContent = CenterContent.Custom(
+            content = {
+                ChatInfoComponent(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(start = 16.dp),
+                    chatInfo = state.chatInfo,
+                )
+            },
+        ),
         endContent = SideContent.Custom(
             content = {
                 Row {
@@ -310,6 +324,23 @@ private fun Toolbar(
             },
         ),
     )
+}
+
+@Composable
+private fun ChatInfoComponent(
+    modifier: Modifier = Modifier,
+    chatInfo: ChatInfoUM,
+) {
+    Box(
+        modifier = modifier,
+    ) {
+        Text(
+            modifier = Modifier.align(Alignment.Center),
+            color = AppTheme.colors.textPrimary,
+            style = AppTheme.typography.title,
+            text = chatInfo.text.resolve(),
+        )
+    }
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -517,6 +548,9 @@ internal fun GroupChatScreenPreview() {
                 syncState = UiLceState.NotStarted,
                 alertDialogDescriptor = null,
                 fullscreenImage = null,
+                chatInfo = ChatInfoUM(
+                    text = rawPrintableText("online 1/12"),
+                ),
             ),
             messages = previewMessages,
             events = emptyFlow(),

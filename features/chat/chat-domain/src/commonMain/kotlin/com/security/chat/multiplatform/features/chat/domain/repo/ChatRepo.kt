@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.chat.domain.repo
 
 import androidx.paging.PagingData
+import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.FileDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.ImageMessageDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
@@ -31,8 +32,11 @@ public interface ChatRepo {
     public suspend fun setUserOnline()
 
     public suspend fun copyImageToCache(image: PickedImage): FileDescriptor
+
     public suspend fun createEncryptedFile(
         file: FileDescriptor,
         chatId: String,
     ): ImageMessageDescriptor
+
+    public fun getChatInfoFlow(chatId: String): Flow<ChatInfo?>
 }

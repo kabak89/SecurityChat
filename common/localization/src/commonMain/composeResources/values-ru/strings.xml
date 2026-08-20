@@ -90,4 +90,6 @@
     <string name="add_member_user_already_in_chat_error_description">Этот пользователь уже является участником чата</string>
     <string name="add_member_user_already_in_list_error_title">Уже в списке</string>
     <string name="add_member_user_already_in_list_error_description">Этот пользователь уже добавлен в список для добавления</string>
+
+    <string name="chat_online_members_template">%1$d/%2$d онлайн</string>
 </resources>

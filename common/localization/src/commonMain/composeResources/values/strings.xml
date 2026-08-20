@@ -89,4 +89,6 @@
     <string name="add_member_user_already_in_chat_error_description">You can not add user twice</string>
     <string name="add_member_user_already_in_list_error_title">User is already in list</string>
     <string name="add_member_user_already_in_list_error_description">You have already added this user to the list</string>
+
+    <string name="chat_online_members_template">%1$d/%2$d online</string>
 </resources>

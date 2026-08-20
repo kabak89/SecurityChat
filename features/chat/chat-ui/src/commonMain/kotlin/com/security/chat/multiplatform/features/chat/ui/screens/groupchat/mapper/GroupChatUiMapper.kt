@@ -1,13 +1,18 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper
 
+import com.security.chat.multiplatform.common.core.localization.StringRes
+import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
+import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
+import securitychat.common.localization.generated.resources.chat_online_members_template
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -97,4 +102,14 @@ internal fun Message.toUi(): MessageUM {
             }
         }
     }
+}
+
+internal fun ChatInfo.toUi(): ChatInfoUM {
+    return ChatInfoUM(
+        text = resPrintableText(
+            StringRes.chat_online_members_template,
+            this.onlineCount,
+            this.totalMembersCount,
+        ),
+    )
 }
