@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.chat.ui.screens.common.component
+package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.paging.compose.LazyPagingItems
-import com.security.chat.multiplatform.features.chat.ui.screens.common.entity.ItemWithId
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ItemWithId
 
 @Composable
 internal fun StickToNewestMessageEffect(

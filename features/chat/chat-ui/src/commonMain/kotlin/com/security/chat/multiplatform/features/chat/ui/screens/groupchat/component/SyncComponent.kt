@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.chat.ui.screens.common.component
+package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat

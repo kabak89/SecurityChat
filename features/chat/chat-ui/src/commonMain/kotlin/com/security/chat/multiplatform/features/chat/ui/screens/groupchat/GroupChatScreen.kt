@@ -65,13 +65,13 @@ import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.Aler
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
-import com.security.chat.multiplatform.features.chat.ui.screens.common.component.StickToNewestMessageEffect
-import com.security.chat.multiplatform.features.chat.ui.screens.common.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.FullscreenImageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingMessageComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.StickToNewestMessageEffect
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle

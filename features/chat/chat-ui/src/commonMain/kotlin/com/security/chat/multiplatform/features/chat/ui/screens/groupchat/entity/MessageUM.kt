@@ -1,7 +1,6 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity
 
 import androidx.compose.runtime.Immutable
-import com.security.chat.multiplatform.features.chat.ui.screens.common.entity.ItemWithId
 
 internal sealed interface MessageUM : ItemWithId {
 
