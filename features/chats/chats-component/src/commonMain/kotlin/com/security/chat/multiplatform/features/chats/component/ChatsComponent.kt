@@ -13,7 +13,6 @@ import com.security.chat.multiplatform.features.chats.component.api.ChatsCompone
 import com.security.chat.multiplatform.features.chats.data.di.chatsDataModule
 import com.security.chat.multiplatform.features.chats.domain.di.chatsDomainModule
 import com.security.chat.multiplatform.features.chats.ui.di.chatsUiModule
-import com.security.chat.multiplatform.features.users.data.network.di.usersNetworkManager
 import kotlinx.serialization.Serializable
 
 public class ChatsComponentImpl(
@@ -47,7 +46,6 @@ public class ChatsComponentImpl(
             chatsUiModule,
             chatsDomainModule,
             chatsDataModule,
-            usersNetworkManager,
         )
         getKoin().loadModules(featureModules)
         doOnDestroy {

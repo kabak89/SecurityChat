@@ -12,15 +12,14 @@ import com.security.chat.multiplatform.common.device.info.DeviceInfoManager
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
-import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
-import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
+import com.security.chat.multiplatform.features.chats.data.common.ChatsDataHelper
 import com.security.chat.multiplatform.features.push.data.entity.SyncedPushToken
 import com.security.chat.multiplatform.features.push.data.network.RegisterDeviceTokenRequest
 import com.security.chat.multiplatform.features.push.data.storage.PushStorage
 import com.security.chat.multiplatform.features.push.domain.PushRepository
 import com.security.chat.multiplatform.features.push.domain.entity.NotificationInfo
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
-import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
+import com.security.chat.multiplatform.features.users.data.common.UsersDataHelper
 import kotlinx.coroutines.withContext
 
 public class PushRepositoryImpl(
@@ -30,8 +29,8 @@ public class PushRepositoryImpl(
     private val deviceInfoManager: DeviceInfoManager,
     private val encryptedSettings: EncryptedSettings,
     private val dispatcherProviderInterface: DispatcherProviderInterface,
-    private val chatsStorage: ChatsStorage,
-    private val usersStorage: UsersStorage,
+    private val chatsDataHelper: ChatsDataHelper,
+    private val usersDataHelper: UsersDataHelper,
     private val chatDataHelper: ChatDataHelper,
     private val pushStorage: PushStorage,
     private val pushNotificationsManager: PushNotificationsManager,
@@ -69,20 +68,16 @@ public class PushRepositoryImpl(
             chatId = chatId,
         )
 
-        val groupChat = chatsStorage.getChat(chatId)
-
-        val title = when (groupChat) {
-            is ChatSM.GroupChat -> {
-                (listOf(groupChat.authorId) + groupChat.members)
-                    .mapNotNull {
-                        usersStorage.getUser(it)?.name
-                    }
-                    .joinToString(separator = ", ")
-            }
-
-            //TODO chat could not be in cache
-            null -> ""
+        val groupChat = chatsDataHelper.getChatInfo(chatId) ?: run {
+            chatsDataHelper.fetchChatInfo(chatId)
+            requireNotNull(chatsDataHelper.getChatInfo(chatId))
         }
+
+        val userId = requireNotNull(userStorage.getUserId())
+
+        val title = (listOf(groupChat.authorId) + groupChat.participantIds - userId)
+            .map { participantId -> usersDataHelper.getOrFetchUser(participantId).username }
+            .joinToString(separator = ", ")
 
         return NotificationInfo(
             title = title,

@@ -24,6 +24,7 @@ import com.security.chat.multiplatform.features.settings.data.common.di.settings
 import com.security.chat.multiplatform.features.settings.data.storage.di.settingsDataStorageModule
 import com.security.chat.multiplatform.features.user.data.storage.di.userDataStorageModule
 import com.security.chat.multiplatform.features.users.data.common.di.usersDataCommonModule
+import com.security.chat.multiplatform.features.users.data.network.di.usersNetworkManager
 import com.security.chat.multiplatform.features.users.data.storage.di.usersDataStorageModule
 import org.koin.core.module.Module
 
@@ -47,6 +48,7 @@ internal val commonAppDiModules: List<Module> =
         chatsDataCommonModule,
 
         usersDataCommonModule,
+        usersNetworkManager,
 
         chatDataCommonModule,
 
