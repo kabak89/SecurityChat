@@ -36,5 +36,9 @@ gradlePlugin {
             id = "securitychat.convention.base"
             implementationClass = "com.securitychat.gradle.ConventionBasePlugin"
         }
+        register("securitychatConventionScreenshot") {
+            id = "securitychat.convention.screenshot"
+            implementationClass = "com.securitychat.gradle.ScreenshotTestPlugin"
+        }
     }
 }

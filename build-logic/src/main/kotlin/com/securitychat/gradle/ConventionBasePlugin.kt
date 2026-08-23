@@ -7,6 +7,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.ExtensionAware
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.plugin.use.PluginDependency
@@ -22,6 +23,10 @@ class ConventionBasePlugin : Plugin<Project> {
             target.extensions.getByType<VersionCatalogsExtension>().named("libs")
         target.plugins.apply(libs.requirePluginId("kotlinMultiplatform"))
         target.plugins.apply(libs.requirePluginId("android-kotlin-multiplatform-library"))
+
+        target.tasks.withType(Test::class.java).configureEach {
+            useJUnitPlatform()
+        }
 
         target.extensions.create(
             "conventionBasePlugin",

@@ -30,6 +30,7 @@ include(
     ":common:core-files",
     ":common:localization",
     ":common:core-component",
+    ":common:core-test",
     ":common:core-db",
     ":common:core-time",
     ":common:settings",

@@ -1,5 +1,6 @@
 plugins {
     id("securitychat.convention.base")
+    id("securitychat.convention.screenshot")
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
 }
@@ -25,6 +26,9 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.ui.tooling)
             implementation(libs.androidx.activity.compose)
+        }
+        jvmTest.dependencies {
+            implementation(projects.common.coreTest)
         }
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigationevent.NavigationEventInfo
@@ -240,3 +241,20 @@ private const val FALLBACK_TINT_ALPHA = 0.6f
 private const val ALPHA_FADE_VISIBILITY = 0.5f
 private const val SCREEN_WIDTH_THRESHOLD_DP = 500
 private const val SIDE_PADDING_DP = 40
+
+@Preview
+@Composable
+internal fun AlertDialogComponentPreview() {
+    AppTheme {
+        AlertDialogComponent(
+            title = "Title",
+            message = "Message message message",
+            positiveButtonText = "Positive",
+            negativeButtonText = "Negative",
+            hazeState = remember { HazeState() },
+            onDismissRequest = {},
+            onPositiveButtonClicked = {},
+            onNegativeButtonClicked = {},
+        )
+    }
+}

@@ -93,6 +93,14 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
   data is dropped, and the log is the only trace of it. See `JoinedMessageRow.toSM` in
   [ChatDataStorageMapper.kt](features/chat/chat-data-storage/src/commonMain/kotlin/com/security/chat/multiplatform/features/chat/data/storage/mapper/ChatDataStorageMapper.kt),
   which logs the unknown `type` before returning `null`.
+- **UI Testing (Screenshots):** Every UI component or screen MUST have a corresponding screenshot
+  test.
+    - Tests are located in the `jvmTest` source set of the UI module.
+    - Test class naming: `<ComponentName>Test.kt` (mirrors the component's file name).
+    - Test method: Use existing `internal fun ...Preview()` functions as the content for
+      `runScreenshotTest`.
+    - Every new UI module must apply `id("securitychat.convention.screenshot")` and include
+      `projects.common.coreTest` in its `jvmTest` dependencies.
 
 ## Error handling
 
