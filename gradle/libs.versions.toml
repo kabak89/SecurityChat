@@ -32,8 +32,9 @@ appVrersionName = "0.1.2"
 decompose = "3.5.0"
 essenty-lifecycle = "2.5.0"
 kotlin = "2.4.10"
-compose = "1.12.0-beta03"
+compose = "1.12.0"
 kotlinx-serialization = "1.11.0"
+kotlinx-collections-immutable = "0.5.1"
 androidxlifecycle = "2.11.0"
 koin = "4.2.2"
 coroutines = "1.11.0"
@@ -94,6 +95,7 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 
 kode-remo = { module = "ru.kode.android:remo", version.ref = "remo" }
 

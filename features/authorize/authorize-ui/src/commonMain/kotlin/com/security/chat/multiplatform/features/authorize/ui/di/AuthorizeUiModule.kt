@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.authorize.ui.di
 
+import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.AuthorizeViewModel
 import com.security.chat.multiplatform.features.authorize.ui.screens.signin.SignInViewModel
 import com.security.chat.multiplatform.features.authorize.ui.screens.signup.SignUpViewModel
 import org.koin.core.module.Module
@@ -10,4 +11,5 @@ public val authorizeUiModule: Module =
     module {
         viewModelOf(::SignUpViewModel)
         viewModelOf(::SignInViewModel)
+        viewModelOf(::AuthorizeViewModel)
     }

@@ -1,6 +1,5 @@
 package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -77,7 +76,6 @@ private fun SignInContent(
     val hazeState = rememberHazeState()
     Column(
         modifier = modifier
-            .background(AppTheme.colors.backgroundPrimary)
             .fillMaxSize()
             .statusBarsPadding()
             .hazeSource(hazeState),

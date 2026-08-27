@@ -23,6 +23,7 @@ kotlin {
             api(libs.koin.compose)
             api(libs.koin.composeVM)
             api(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.collections.immutable)
 
             implementation(projects.common.coreDomain)
             implementation(projects.common.coreComponent)

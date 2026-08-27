@@ -3,8 +3,10 @@ package com.security.chat.multiplatform.features.authorize.component.api
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.security.chat.multiplatform.common.core.component.BaseComponent
+import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 
-public interface AuthorizeComponent : BackHandlerOwner {
+public interface AuthorizeComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
 
     public val childStack: Value<ChildStack<*, Child>>
 

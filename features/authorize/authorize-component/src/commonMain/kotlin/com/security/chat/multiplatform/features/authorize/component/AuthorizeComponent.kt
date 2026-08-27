@@ -8,18 +8,22 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.authorize.component.api.AuthorizeComponent
 import com.security.chat.multiplatform.features.authorize.component.api.UserState
 import com.security.chat.multiplatform.features.authorize.data.di.authorizeDataModule
 import com.security.chat.multiplatform.features.authorize.domain.di.authorizeDomainModule
 import com.security.chat.multiplatform.features.authorize.ui.di.authorizeUiModule
 import kotlinx.serialization.Serializable
-import org.koin.mp.KoinPlatform.getKoin
 
 public class AuthorizeComponentImpl(
     private val onFinished: (userState: UserState) -> Unit,
     componentContext: ComponentContext,
-) : AuthorizeComponent, ComponentContext by componentContext {
+) : AuthorizeComponent,
+    BaseComponentImpl(
+        componentContext = componentContext,
+        scopeId = SCOPE_ID_AUTHORIZE,
+    ) {
 
     private val navigation = StackNavigation<Params>()
 
@@ -90,3 +94,5 @@ public class AuthorizeComponentImpl(
     }
 
 }
+
+public const val SCOPE_ID_AUTHORIZE: String = "SCOPE_ID_AUTHORIZE"

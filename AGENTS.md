@@ -79,6 +79,8 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
   (`androidx.compose.runtime.Immutable`) so Compose can skip recompositions. Such entities live in
   the screen's `entity` package. Use `@Stable` instead only when the class exposes observable
   mutable state.
+- **ViewModel State:** The default state for a screen is defined by overriding `createInitialState`
+  in its `ViewModel`.
 - **DB access:** in SQLDelight-backed `{name}-data-storage` modules use a single
   `DatabaseCreator<T>`
   instance per database (never create more than one for the same DB). Obtain the DB via
