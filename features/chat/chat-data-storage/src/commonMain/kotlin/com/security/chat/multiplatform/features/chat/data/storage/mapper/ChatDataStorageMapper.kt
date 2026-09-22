@@ -79,9 +79,10 @@ private fun mapTypeToString(message: MessageSM): String {
     }
 }
 
-private fun mapStatusToString(status: Status): String {
+internal fun mapStatusToString(status: Status): String {
     return when (status) {
         Status.Created -> "Created"
+        Status.Sending -> "Sending"
         Status.Sent -> "Sent"
         Status.Received -> "Received"
     }

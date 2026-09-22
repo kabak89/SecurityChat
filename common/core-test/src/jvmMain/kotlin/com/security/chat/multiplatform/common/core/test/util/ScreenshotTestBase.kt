@@ -3,9 +3,11 @@ package com.security.chat.multiplatform.common.core.test.util
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asSkiaBitmap
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
@@ -50,17 +52,27 @@ public abstract class ScreenshotTestBase {
         screenshotName: String,
         width: Dp = 412.dp,
         height: Dp = 900.dp,
+        animationTimeMillis: Long? = null,
         content: @Composable () -> Unit,
     ) {
         runComposeUiTest {
+            if (animationTimeMillis != null) {
+                mainClock.autoAdvance = false
+            }
             setContent {
-                Box(
-                    modifier = Modifier
-                        .size(width, height)
-                        .testTag(SCREENSHOT_TAG),
-                ) {
-                    content()
+                CompositionLocalProvider(LocalInspectionMode provides true) {
+                    Box(
+                        modifier = Modifier
+                            .size(width, height)
+                            .testTag(SCREENSHOT_TAG),
+                    ) {
+                        content()
+                    }
                 }
+            }
+
+            if (animationTimeMillis != null) {
+                mainClock.advanceTimeBy(animationTimeMillis)
             }
 
             val actualBitmap = onNodeWithTag(SCREENSHOT_TAG).captureToImage()

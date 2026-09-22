@@ -78,6 +78,7 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compon
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -527,6 +528,7 @@ internal fun GroupChatScreenPreview() {
                     text = "image",
                     datetimeText = "12:11",
                     filePath = "",
+                    status = MessageStatusUM.Sent,
                 ),
                 MessageUM.Incoming.Image(
                     id = "4",

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -69,7 +72,7 @@ internal fun OutgoingImageMessageComponent(
                     exit = fadeOut(),
                 ) {
                     with(sharedTransitionScope) {
-                        ImageComponent(
+                        OutgoingImageContent(
                             modifier = Modifier
                                 .widthIn(min = 120.dp, max = 260.dp)
                                 .heightIn(min = 120.dp, max = 340.dp)
@@ -84,19 +87,19 @@ internal fun OutgoingImageMessageComponent(
                                 )
                                 .clickable(onClick = onClicked)
                                 .clip(AppTheme.shapes.roundedRectangle8),
-                            filePath = message.filePath,
+                            message = message,
                         )
                     }
                 }
             }
         } else {
-            ImageComponent(
+            OutgoingImageContent(
                 modifier = Modifier
                     .widthIn(min = 120.dp, max = 260.dp)
                     .heightIn(min = 120.dp, max = 340.dp)
                     .clickable(onClick = onClicked)
                     .clip(AppTheme.shapes.roundedRectangle8),
-                filePath = message.filePath,
+                message = message,
             )
         }
         Spacer(modifier.height(8.dp))
@@ -109,9 +112,52 @@ internal fun OutgoingImageMessageComponent(
     }
 }
 
+@Composable
+private fun OutgoingImageContent(
+    modifier: Modifier,
+    message: MessageUM.Outgoing.Image,
+) {
+    Box(
+        modifier = modifier,
+        propagateMinConstraints = true,
+    ) {
+        ImageComponent(filePath = message.filePath)
+        if (message.status == MessageStatusUM.Sending) {
+            val backgroundPrimary = AppTheme.colors.backgroundPrimary
+            val progressBackground = remember(backgroundPrimary) {
+                backgroundPrimary.copy(alpha = 0.8f)
+            }
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .wrapContentSize()
+                    .background(
+                        color = progressBackground,
+                        shape = AppTheme.shapes.circle,
+                    )
+                    .padding(10.dp)
+                    .size(28.dp),
+                color = AppTheme.colors.textPrimary,
+                strokeWidth = 3.dp,
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
 internal fun OutgoingOutgoingImageMessageComponentPreview() {
+    OutgoingImageMessagePreview(status = MessageStatusUM.Sent)
+}
+
+@Preview
+@Composable
+internal fun OutgoingImageMessageSendingPreview() {
+    OutgoingImageMessagePreview(status = MessageStatusUM.Sending)
+}
+
+@Composable
+private fun OutgoingImageMessagePreview(status: MessageStatusUM) {
     AppTheme {
         OutgoingImageMessageComponent(
             modifier = Modifier
@@ -122,6 +168,7 @@ internal fun OutgoingOutgoingImageMessageComponentPreview() {
                 text = "image",
                 datetimeText = "12:10",
                 filePath = "",
+                status = status,
             ),
             onClicked = {},
         )

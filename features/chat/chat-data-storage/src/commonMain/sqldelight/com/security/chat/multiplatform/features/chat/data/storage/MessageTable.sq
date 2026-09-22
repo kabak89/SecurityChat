@@ -14,6 +14,11 @@ insert:
 INSERT OR REPLACE INTO MessageTable
 VALUES ?;
 
+updateStatus:
+UPDATE MessageTable
+SET status = :status
+WHERE id = :id AND status = :expectedStatus;
+
 -- The read queries below LEFT JOIN every detail table. Only the payload columns of the row's
 -- `type` are non-null (text for Text; fileId + key for Image). When a new message type is added,
 -- add its detail table as another LEFT JOIN and its payload columns here.

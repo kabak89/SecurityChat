@@ -6,6 +6,16 @@ import org.junit.jupiter.api.Test
 class OutgoingImageMessageComponentTest : ScreenshotTestBase() {
 
     @Test
+    fun `outgoing image message is sending`() {
+        runScreenshotTest(
+            screenshotName = "OutgoingImageMessageSendingPreview",
+            animationTimeMillis = 300L,
+        ) {
+            OutgoingImageMessageSendingPreview()
+        }
+    }
+
+    @Test
     fun outgoingOutgoingImageMessageComponentPreview() {
         runScreenshotTest(screenshotName = "OutgoingOutgoingImageMessageComponentPreview") {
             OutgoingOutgoingImageMessageComponentPreview()

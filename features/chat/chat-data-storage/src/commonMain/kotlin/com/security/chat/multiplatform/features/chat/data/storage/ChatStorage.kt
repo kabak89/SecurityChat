@@ -6,12 +6,13 @@ import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFacto
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
+import com.security.chat.multiplatform.features.chat.data.storage.mapper.mapStatusToString
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toImageTable
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toMessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toTextTable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -41,6 +42,7 @@ public interface ChatStorage {
 
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
     public suspend fun updateMessage(message: MessageSM)
+    public suspend fun updateMessageStatus(id: String, status: Status, expectedStatus: Status)
     public suspend fun clearAll()
 }
 
@@ -171,8 +173,6 @@ internal class ChatStorageImpl(
                         mapper = ::JoinedMessageRow,
                     )
                     .asFlow()
-                    .map { it.executeAsOneOrNull() }
-                    .distinctUntilChanged()
                     .map { }
             }
             .flowOn(dispatcherProvider.IO)
@@ -185,6 +185,16 @@ internal class ChatStorageImpl(
                 db.messageTableQueries.insert(message.toMessageTable())
                 db.insertMessageDetail(message)
             }
+        }
+    }
+
+    override suspend fun updateMessageStatus(id: String, status: Status, expectedStatus: Status) {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageTableQueries.updateStatus(
+                status = mapStatusToString(status),
+                id = id,
+                expectedStatus = mapStatusToString(expectedStatus),
+            )
         }
     }
 

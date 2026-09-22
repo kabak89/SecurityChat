@@ -34,6 +34,7 @@ public sealed interface MessageSM {
 
 public enum class Status {
     Created,
+    Sending,
     Sent,
     Received,
 }

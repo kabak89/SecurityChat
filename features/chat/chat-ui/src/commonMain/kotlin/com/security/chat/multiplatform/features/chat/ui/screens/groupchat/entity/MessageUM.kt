@@ -24,6 +24,7 @@ internal sealed interface MessageUM : ItemWithId {
             override val text: String,
             override val datetimeText: String,
             val filePath: String,
+            val status: MessageStatusUM,
         ) : Outgoing
     }
 

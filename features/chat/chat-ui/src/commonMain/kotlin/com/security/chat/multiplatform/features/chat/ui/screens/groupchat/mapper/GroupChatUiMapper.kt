@@ -5,7 +5,9 @@ import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageStatus
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -98,9 +100,19 @@ internal fun Message.toUi(): MessageUM {
                     text = "image",
                     datetimeText = datetimeText,
                     filePath = localFilePath,
+                    status = status.toUi(),
                 )
             }
         }
+    }
+}
+
+private fun MessageStatus.toUi(): MessageStatusUM {
+    return when (this) {
+        MessageStatus.Created -> MessageStatusUM.Created
+        MessageStatus.Sending -> MessageStatusUM.Sending
+        MessageStatus.Sent -> MessageStatusUM.Sent
+        MessageStatus.Received -> MessageStatusUM.Received
     }
 }
 

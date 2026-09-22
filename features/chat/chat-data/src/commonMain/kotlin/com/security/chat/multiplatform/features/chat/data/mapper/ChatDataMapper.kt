@@ -1,11 +1,11 @@
 package com.security.chat.multiplatform.features.chat.data.mapper
 
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
-import com.security.chat.multiplatform.features.users.data.network.entity.UserNM
-import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageStatus
 
 internal fun MessageSM.toDomain(
     appOwnerId: String,
@@ -24,6 +24,7 @@ internal fun MessageSM.toDomain(
             author = author,
             timestamp = timestamp,
             direction = direction,
+            status = status.toDomain(),
             text = text,
         )
 
@@ -32,15 +33,17 @@ internal fun MessageSM.toDomain(
             author = author,
             timestamp = timestamp,
             direction = direction,
+            status = status.toDomain(),
             filePath = if (isDownloaded) "$imagesDirectoryPath/$fileId" else null,
         )
     }
 }
 
-internal fun UserNM.toSM(): UserSM {
-    return UserSM(
-        id = userId,
-        publicKey = publicKey,
-        name = name,
-    )
+private fun Status.toDomain(): MessageStatus {
+    return when (this) {
+        Status.Created -> MessageStatus.Created
+        Status.Sending -> MessageStatus.Sending
+        Status.Sent -> MessageStatus.Sent
+        Status.Received -> MessageStatus.Received
+    }
 }

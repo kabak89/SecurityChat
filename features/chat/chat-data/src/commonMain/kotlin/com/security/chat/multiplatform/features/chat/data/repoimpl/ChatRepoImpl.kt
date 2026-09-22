@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.files.FileManager
@@ -46,14 +47,15 @@ import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 internal class ChatRepoImpl(
@@ -104,7 +106,6 @@ internal class ChatRepoImpl(
         chatStorage.saveMessage(messageSm)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveImageMessage(
         chatId: String,
         message: ImageMessageDescriptor,
@@ -137,62 +138,44 @@ internal class ChatRepoImpl(
             .filter { it.status == Status.Created }
 
         messagesToUpload.forEach { message ->
-            val sendMessageRequest = when (message) {
-                is MessageSM.Text -> {
-                    val key = chatDataHelper.getOneTimeEncryptionKey()
-                    val encryptedText = chatDataHelper.encryptText(
-                        text = message.text,
-                        key = key,
-                    )
-                    val recipients = buildRecipientCipherTexts(
-                        recipients = message.recipients,
-                        key = key,
-                    )
-                    val textMessageRequest = TextMessageRequest(
+            runSuspendCatching {
+                var isSent = false
+                try {
+                    chatStorage.updateMessageStatus(
                         id = message.id,
-                        chatId = chatId,
-                        timestamp = message.timestamp,
-                        recipients = recipients,
-                        message = encryptedText,
+                        status = Status.Sending,
+                        expectedStatus = Status.Created,
                     )
-                    SendMessageRequest(
-                        type = "text",
-                        message = json.encodeToString(textMessageRequest),
-                    )
-                }
 
-                is MessageSM.Image -> {
-                    uploadImageFile(fileId = message.fileId)
-                    val recipients = buildRecipientCipherTexts(
-                        recipients = message.recipients,
-                        key = message.key,
+                    val sendMessageRequest = createSendMessageRequest(message)
+                    networkManager.runPost<SendMessageRequest, Unit>(
+                        relativePath = "/messages",
+                        request = sendMessageRequest,
                     )
-                    val imageMessageRequest = ImageMessageRequest(
+
+                    chatStorage.updateMessageStatus(
                         id = message.id,
-                        chatId = chatId,
-                        timestamp = message.timestamp,
-                        recipients = recipients,
-                        fileId = message.fileId,
+                        status = Status.Sent,
+                        expectedStatus = Status.Sending,
                     )
-                    SendMessageRequest(
-                        type = "image",
-                        message = json.encodeToString(imageMessageRequest),
-                    )
+                    isSent = true
+                } finally {
+                    if (!isSent) {
+                        withContext(NonCancellable) {
+                            chatStorage.updateMessageStatus(
+                                id = message.id,
+                                status = Status.Created,
+                                expectedStatus = Status.Sending,
+                            )
+                        }
+                    }
                 }
             }
+                .getOrThrow()
 
-            networkManager.runPost<SendMessageRequest, Unit>(
-                relativePath = "/messages",
-                request = sendMessageRequest,
-            )
-
-            when (message) {
-                is MessageSM.Text -> chatStorage.updateMessage(message.copy(status = Status.Sent))
-                is MessageSM.Image -> {
-                    chatStorage.updateMessage(message.copy(status = Status.Sent))
-                    /** The encrypted copy is uploaded already and no longer needed locally. */
-                    deleteEncryptedImageFile(fileId = message.fileId)
-                }
+            if (message is MessageSM.Image) {
+                /** The encrypted copy is uploaded already and no longer needed locally. */
+                deleteEncryptedImageFile(fileId = message.fileId)
             }
         }
     }
@@ -313,13 +296,18 @@ internal class ChatRepoImpl(
         )
 
         if (!fileManager.isRenderable(localPath)) {
-            try {
+            runSuspendCatching {
                 fileManager.transcodeToJpeg(localPath)
-            } catch (error: TranscodeException) {
-                Log.e(error)
-                fileManager.deleteFile(localPath)
-                error("Can not transcode image")
             }
+                .onErr { error ->
+                    if (error is TranscodeException) {
+                        Log.e(error)
+                        fileManager.deleteFile(localPath)
+                        error("Can not transcode image")
+                    } else {
+                        throw error
+                    }
+                }
         }
 
         return FileDescriptor(
@@ -441,21 +429,68 @@ internal class ChatRepoImpl(
         }
     }
 
+    private suspend fun createSendMessageRequest(message: MessageSM): SendMessageRequest {
+        return when (message) {
+            is MessageSM.Text -> {
+                val key = chatDataHelper.getOneTimeEncryptionKey()
+                val encryptedText = chatDataHelper.encryptText(
+                    text = message.text,
+                    key = key,
+                )
+                val recipients = buildRecipientCipherTexts(
+                    recipients = message.recipients,
+                    key = key,
+                )
+                val textMessageRequest = TextMessageRequest(
+                    id = message.id,
+                    chatId = message.chatId,
+                    timestamp = message.timestamp,
+                    recipients = recipients,
+                    message = encryptedText,
+                )
+                SendMessageRequest(
+                    type = "text",
+                    message = json.encodeToString(textMessageRequest),
+                )
+            }
+
+            is MessageSM.Image -> {
+                uploadImageFile(fileId = message.fileId)
+                val recipients = buildRecipientCipherTexts(
+                    recipients = message.recipients,
+                    key = message.key,
+                )
+                val imageMessageRequest = ImageMessageRequest(
+                    id = message.id,
+                    chatId = message.chatId,
+                    timestamp = message.timestamp,
+                    recipients = recipients,
+                    fileId = message.fileId,
+                )
+                SendMessageRequest(
+                    type = "image",
+                    message = json.encodeToString(imageMessageRequest),
+                )
+            }
+        }
+    }
+
     private suspend fun uploadImageFile(fileId: String) {
         val encryptedDirectory =
             fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
         val filePath = "$encryptedDirectory/$fileId"
-        try {
+        runSuspendCatching {
             networkManager.runPostFile(
                 relativePath = "/files/$fileId",
                 filePath = filePath,
             )
-        } catch (error: NetworkError) {
-            /** 409 means the file already exists on the server, which is fine for retries. */
-            if (error.statusCode != 409) {
-                throw error
-            }
         }
+            .onErr { error ->
+                /** 409 means the file already exists on the server, which is fine for retries. */
+                if (error !is NetworkError || error.statusCode != 409) {
+                    throw error
+                }
+            }
     }
 
     private suspend fun deleteEncryptedImageFile(fileId: String) {
