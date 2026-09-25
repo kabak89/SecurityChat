@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
@@ -29,6 +30,10 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import org.jetbrains.compose.resources.stringResource
+import securitychat.common.localization.generated.resources.sign_in_private_key_placeholder
+import securitychat.common.localization.generated.resources.sign_in_sign_in_label
+import securitychat.common.localization.generated.resources.sign_in_sign_up_label
 
 @Composable
 internal fun SignInScreen(
@@ -90,7 +95,7 @@ private fun SignInContent(
                 modifier = Modifier
                     .padding(horizontal = 16.dp),
                 onClicked = onSignUpClicked,
-                content = ButtonContent.Text("Sign Up"),
+                content = ButtonContent.Text(stringResource(StringRes.sign_in_sign_up_label)),
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -100,7 +105,7 @@ private fun SignInContent(
                 .padding(horizontal = 16.dp),
             value = state.privateKey,
             onValueChanged = onPrivateKeyTextChanged,
-            placeholder = "Private key",
+            placeholder = stringResource(StringRes.sign_in_private_key_placeholder),
             enabled = !state.isLoading,
             lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
         )
@@ -115,7 +120,7 @@ private fun SignInContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                content = ButtonContent.Text("Sign In"),
+                content = ButtonContent.Text(stringResource(StringRes.sign_in_sign_in_label)),
                 onClicked = onSignInClicked,
                 enabled = state.isSignInEnabled,
             )

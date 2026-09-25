@@ -46,6 +46,9 @@
     <string name="sign_in_user_not_found_error_description">No user with this name was found</string>
     <string name="sign_in_wrong_password_error_title">Wrong password</string>
     <string name="sign_in_wrong_password_error_description">The password entered for this username is incorrect</string>
+    <string name="sign_in_sign_up_label">Sign up</string>
+    <string name="sign_in_sign_in_label">Sign in</string>
+    <string name="sign_in_private_key_placeholder">Private key</string>
 
     <string name="notification_permission_description">Notifications help you stay connected. With them you:\n\n•  instantly learn about new messages;\n•  never miss a message;\n•  respond to messages on time.\n\nYou can change this anytime in settings</string>
     <string name="notification_permission_grant">Allow</string>
