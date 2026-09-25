@@ -9,9 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +20,7 @@ import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
+import com.security.chat.multiplatform.common.ui.kit.components.InputField
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignInComponent
@@ -94,17 +94,15 @@ private fun SignInContent(
             )
         }
         Spacer(Modifier.height(16.dp))
-        TextField(
+        InputField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             value = state.privateKey,
-            onValueChange = onPrivateKeyTextChanged,
-            placeholder = {
-                Text("Private key")
-            },
+            onValueChanged = onPrivateKeyTextChanged,
+            placeholder = "Private key",
             enabled = !state.isLoading,
-            maxLines = 3,
+            lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
         )
         Spacer(Modifier.height(16.dp))
         if (state.isLoading) {

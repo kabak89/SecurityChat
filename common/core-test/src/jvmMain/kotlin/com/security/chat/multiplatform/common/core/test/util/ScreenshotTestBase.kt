@@ -5,14 +5,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +55,9 @@ public abstract class ScreenshotTestBase {
         animationTimeMillis: Long? = null,
         content: @Composable () -> Unit,
     ) {
-        runComposeUiTest {
+        runSkikoComposeUiTest(
+            size = Size(width = maxOf(1024f, width.value), height = height.value),
+        ) {
             if (animationTimeMillis != null) {
                 mainClock.autoAdvance = false
             }

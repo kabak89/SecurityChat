@@ -34,6 +34,7 @@ private val lightColorPalette: AppColors =
         element = Color(0xFF808080),
         accent = Color(0xFFACACAC),
         contrast = Color(0xFF000000),
+        error = Color(0xFFBA1A1A),
     )
 
 private val darkColorPalette: AppColors =
@@ -47,6 +48,7 @@ private val darkColorPalette: AppColors =
         element = Color(0xFF808080),
         accent = Color(0xFF747474),
         contrast = Color(0xFFFFFFFF),
+        error = Color(0xFFFFB4AB),
     )
 
 @Composable

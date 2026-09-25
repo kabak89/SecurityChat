@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +19,7 @@ import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
+import com.security.chat.multiplatform.common.ui.kit.components.InputField
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.authorize.component.api.SignUpComponent
@@ -99,13 +98,13 @@ private fun SignUpContent(
             )
         }
         Spacer(Modifier.height(16.dp))
-        TextField(
+        InputField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             value = state.username,
-            onValueChange = onUsernameTextChanged,
-            placeholder = { Text(stringResource(StringRes.sign_up_username_placeholder)) },
+            onValueChanged = onUsernameTextChanged,
+            placeholder = stringResource(StringRes.sign_up_username_placeholder),
             enabled = !state.isLoading,
         )
         Spacer(Modifier.height(16.dp))

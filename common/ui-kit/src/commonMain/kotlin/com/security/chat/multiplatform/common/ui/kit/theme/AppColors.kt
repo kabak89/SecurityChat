@@ -14,4 +14,5 @@ public data class AppColors(
     val element: Color,
     val accent: Color,
     val contrast: Color,
+    val error: Color,
 )
