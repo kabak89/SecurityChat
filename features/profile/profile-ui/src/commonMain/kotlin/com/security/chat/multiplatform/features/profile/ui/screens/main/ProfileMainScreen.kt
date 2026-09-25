@@ -22,7 +22,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +49,7 @@ import com.security.chat.multiplatform.common.ui.kit.MAX_CONTENT_WIDTH_DP
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
+import com.security.chat.multiplatform.common.ui.kit.components.InputField
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
@@ -227,15 +227,13 @@ private fun ProfileContent(
                 style = AppTheme.typography.title2,
             )
             Spacer(modifier = Modifier.height(16.dp))
-            TextField(
+            InputField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { contentType = ContentType.Username },
                 value = state.login,
-                onValueChange = onUsernameTextChanged,
-                placeholder = {
-                    Text(text = stringResource(StringRes.profile_login_placeholder))
-                },
+                onValueChanged = onUsernameTextChanged,
+                placeholder = stringResource(StringRes.profile_login_placeholder),
                 enabled = !state.showLoading,
             )
         }

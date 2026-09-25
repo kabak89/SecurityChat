@@ -20,12 +20,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.localization.StringRes
@@ -34,6 +31,7 @@ import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
+import com.security.chat.multiplatform.common.ui.kit.components.InputField
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
@@ -103,29 +101,14 @@ private fun AddMemberContent(
                     text = stringResource(StringRes.add_member_title),
                 ),
             )
-            TextField(
+            InputField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 value = state.username,
-                onValueChange = onUsernameTextChanged,
-                placeholder = {
-                    Text(
-                        text = stringResource(StringRes.add_member_textfield_placeholder),
-                        style = AppTheme.typography.body,
-                        color = AppTheme.colors.textSuppressed,
-                    )
-                },
+                onValueChanged = onUsernameTextChanged,
+                placeholder = stringResource(StringRes.add_member_textfield_placeholder),
                 enabled = !state.smthIsLoading,
-                maxLines = 1,
-                textStyle = AppTheme.typography.body,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = AppTheme.colors.accent,
-                    unfocusedIndicatorColor = AppTheme.colors.element,
-                ),
             )
             Spacer(Modifier.height(16.dp))
             ButtonPrimary(

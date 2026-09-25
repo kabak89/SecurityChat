@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +27,7 @@ import com.security.chat.multiplatform.common.ui.kit.MAX_CONTENT_WIDTH_DP
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
+import com.security.chat.multiplatform.common.ui.kit.components.InputField
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
@@ -156,22 +156,14 @@ private fun GroupChat(
         modifier = modifier
             .fillMaxWidth(),
     ) {
-        TextField(
+        InputField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             value = state.username,
-            onValueChange = onUsernameTextChanged,
-            placeholder = {
-                Text(
-                    text = stringResource(StringRes.create_chat_username_placeholder),
-                    style = AppTheme.typography.body,
-                    color = AppTheme.colors.textSuppressed,
-                )
-            },
+            onValueChanged = onUsernameTextChanged,
+            placeholder = stringResource(StringRes.create_chat_username_placeholder),
             enabled = !state.smthIsLoading,
-            maxLines = 1,
-            textStyle = AppTheme.typography.body,
         )
         Spacer(Modifier.height(16.dp))
         if (state.searchInProgress) {
