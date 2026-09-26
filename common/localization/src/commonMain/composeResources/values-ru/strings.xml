@@ -44,7 +44,7 @@
     <string name="push_stub_image">Фотография</string>
 
     <string name="sign_in_user_not_found_error_title">Пользователь не найден</string>
-    <string name="sign_in_user_not_found_error_description">Пользователь с таким именем не найден</string>
+    <string name="sign_in_user_not_found_error_description">Пользователь с таким приватным ключом не найден</string>
     <string name="sign_in_wrong_password_error_title">Неверный пароль</string>
     <string name="sign_in_wrong_password_error_description">Введен неверный пароль для этого имени</string>
     <string name="sign_in_sign_up_label">Регистрация</string>
