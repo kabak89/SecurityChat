@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.authorize.ui.screens.signin
 
 import androidx.lifecycle.viewModelScope
+import com.security.chat.multiplatform.common.analytics.Analytics
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.error.NetworkError
@@ -23,6 +24,7 @@ import securitychat.common.localization.generated.resources.common_retry
 
 internal class SignInViewModel(
     private val signInModel: SignInModel,
+    private val analytics: Analytics,
 ) : BaseViewModel<SignInState, SignInEvent>() {
 
     override fun onPostStart() {
@@ -94,6 +96,7 @@ internal class SignInViewModel(
 
         signInModel.signIn.jobFlow.successResults()
             .onEach {
+                analytics.logEvent("signed_in")
                 sendEvent(SignInEvent.Authorized)
             }
             .launchIn(viewModelScope)
@@ -114,7 +117,7 @@ internal class SignInViewModel(
     }
 
     fun onSignInClicked() {
+        analytics.logEvent("sign_in_clicked")
         signInModel.signIn.startOnSubscribe()
     }
-
 }

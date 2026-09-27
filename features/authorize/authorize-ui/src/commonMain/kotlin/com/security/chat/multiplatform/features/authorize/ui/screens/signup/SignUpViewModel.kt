@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.authorize.ui.screens.signup
 
 import androidx.lifecycle.viewModelScope
+import com.security.chat.multiplatform.common.analytics.Analytics
 import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.localization.StringRes
@@ -23,6 +24,7 @@ import securitychat.common.localization.generated.resources.common_retry
 
 internal class SignUpViewModel(
     private val signUpModel: SignUpModel,
+    private val analytics: Analytics,
 ) : BaseViewModel<SignUpState, SignUpEvent>() {
 
     override fun onPostStart() {
@@ -93,6 +95,7 @@ internal class SignUpViewModel(
 
         signUpModel.signUp.jobFlow.successResults()
             .onEach {
+                analytics.logEvent("signed_up")
                 sendEvent(SignUpEvent.SuccessSignUp)
             }
             .launchIn(viewModelScope)
@@ -113,6 +116,7 @@ internal class SignUpViewModel(
     }
 
     fun onSignUpClicked() {
+        analytics.logEvent("sign_up_clicked")
         signUpModel.signUp.startOnSubscribe()
     }
 }
