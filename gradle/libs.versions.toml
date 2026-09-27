@@ -27,7 +27,7 @@ nsexceptionKt = "1.0.11"
 #ios
 
 appVersionCode = "29"
-appVrersionName = "0.1.2"
+appVrersionName = "0.1.3"
 
 decompose = "3.5.0"
 essenty-lifecycle = "2.5.0"
