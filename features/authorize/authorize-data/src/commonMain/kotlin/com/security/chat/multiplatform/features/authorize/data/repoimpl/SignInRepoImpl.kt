@@ -34,7 +34,7 @@ internal class SignInRepoImpl(
     }
 
     override suspend fun signIn(privateKey: String) {
-        val rawPrivateKey = RsaSqueezer.expand(privateKey)
+        val rawPrivateKey = RsaSqueezer.expand(privateKey.trim())
         val deviceId = Uuid.random().toString()
         userStorage.saveDeviceId(id = deviceId)
 
