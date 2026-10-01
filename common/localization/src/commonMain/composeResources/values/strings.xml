@@ -94,4 +94,6 @@
     <string name="add_member_user_already_in_list_error_description">You have already added this user to the list</string>
 
     <string name="chat_online_members_template">%1$d/%2$d online</string>
+
+    <string name="call_title">Call</string>
 </resources>

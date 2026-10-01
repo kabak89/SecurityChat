@@ -92,6 +92,7 @@ import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_attach
 import securitychat.common.icons_kit.generated.resources.ic_back
+import securitychat.common.icons_kit.generated.resources.ic_call
 import securitychat.common.icons_kit.generated.resources.ic_info
 import securitychat.common.icons_kit.generated.resources.ic_send
 
@@ -118,6 +119,7 @@ internal fun GroupChatScreen(
             onSendMessageClicked = vm::onSendMessageClicked,
             onSyncClicked = vm::onSyncClicked,
             onMoreClicked = component::onMoreClicked,
+            onCallClicked = component::onCallClicked,
             onImageClicked = vm::onImageClicked,
             onFullscreenImageDismissed = vm::onFullscreenImageDismissed,
         )
@@ -137,6 +139,7 @@ private fun GroupChatContent(
     onSendMessageClicked: () -> Unit,
     onSyncClicked: () -> Unit,
     onMoreClicked: () -> Unit,
+    onCallClicked: () -> Unit,
     onImageClicked: (message: MessageUM) -> Unit,
     onFullscreenImageDismissed: () -> Unit,
 ) {
@@ -215,6 +218,7 @@ private fun GroupChatContent(
                 onBackClicked = onBackClicked,
                 onSyncClicked = onSyncClicked,
                 onMoreClicked = onMoreClicked,
+                onCallClicked = onCallClicked,
             )
             val isImeVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() != 0.dp
             val editPanelBottomPadding = if (isImeVisible) {
@@ -293,6 +297,7 @@ private fun Toolbar(
     onBackClicked: () -> Unit,
     onSyncClicked: () -> Unit,
     onMoreClicked: () -> Unit,
+    onCallClicked: () -> Unit,
 ) {
     ToolbarComponent(
         modifier = modifier,
@@ -320,6 +325,10 @@ private fun Toolbar(
                     ButtonContent(
                         icon = DrawableRes.ic_info,
                         onClicked = onMoreClicked,
+                    )
+                    ButtonContent(
+                        icon = DrawableRes.ic_call,
+                        onClicked = onCallClicked,
                     )
                 }
             },
@@ -562,6 +571,7 @@ internal fun GroupChatScreenPreview() {
             onSendMessageClicked = {},
             onSyncClicked = {},
             onMoreClicked = {},
+            onCallClicked = {},
             onImageClicked = {},
             onFullscreenImageDismissed = {},
         )

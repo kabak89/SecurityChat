@@ -5,9 +5,11 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
+import com.security.chat.multiplatform.features.call.component.CallComponentImpl
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chat.data.di.chatDataModule
 import com.security.chat.multiplatform.features.chat.domain.di.chatDomainModule
@@ -76,6 +78,19 @@ public class ChatComponentImpl(
                         onMore = {
                             onMore(params.chatId)
                         },
+                        onCall = {
+                            navigation.pushNew(Params.CallParams(chatId = params.chatId))
+                        },
+                    ),
+                )
+            }
+
+            is Params.CallParams -> {
+                ChatComponent.Child.Call(
+                    component = CallComponentImpl(
+                        chatId = params.chatId,
+                        onBack = { navigation.pop() },
+                        componentContext = componentContext,
                     ),
                 )
             }
@@ -90,6 +105,9 @@ public class ChatComponentImpl(
             val chatId: String,
             val initialText: String? = null,
         ) : Params()
+
+        @Serializable
+        data class CallParams(val chatId: String) : Params()
     }
 }
 

@@ -5,6 +5,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.security.chat.multiplatform.features.call.ui.screens.root.CallRootScreen
 import com.security.chat.multiplatform.features.chat.component.api.ChatComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.GroupChatScreen
 
@@ -22,6 +23,10 @@ public fun ChatRootScreen(
         content = {
             when (val child = it.instance) {
                 is ChatComponent.Child.GroupChat -> GroupChatScreen(
+                    component = child.component,
+                )
+
+                is ChatComponent.Child.Call -> CallRootScreen(
                     component = child.component,
                 )
             }

@@ -28,6 +28,7 @@ kotlin {
 
             implementation(projects.features.chat.chatDomain)
             implementation(projects.features.push.pushDomain)
+            implementation(projects.features.call.callUi)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)

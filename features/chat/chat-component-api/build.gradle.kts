@@ -10,6 +10,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.coreComponent)
+            api(projects.features.call.callComponentApi)
         }
     }
 }

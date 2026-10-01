@@ -16,6 +16,7 @@ kotlin {
             implementation(projects.features.chat.chatDomain)
             implementation(projects.features.chat.chatData)
             implementation(projects.features.chat.chatDataStorage)
+            implementation(projects.features.call.callComponent)
         }
     }
 }

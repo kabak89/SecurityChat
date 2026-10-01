@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.security.chat.multiplatform.common.core.component.BaseComponent
 import com.security.chat.multiplatform.common.core.component.DiScopeHolder
+import com.security.chat.multiplatform.features.call.component.api.CallComponent
 
 public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner {
 
@@ -16,6 +17,7 @@ public interface ChatComponent : BaseComponent, DiScopeHolder, BackHandlerOwner 
 
     public sealed interface Child {
         public class GroupChat(public val component: GroupChatComponent) : Child
+        public class Call(public val component: CallComponent) : Child
     }
 
     public sealed interface Params {

@@ -145,3 +145,10 @@ include(
     ":features:onboarding:onboarding-domain",
     ":features:onboarding:onboarding-data",
 )
+include(
+    ":features:call:call-domain",
+    ":features:call:call-data",
+    ":features:call:call-ui",
+    ":features:call:call-component-api",
+    ":features:call:call-component",
+)

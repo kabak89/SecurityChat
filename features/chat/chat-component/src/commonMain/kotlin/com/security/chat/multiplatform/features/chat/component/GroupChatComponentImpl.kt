@@ -11,6 +11,7 @@ public class GroupChatComponentImpl(
     private val initialText: String? = null,
     private val onExit: () -> Unit,
     private val onMore: () -> Unit,
+    private val onCall: () -> Unit,
     componentContext: ComponentContext,
 ) : GroupChatComponent,
     BaseComponentImpl(
@@ -34,6 +35,10 @@ public class GroupChatComponentImpl(
 
     override fun onMoreClicked() {
         onMore()
+    }
+
+    override fun onCallClicked() {
+        onCall()
     }
 }
 
