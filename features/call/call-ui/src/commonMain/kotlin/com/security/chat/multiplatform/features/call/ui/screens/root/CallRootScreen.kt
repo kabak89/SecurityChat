@@ -8,6 +8,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.call.component.api.CallComponent
 import com.security.chat.multiplatform.features.call.ui.screens.call.CallScreen
+import com.security.chat.multiplatform.features.call.ui.screens.permissions.PermissionsScreen
 
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
@@ -23,6 +24,7 @@ public fun CallRootScreen(
         ),
     ) {
         when (val child = it.instance) {
+            is CallComponent.Child.Permissions -> PermissionsScreen(component = child.component)
             is CallComponent.Child.Main -> CallScreen(component = child.component)
         }
     }

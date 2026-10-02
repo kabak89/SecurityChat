@@ -4,7 +4,5 @@ public sealed interface AllowanceResult {
 
     public data object Allowed : AllowanceResult
 
-    public data class Restricted(
-        val isPermanent: Boolean,
-    ) : AllowanceResult
+    public data object Restricted : AllowanceResult
 }

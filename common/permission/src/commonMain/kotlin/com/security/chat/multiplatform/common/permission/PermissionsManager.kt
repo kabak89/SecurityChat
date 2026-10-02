@@ -8,6 +8,8 @@ import com.security.chat.multiplatform.common.permission.entity.RequestPermissio
 public interface PermissionsManager {
 
     public fun isPermissionAllowed(permission: Permission): AllowanceResult
+
+    public fun openAppSettings()
 }
 
 @Composable

@@ -13,6 +13,8 @@ public interface CallComponent : BaseComponent, DiScopeHolder, BackHandlerOwner 
     public fun onBackClicked()
 
     public sealed interface Child {
+        public class Permissions(public val component: PermissionsComponent) : Child
+
         public class Main(public val component: CallMainComponent) : Child
     }
 }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
@@ -28,43 +27,22 @@ internal fun CallScreen(
         component = component,
         screenName = "CallScreen",
     ) { _: CallState, _: CallViewModel ->
-        CallContent(
-            modifier = Modifier.fillMaxSize(),
-            onBackClicked = component::onBackClicked,
-        )
-    }
-}
-
-@Composable
-private fun CallContent(
-    modifier: Modifier,
-    onBackClicked: () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .background(AppTheme.colors.backgroundPrimary)
-            .systemBarsPadding(),
-    ) {
-        ToolbarComponent(
-            modifier = Modifier.fillMaxWidth(),
-            startContent = SideContent.Button(
-                icon = DrawableRes.ic_back,
-                onClicked = onBackClicked,
-            ),
-            centerContent = CenterContent.Title(
-                text = stringResource(StringRes.call_title),
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-internal fun CallScreenPreview() {
-    AppTheme {
-        CallContent(
-            modifier = Modifier.fillMaxSize(),
-            onBackClicked = {},
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.backgroundPrimary)
+                .systemBarsPadding(),
+        ) {
+            ToolbarComponent(
+                modifier = Modifier.fillMaxWidth(),
+                startContent = SideContent.Button(
+                    icon = DrawableRes.ic_back,
+                    onClicked = component::onBackClicked,
+                ),
+                centerContent = CenterContent.Title(
+                    text = stringResource(StringRes.call_title),
+                ),
+            )
+        }
     }
 }

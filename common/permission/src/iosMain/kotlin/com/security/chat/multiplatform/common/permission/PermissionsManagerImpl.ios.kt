@@ -5,6 +5,8 @@ import com.security.chat.multiplatform.common.permission.entity.Permission
 
 internal actual class PermissionsManagerImpl : PermissionsManager {
 
+    override fun openAppSettings(): Unit = Unit
+
     override fun isPermissionAllowed(permission: Permission): AllowanceResult {
         //TODO add actual realization
         return AllowanceResult.Allowed

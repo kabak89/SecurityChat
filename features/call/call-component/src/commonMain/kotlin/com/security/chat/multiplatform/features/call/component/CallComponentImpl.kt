@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
@@ -41,7 +42,7 @@ public class CallComponentImpl(
         childStack(
             source = navigation,
             serializer = Params.serializer(),
-            initialConfiguration = Params.Main,
+            initialConfiguration = Params.Permissions,
             handleBackButton = true,
             childFactory = ::createChild,
         )
@@ -55,6 +56,14 @@ public class CallComponentImpl(
         componentContext: ComponentContext,
     ): CallComponent.Child {
         return when (params) {
+            Params.Permissions -> CallComponent.Child.Permissions(
+                component = PermissionsComponentImpl(
+                    onBack = ::onBackClicked,
+                    onGranted = { navigation.replaceAll(Params.Main) },
+                    componentContext = componentContext,
+                ),
+            )
+
             Params.Main -> CallComponent.Child.Main(
                 component = CallMainComponentImpl(
                     chatId = chatId,
@@ -67,6 +76,9 @@ public class CallComponentImpl(
 
     @Serializable
     private sealed interface Params {
+        @Serializable
+        data object Permissions : Params
+
         @Serializable
         data object Main : Params
     }

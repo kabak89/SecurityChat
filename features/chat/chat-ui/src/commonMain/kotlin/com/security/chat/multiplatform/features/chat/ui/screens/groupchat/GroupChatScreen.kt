@@ -92,6 +92,7 @@ import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_attach
 import securitychat.common.icons_kit.generated.resources.ic_back
+import securitychat.common.icons_kit.generated.resources.ic_call
 import securitychat.common.icons_kit.generated.resources.ic_info
 import securitychat.common.icons_kit.generated.resources.ic_send
 
@@ -325,10 +326,10 @@ private fun Toolbar(
                         icon = DrawableRes.ic_info,
                         onClicked = onMoreClicked,
                     )
-//                    ButtonContent(
-//                        icon = DrawableRes.ic_call,
-//                        onClicked = onCallClicked,
-//                    )
+                    ButtonContent(
+                        icon = DrawableRes.ic_call,
+                        onClicked = onCallClicked,
+                    )
                 }
             },
         ),

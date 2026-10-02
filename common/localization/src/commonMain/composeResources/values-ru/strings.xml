@@ -97,4 +97,12 @@
     <string name="chat_online_members_template">%1$d/%2$d онлайн</string>
 
     <string name="call_title">Звонок</string>
+
+    <string name="call_permissions_title">Разрешения</string>
+    <string name="call_permission_description">Разрешите доступ к микрофону, чтобы собеседники слышали вас во время звонков.\n\nБез этого разрешения звонки работать не будут.</string>
+    <string name="call_permission_grant">Разрешить</string>
+    <string name="call_permission_do_not_grant">Не разрешать</string>
+    <string name="call_permission_restricted_title">Нужен доступ к микрофону</string>
+    <string name="call_permission_restricted_message">Для звонков нужен доступ к микрофону. Вы можете разрешить доступ в настройках приложения.</string>
+    <string name="call_permission_open_settings">Открыть настройки</string>
 </resources>
