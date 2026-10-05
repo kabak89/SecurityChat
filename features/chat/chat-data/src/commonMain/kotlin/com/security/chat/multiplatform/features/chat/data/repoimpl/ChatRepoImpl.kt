@@ -10,7 +10,6 @@ import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.files.FileManager
 import com.security.chat.multiplatform.common.core.files.error.TranscodeException
-import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
@@ -18,11 +17,9 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.core.time.TimeProvider
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
+import com.security.chat.multiplatform.features.chat.data.common.ChatPresenceHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
-import com.security.chat.multiplatform.features.chat.data.entity.OnlineInfoMessage
-import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusPublisherMessage
-import com.security.chat.multiplatform.features.chat.data.entity.OnlineStatusSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.entity.RecipientCiphertext
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
 import com.security.chat.multiplatform.features.chat.data.entity.TextMessageRequest
@@ -50,10 +47,7 @@ import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.uuid.Uuid
@@ -65,7 +59,6 @@ internal class ChatRepoImpl(
     private val chatsStorage: ChatsStorage,
     private val chatStorage: ChatStorage,
     private val timeProvider: TimeProvider,
-    private val liveEventsManager: LiveEventsManager,
     private val networkConfig: NetworkConfig,
     private val dispatcherProvider: DispatcherProviderInterface,
     private val chatNetworkManager: ChatNetworkManager,
@@ -73,6 +66,7 @@ internal class ChatRepoImpl(
     private val fileManager: FileManager,
     private val json: Json,
     private val chatsDataHelper: ChatsDataHelper,
+    private val chatPresenceHelper: ChatPresenceHelper,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -268,19 +262,7 @@ internal class ChatRepoImpl(
     }
 
     override suspend fun setUserOnline() {
-        val userId = checkNotNull(userStorage.getUserId())
-        val subscribeMessage = OnlineStatusPublisherMessage(
-            userId = userId,
-        )
-
-        liveEventsManager
-            .subscribe<String, OnlineStatusPublisherMessage>(
-                subscribeMessage = subscribeMessage,
-                type = "online_status_publish",
-            )
-            .collect {
-                //no messages expected
-            }
+        chatPresenceHelper.setUserOnline()
     }
 
     override suspend fun copyImageToCache(image: PickedImage): FileDescriptor {
@@ -351,49 +333,15 @@ internal class ChatRepoImpl(
     override fun getChatInfoFlow(chatId: String): Flow<ChatInfo?> {
         return combine(
             chatsDataHelper.getChatInfoFlow(chatId),
-            getInterlocutorInfoFlow(chatId),
-        ) { chatInfo, onlineCount ->
+            chatPresenceHelper.getOnlineParticipantIdsFlow(chatId),
+        ) { chatInfo, onlineParticipantIds ->
             chatInfo ?: return@combine null
-            onlineCount ?: return@combine null
 
             ChatInfo(
                 totalMembersCount = chatInfo.participantIds.size + 1,
-                onlineCount = onlineCount + 1,
+                onlineCount = onlineParticipantIds.size + 1,
             )
         }
-    }
-
-    fun getInterlocutorInfoFlow(chatId: String): Flow<Int?> {
-        return chatsDataHelper.getChatInfoFlow(chatId)
-            .flatMapLatest { chat ->
-                chat ?: return@flatMapLatest flowOf(null)
-
-                val userId = requireNotNull(userStorage.getUserId())
-                val targetUserIds = chat.participantIds + chat.authorId - userId
-
-
-                val subscribeMessages = targetUserIds
-                    .map { memberId ->
-                        OnlineStatusSubscribeMessage(
-                            targetUserId = memberId,
-                        )
-                    }
-
-                val isOnlineFlows = subscribeMessages
-                    .map { subscribeMessage ->
-                        liveEventsManager
-                            .subscribe<OnlineInfoMessage, OnlineStatusSubscribeMessage>(
-                                subscribeMessage = subscribeMessage,
-                                type = "online_status_receive",
-                            )
-                            .map { it.isOnline }
-                            .onStart { emit(false) }
-                    }
-
-                combine(isOnlineFlows) { onlineInfo ->
-                    onlineInfo.count { it }
-                }
-            }
     }
 
     private suspend fun resolveRecipientPublicKey(recipientId: String): String {

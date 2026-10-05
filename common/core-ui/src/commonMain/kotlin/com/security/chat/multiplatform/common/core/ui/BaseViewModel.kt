@@ -46,6 +46,7 @@ public abstract class BaseViewModel<S : Any, E : Any> : ViewModel(), ViewModelIn
 
     protected val currentViewState: S get() = _viewState.value
 
+    /** Tracks whether the screen lifecycle is RESUMED. */
     protected val viewActivable: Activable = Activable()
 
     init {

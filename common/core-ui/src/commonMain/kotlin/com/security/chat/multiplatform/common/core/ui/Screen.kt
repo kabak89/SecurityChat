@@ -58,7 +58,7 @@ public inline fun <reified T, S : Any, C> Screen(
             }
         }
         launch {
-            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 vm.onViewActive()
                 try {
                     awaitCancellation()

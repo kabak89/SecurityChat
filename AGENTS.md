@@ -125,8 +125,12 @@ from the UI presentation:
 
 ## Code style
 
-Code style is enforced by ktlint; all rules come from [.editorconfig](.editorconfig). Do not restate
-or override them here.
+Code style is enforced by ktlint using [.editorconfig](.editorconfig), with the following additional
+project convention:
+
+- **Expression-bodied functions:** keep the expression on the same line as `=` only when the entire
+  function fits on one line. If the function spans multiple lines, insert a line break immediately
+  after `=` and indent the expression on the next line.
 
 ## Comments
 

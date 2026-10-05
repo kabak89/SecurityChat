@@ -1,4 +1,4 @@
-package com.security.chat.multiplatform.features.chat.data.entity
+package com.security.chat.multiplatform.features.chat.data.common.entity
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

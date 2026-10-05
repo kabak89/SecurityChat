@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.common.core.network.entity.SocketMessage
 import com.security.chat.multiplatform.common.core.network.entity.SocketSubscribeMessage
 import com.security.chat.multiplatform.common.log.Log
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.auth.clearAuthTokens
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.http.URLProtocol
 import io.ktor.websocket.CloseReason
@@ -45,7 +46,7 @@ public class LiveEventsManager(
     httpClientFactory: HttpClientFactory,
 ) {
 
-    private val httpClient: HttpClient = httpClientFactory.build(needAuthorization = false)
+    private val httpClient: HttpClient = httpClientFactory.build(needAuthorization = true)
     private val loopMutex = Mutex()
     private var reconnectJob: Job? = null
 
@@ -130,6 +131,7 @@ public class LiveEventsManager(
     }
 
     private suspend fun runWebSocketSession() {
+        httpClient.clearAuthTokens()
         httpClient.webSocket(
             host = socketConfig.host,
             port = socketConfig.port,
