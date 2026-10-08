@@ -2,10 +2,12 @@ package com.security.chat.multiplatform.common.core.network
 
 import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
 import com.security.chat.multiplatform.common.core.network.entity.SocketMessage
+import com.security.chat.multiplatform.common.core.network.entity.SocketSendMessage
 import com.security.chat.multiplatform.common.core.network.entity.SocketSubscribeMessage
 import com.security.chat.multiplatform.common.log.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.auth.clearAuthTokens
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.http.URLProtocol
 import io.ktor.websocket.CloseReason
@@ -15,7 +17,9 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +32,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -49,6 +54,7 @@ public class LiveEventsManager(
     private val httpClient: HttpClient = httpClientFactory.build(needAuthorization = true)
     private val loopMutex = Mutex()
     private var reconnectJob: Job? = null
+    private val activeSession = MutableStateFlow<DefaultClientWebSocketSession?>(null)
 
     @PublishedApi
     internal val incomingFlow: MutableSharedFlow<SocketMessage> = MutableSharedFlow()
@@ -56,6 +62,18 @@ public class LiveEventsManager(
     @PublishedApi
     internal val activeSubscriptions: MutableStateFlow<Map<String, String>> =
         MutableStateFlow(emptyMap())
+
+    /**
+     * Sends a typed payload through the connection maintained by active subscriptions.
+     * Fails when disconnected and does not retry or wait for a server acknowledgement.
+     */
+    public suspend inline fun <reified Message> send(message: Message, type: String) {
+        val socketMessage = SocketSendMessage(
+            type = type,
+            payload = json.encodeToString(message),
+        )
+        sendSerialized(json.encodeToString(socketMessage))
+    }
 
     @OptIn(ExperimentalUuidApi::class)
     public inline fun <reified Event, reified SubscribeMessage> subscribe(
@@ -80,6 +98,20 @@ public class LiveEventsManager(
             .onCompletion {
                 activeSubscriptions.update { it - id }
             }
+    }
+
+    @PublishedApi
+    internal suspend fun sendSerialized(message: String) {
+        currentCoroutineContext().ensureActive()
+        val session = checkNotNull(activeSession.value) { "WebSocket is not connected" }
+        check(
+            session.isActive &&
+                    !session.closeReason.isCompleted &&
+                    connectivityObserver.isOnline.value,
+        ) {
+            "WebSocket is not connected"
+        }
+        session.send(Frame.Text(message))
     }
 
     @PublishedApi
@@ -140,6 +172,8 @@ public class LiveEventsManager(
                 url.protocol = if (socketConfig.secure) URLProtocol.WSS else URLProtocol.WS
             },
             block = {
+                val session = this
+                activeSession.value = session
                 val sent: MutableSet<String> = mutableSetOf()
 
                 val syncJob = activeSubscriptions
@@ -174,6 +208,7 @@ public class LiveEventsManager(
                             .filter { it.isEmpty() }
                             .map { CloseReason(CloseReason.Codes.NORMAL, "no subscribers") },
                     ).first().let { reason ->
+                        activeSession.compareAndSet(session, null)
                         Log.d { "closing socket: ${reason.message}" }
                         close(reason)
                     }
@@ -189,6 +224,7 @@ public class LiveEventsManager(
                         incomingFlow.emit(newMessage)
                     }
                 } finally {
+                    activeSession.compareAndSet(session, null)
                     syncJob.cancel()
                     closeGuardJob.cancel()
                 }
