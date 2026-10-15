@@ -1,6 +1,13 @@
 package com.security.chat.multiplatform.common.core.network
 
+import com.security.chat.multiplatform.common.core.network.entity.AccessToken
+import com.security.chat.multiplatform.common.core.network.entity.RefreshToken
+import com.security.chat.multiplatform.common.core.network.entity.SOCKET_AUTH_ID
+import com.security.chat.multiplatform.common.core.network.entity.SocketAuthEnvelope
+import com.security.chat.multiplatform.common.core.network.entity.SocketAuthState
+import com.security.chat.multiplatform.common.core.network.entity.SocketAuthUpdate
 import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
+import com.security.chat.multiplatform.common.core.network.entity.Tokens
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.callContext
 import io.ktor.client.engine.mock.MockEngine
@@ -23,10 +30,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -36,8 +45,10 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.TimeSource
 
 class LiveEventsManagerTest {
 
@@ -129,12 +140,139 @@ class LiveEventsManagerTest {
             )
         }
 
+    @Test
+    fun `commands bound to an old connection cannot reach a replacement socket`() =
+        runManagerTest { fixture ->
+            fixture.subscribe()
+            runCurrent()
+            val first = fixture.sessions.receive()
+            first.outgoing.receive()
+            val firstId = fixture.manager.getConnectionIdFlow().first { it != null }
+            fixture.isOnline.value = false
+            runCurrent()
+            fixture.isOnline.value = true
+            runCurrent()
+            val second = fixture.sessions.receive()
+            second.outgoing.receive()
+
+            assertFailsWith<IllegalStateException> {
+                fixture.manager.send(emptyMap<String, String>(), "call.join", firstId)
+            }
+            assertTrue(second.outgoing.tryReceive().isFailure)
+        }
+
     private suspend fun SocketSession.receiveMessage() =
         Json.parseToJsonElement(assertIs<Frame.Text>(outgoing.receive()).readText()).jsonObject
 
+    @Test
+    fun `authorization updates preserve connection id and subscription delivery`() =
+        runManagerTest { fixture ->
+            fixture.subscribe()
+            runCurrent()
+            val socket = fixture.sessions.receive()
+            val subscription = socket.receiveMessage()
+            val connectionId = fixture.manager.getConnectionIdFlow().first()
+            socket.authState(120_000L)
+            runCurrent()
+            advanceTimeBy(60_000L)
+            runCurrent()
+            val command = socket.receiveMessage()
+            assertEquals("auth.update", command.getValue("type").jsonPrimitive.content)
+            val update =
+                Json.decodeFromString<SocketAuthUpdate>(command.getValue("payload").jsonPrimitive.content)
+            assertEquals("refreshed-access", update.accessToken)
+            socket.authState(120_000L, update.requestId)
+            runCurrent()
+            socket.incoming.send(
+                Frame.Text(
+                    Json.encodeToString(
+                        mapOf(
+                            "id" to subscription.getValue("id").jsonPrimitive.content,
+                            "payload" to Json.encodeToString(mapOf("userId" to "peer")),
+                        ),
+                    ),
+                ),
+            )
+            runCurrent()
+            assertEquals(mapOf("userId" to "peer"), fixture.events.receive())
+            assertEquals(connectionId, fixture.manager.getConnectionIdFlow().first())
+            assertFalse(socket.closeReason.isCompleted)
+            assertEquals(1, fixture.engine.requestHistory.size)
+            assertTrue(socket.outgoing.tryReceive().isFailure)
+        }
+
+    private suspend fun SocketSession.authState(expiresInMillis: Long, requestId: String? = null) {
+        val envelope = SocketAuthEnvelope(
+            if (requestId == null) "auth.state" else "auth.updated",
+            Json.encodeToString(SocketAuthState(1L, expiresInMillis, requestId)),
+        )
+        incoming.send(
+            Frame.Text(
+                Json.encodeToString(
+                    mapOf(
+                        "id" to SOCKET_AUTH_ID, "payload" to Json.encodeToString(envelope),
+                    ),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `room replacement unsubscribes before subscribing on the same socket`() =
+        runManagerTest { fixture ->
+            fixture.subscribe()
+            val old = fixture.manager.subscribe<Map<String, String>, Map<String, String>>(
+                subscribeMessage = mapOf("chatId" to "chat-1"),
+                type = "call_events",
+            ).launchIn(backgroundScope)
+            runCurrent()
+            val socket = fixture.sessions.receive()
+            val original = List(2) { socket.receiveMessage() }
+                .single { it.getValue("type").jsonPrimitive.content == "call_events" }
+            val oldId = original.getValue("id").jsonPrimitive.content
+            val events = Channel<Map<String, String>>(Channel.UNLIMITED)
+
+            old.cancel()
+            fixture.manager.subscribe<Map<String, String>, Map<String, String>>(
+                subscribeMessage = mapOf("chatId" to "chat-2"),
+                type = "call_events",
+            ).onEach { events.send(it) }.launchIn(backgroundScope)
+            runCurrent()
+
+            val unsubscribe = socket.receiveMessage()
+            assertEquals("unsubscribe", unsubscribe.getValue("type").jsonPrimitive.content)
+            assertEquals(oldId, unsubscribe.getValue("payload").jsonPrimitive.content)
+            val replacement = socket.receiveMessage()
+            assertEquals("call_events", replacement.getValue("type").jsonPrimitive.content)
+            assertEquals(
+                mapOf("chatId" to "chat-2"),
+                Json.decodeFromString<Map<String, String>>(
+                    replacement.getValue("payload").jsonPrimitive.content,
+                ),
+            )
+            socket.incoming.send(
+                Frame.Text(
+                    Json.encodeToString(
+                        mapOf(
+                            "id" to replacement.getValue("id").jsonPrimitive.content,
+                            "payload" to Json.encodeToString(mapOf("chatId" to "chat-2")),
+                        ),
+                    ),
+                ),
+            )
+            runCurrent()
+            assertEquals(mapOf("chatId" to "chat-2"), events.receive())
+            assertEquals(1, fixture.engine.requestHistory.size)
+            assertTrue(fixture.sessions.tryReceive().isFailure)
+        }
+
     private fun runManagerTest(block: suspend TestScope.(Fixture) -> Unit) =
         runTest {
-            val fixture = Fixture(backgroundScope, StandardTestDispatcher(testScheduler))
+            val fixture = Fixture(
+                backgroundScope,
+                StandardTestDispatcher(testScheduler),
+                testScheduler.timeSource,
+            )
             try {
                 block(fixture)
             } finally {
@@ -146,7 +284,11 @@ class LiveEventsManagerTest {
         }
 
     @OptIn(InternalAPI::class)
-    private class Fixture(scope: CoroutineScope, testDispatcher: CoroutineDispatcher) {
+    private class Fixture(
+        scope: CoroutineScope,
+        testDispatcher: CoroutineDispatcher,
+        timeSource: TimeSource,
+    ) {
         val sessions = Channel<SocketSession>(Channel.UNLIMITED)
         val engine = MockEngine(
             MockEngineConfig().apply {
@@ -172,6 +314,7 @@ class LiveEventsManagerTest {
             override val isOnline = this@Fixture.isOnline
         }
         val events = Channel<Map<String, String>>(Channel.UNLIMITED)
+        val tokenManager = FakeTokenManager()
         val manager = LiveEventsManager(
             json = Json,
             coroutineScope = scope,
@@ -185,6 +328,8 @@ class LiveEventsManagerTest {
             httpClientFactory = object : HttpClientFactory {
                 override fun build(needAuthorization: Boolean): HttpClient = client
             },
+            tokenManager = tokenManager,
+            timeSource = timeSource,
         )
         private val subscriptionScope = scope
 
@@ -224,6 +369,26 @@ class LiveEventsManagerTest {
         @Deprecated("Use cancel() instead.")
         override fun terminate() {
             coroutineContext.cancel()
+        }
+    }
+
+    private class FakeTokenManager : TokenManager {
+        var tokens: Tokens? = Tokens(AccessToken("refreshed-access"), RefreshToken("refresh"))
+        var refreshCalls = 0
+        var refreshError: Throwable? = null
+        override suspend fun saveTokens(tokens: Tokens) {
+            this.tokens = tokens
+        }
+
+        override suspend fun getTokens(): Tokens? = tokens
+        override suspend fun refreshTokens(): Tokens? {
+            refreshCalls++
+            refreshError?.let { throw it }
+            return tokens
+        }
+
+        override suspend fun clearTokens() {
+            tokens = null
         }
     }
 }

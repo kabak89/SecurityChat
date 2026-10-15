@@ -1,6 +1,8 @@
 package com.security.chat.multiplatform.common.core.network
 
+import com.security.chat.multiplatform.common.core.network.entity.SOCKET_AUTH_ID
 import com.security.chat.multiplatform.common.core.network.entity.SocketConfig
+import com.security.chat.multiplatform.common.core.network.entity.SocketEvent
 import com.security.chat.multiplatform.common.core.network.entity.SocketMessage
 import com.security.chat.multiplatform.common.core.network.entity.SocketSendMessage
 import com.security.chat.multiplatform.common.core.network.entity.SocketSubscribeMessage
@@ -17,6 +19,7 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -31,14 +35,16 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.uuid.ExperimentalUuidApi
+import kotlin.time.TimeSource
 import kotlin.uuid.Uuid
 
 public class LiveEventsManager(
@@ -49,15 +55,18 @@ public class LiveEventsManager(
     private val socketConfig: SocketConfig,
     private val connectivityObserver: ConnectivityObserver,
     httpClientFactory: HttpClientFactory,
+    private val tokenManager: TokenManager,
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
 
     private val httpClient: HttpClient = httpClientFactory.build(needAuthorization = true)
     private val loopMutex = Mutex()
     private var reconnectJob: Job? = null
-    private val activeSession = MutableStateFlow<DefaultClientWebSocketSession?>(null)
+    private val activeSession = MutableStateFlow<Connection?>(null)
+    private var nextConnectionId = 0L
 
     @PublishedApi
-    internal val incomingFlow: MutableSharedFlow<SocketMessage> = MutableSharedFlow()
+    internal val incomingFlow: MutableSharedFlow<ReceivedMessage> = MutableSharedFlow()
 
     @PublishedApi
     internal val activeSubscriptions: MutableStateFlow<Map<String, String>> =
@@ -67,43 +76,66 @@ public class LiveEventsManager(
      * Sends a typed payload through the connection maintained by active subscriptions.
      * Fails when disconnected and does not retry or wait for a server acknowledgement.
      */
-    public suspend inline fun <reified Message> send(message: Message, type: String) {
+    public suspend inline fun <reified Message> send(
+        message: Message,
+        type: String,
+        connectionId: Long? = null,
+    ) {
         val socketMessage = SocketSendMessage(
             type = type,
             payload = json.encodeToString(message),
         )
-        sendSerialized(json.encodeToString(socketMessage))
+        sendSerialized(json.encodeToString(socketMessage), connectionId)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
+    public fun getConnectionIdFlow(): Flow<Long?> = activeSession.map { it?.id }
+
     public inline fun <reified Event, reified SubscribeMessage> subscribe(
         subscribeMessage: SubscribeMessage,
         type: String,
-    ): Flow<Event> {
-        val id = Uuid.random().toString()
-        val socketSubscribeMessage = SocketSubscribeMessage(
-            id = id,
-            type = type,
-            payload = json.encodeToString(subscribeMessage),
-        )
-        val subscribeMessageJson = json.encodeToString(socketSubscribeMessage)
+    ): Flow<Event> =
+        subscribeEvents<Event, SubscribeMessage>(subscribeMessage, type)
+            .filterIsInstance<SocketEvent.Message<Event>>()
+            .map { it.value }
 
+    /** Associates messages with their transport session and invalidates snapshots on disconnect. */
+    public inline fun <reified Event, reified SubscribeMessage> subscribeEvents(
+        subscribeMessage: SubscribeMessage,
+        type: String,
+    ): Flow<SocketEvent<Event>> =
+        subscribeSerialized(json.encodeToString(subscribeMessage), type)
+            .map<ReceivedMessage, SocketEvent<Event>> { received ->
+                val message = received.message
+                if (message == null) {
+                    SocketEvent.Disconnected
+                } else {
+                    SocketEvent.Message(
+                        received.connectionId,
+                        json.decodeFromString<Event>(message.payload),
+                    )
+                }
+            }
+            .onStart { emit(SocketEvent.Disconnected) }
+
+    @PublishedApi
+    internal fun subscribeSerialized(payload: String, type: String): Flow<ReceivedMessage> {
+        val id = Uuid.random().toString()
+        val message = json.encodeToString(SocketSubscribeMessage(id, type, payload))
         return incomingFlow
-            .filter { it.id == id }
-            .map { json.decodeFromString<Event>(it.payload) }
-            .onStart {
-                activeSubscriptions.update { it + (id to subscribeMessageJson) }
+            .onSubscription {
+                activeSubscriptions.update { it + (id to message) }
                 coroutineScope.launch { startSocketLoopIfNeeded() }
             }
-            .onCompletion {
-                activeSubscriptions.update { it - id }
-            }
+            .filter { it.message == null || it.message.id == id }
+            .onCompletion { activeSubscriptions.update { it - id } }
     }
 
     @PublishedApi
-    internal suspend fun sendSerialized(message: String) {
+    internal suspend fun sendSerialized(message: String, connectionId: Long? = null) {
         currentCoroutineContext().ensureActive()
-        val session = checkNotNull(activeSession.value) { "WebSocket is not connected" }
+        val connection = checkNotNull(activeSession.value) { "WebSocket is not connected" }
+        check(connectionId == null || connectionId == connection.id) { "WebSocket session changed" }
+        val session = connection.session
         check(
             session.isActive &&
                     !session.closeReason.isCompleted &&
@@ -173,18 +205,27 @@ public class LiveEventsManager(
             },
             block = {
                 val session = this
-                activeSession.value = session
+                val connection = Connection(++nextConnectionId, session)
+                activeSession.value = connection
                 val sent: MutableSet<String> = mutableSetOf()
+                val authorization = SocketAuthorizationClient(
+                    tokenManager = tokenManager,
+                    json = json,
+                    timeSource = timeSource,
+                    send = { update -> send(update, "auth.update", connection.id) },
+                    close = {
+                        close(
+                            CloseReason(
+                                CloseReason.Codes.VIOLATED_POLICY,
+                                "Authorization refresh failed",
+                            ),
+                        )
+                    },
+                )
+                val authorizationJob = launch { authorization.run() }
 
                 val syncJob = activeSubscriptions
                     .onEach { current ->
-                        for (newId in current.keys - sent) {
-                            val message = current[newId] ?: continue
-                            Log.d { "subscribe message = $message" }
-                            send(Frame.Text(message))
-                            sent.add(newId)
-                        }
-
                         for (goneId in sent - current.keys) {
                             val unsubscribe = SocketSubscribeMessage(
                                 id = goneId,
@@ -195,6 +236,13 @@ public class LiveEventsManager(
                             Log.d { "unsubscribe message = $unsubscribeText" }
                             send(Frame.Text(unsubscribeText))
                             sent.remove(goneId)
+                        }
+
+                        for (newId in current.keys - sent) {
+                            val message = current[newId] ?: continue
+                            Log.d { "subscribe message = $message" }
+                            send(Frame.Text(message))
+                            sent.add(newId)
                         }
                     }
                     .launchIn(this)
@@ -208,7 +256,7 @@ public class LiveEventsManager(
                             .filter { it.isEmpty() }
                             .map { CloseReason(CloseReason.Codes.NORMAL, "no subscribers") },
                     ).first().let { reason ->
-                        activeSession.compareAndSet(session, null)
+                        activeSession.compareAndSet(connection, null)
                         Log.d { "closing socket: ${reason.message}" }
                         close(reason)
                     }
@@ -220,13 +268,21 @@ public class LiveEventsManager(
                             ?: error("Wrong message type: $receivedFrame")
                         val newMessage: SocketMessage =
                             json.decodeFromString(textFrame.readText())
-                        Log.d { "new socket message: $newMessage" }
-                        incomingFlow.emit(newMessage)
+                        if (newMessage.id == SOCKET_AUTH_ID) {
+                            authorization.receive(newMessage.payload)
+                            continue
+                        }
+                        Log.d { "socket message for subscription ${newMessage.id}" }
+                        incomingFlow.emit(ReceivedMessage(connection.id, newMessage))
                     }
                 } finally {
-                    activeSession.compareAndSet(session, null)
+                    activeSession.compareAndSet(connection, null)
                     syncJob.cancel()
                     closeGuardJob.cancel()
+                    authorizationJob.cancel()
+                    withContext(NonCancellable) {
+                        incomingFlow.emit(ReceivedMessage(connection.id, null))
+                    }
                 }
             },
         )
@@ -237,6 +293,13 @@ public class LiveEventsManager(
         return (BACKOFF_BASE_MS shl bounded).coerceAtMost(BACKOFF_MAX_MS)
     }
 
+    private data class Connection(val id: Long, val session: DefaultClientWebSocketSession)
+
+    @PublishedApi
+    internal data class ReceivedMessage(
+        @PublishedApi internal val connectionId: Long,
+        @PublishedApi internal val message: SocketMessage?,
+    )
 }
 
 @PublishedApi

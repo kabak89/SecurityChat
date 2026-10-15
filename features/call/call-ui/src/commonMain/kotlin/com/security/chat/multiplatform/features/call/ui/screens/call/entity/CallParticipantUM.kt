@@ -6,4 +6,5 @@ import androidx.compose.runtime.Immutable
 internal data class CallParticipantUM(
     val id: String,
     val name: String,
+    val isInCall: Boolean,
 )

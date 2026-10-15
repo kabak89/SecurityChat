@@ -19,5 +19,19 @@ kotlin {
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.users.usersDataCommon)
         }
+        commonTest.dependencies {
+            implementation(projects.common.encryption)
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
+            implementation(libs.ktor.client.websockets)
+        }
+        jvmTest.dependencies {
+            implementation(libs.junit.jupiter)
+            implementation(libs.junit.platform.launcher)
+        }
+        androidMain.dependencies {
+            implementation(libs.webrtc.android)
+        }
     }
 }

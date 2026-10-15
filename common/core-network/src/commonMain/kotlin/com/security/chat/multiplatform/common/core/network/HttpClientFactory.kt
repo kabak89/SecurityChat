@@ -14,6 +14,8 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.http.HttpHeaders
+import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
@@ -44,6 +46,8 @@ internal class HttpClientFactoryImpl(
             install(Logging) {
                 logger = networkLogger
                 level = LogLevel.ALL
+                sanitizeHeader { it.equals(HttpHeaders.Authorization, ignoreCase = true) }
+                filter { it.url.encodedPath != "/refresh" }
             }
             expectSuccess = true
             HttpResponseValidator {

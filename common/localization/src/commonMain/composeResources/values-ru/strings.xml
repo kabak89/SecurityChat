@@ -102,6 +102,8 @@
     <string name="call_status_connecting">Соединение</string>
     <string name="call_status_active">Звонок идёт</string>
     <string name="call_start">Позвонить</string>
+    <string name="call_join">Присоединиться</string>
+    <string name="call_participant_in_call">На звонке</string>
     <string name="call_end">Завершить</string>
 
     <string name="call_permissions_title">Разрешения</string>
@@ -111,4 +113,8 @@
     <string name="call_permission_restricted_title">Нужен доступ к микрофону</string>
     <string name="call_permission_restricted_message">Для звонков нужен доступ к микрофону. Вы можете разрешить доступ в настройках приложения.</string>
     <string name="call_permission_open_settings">Открыть настройки</string>
+    <string name="call_error_title">Не удалось начать звонок</string>
+    <string name="call_error_description">Проверьте доступ к микрофону и попробуйте ещё раз.</string>
+    <string name="call_unsupported_description">Звонки на этой платформе пока не поддерживаются.</string>
+    <string name="call_connection_error_description">Соединение прервано или сервер не смог подключить к звонку. Попробуйте ещё раз.</string>
 </resources>

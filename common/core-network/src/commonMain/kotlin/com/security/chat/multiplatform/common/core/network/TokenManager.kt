@@ -1,7 +1,5 @@
 package com.security.chat.multiplatform.common.core.network
 
-import com.github.michaelbull.result.coroutines.runSuspendCatching
-import com.github.michaelbull.result.mapBoth
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.network.entity.AccessToken
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
@@ -13,9 +11,20 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlin.uuid.Uuid
 
 public interface TokenManager {
     public suspend fun saveTokens(tokens: Tokens)
@@ -30,111 +39,162 @@ internal class TokenManagerImpl(
     private val dispatcherProviderInterface: DispatcherProviderInterface,
     private val networkManagerFactory: NetworkManagerFactory,
     private val networkConfig: NetworkConfig,
+    private val coroutineScope: CoroutineScope,
+    private val json: Json,
 ) : TokenManager {
-
     private val networkManager: NetworkManager by lazy {
         networkManagerFactory.build(
             baseUrl = "${networkConfig.host}:${networkConfig.port}",
             needAuthorization = false,
         )
     }
-
-    private val refreshMutex = Mutex()
+    private val stateMutex = Mutex()
+    private var refresh: Deferred<Tokens?>? = null
+    private var generation = 0L
 
     override suspend fun saveTokens(tokens: Tokens) {
-        withContext(dispatcherProviderInterface.IO) {
-            encryptedSettings.putString(KEY_ACCESS_TOKEN, tokens.accessToken.value)
-            encryptedSettings.putString(KEY_REFRESH_TOKEN, tokens.refreshToken.value)
+        withContext(NonCancellable + dispatcherProviderInterface.IO) {
+            stateMutex.withLock {
+                writeTokens(tokens)
+                encryptedSettings.putString(KEY_PENDING_REFRESH, null)
+                generation++
+                refresh = null
+            }
         }
     }
 
-    override suspend fun getTokens(): Tokens? {
-        return getTokensInternal()
-    }
+    override suspend fun getTokens(): Tokens? =
+        withContext(dispatcherProviderInterface.IO) {
+            stateMutex.withLock {
+                readTokens().also { tokens ->
+                    if (tokens == null) {
+                        Log.e("No tokens in storage")
+                        logoutErrorAlerter.logout()
+                    }
+                }
+            }
+        }
 
     override suspend fun refreshTokens(): Tokens? {
-        val oldRefreshToken = withContext(dispatcherProviderInterface.IO) {
-            encryptedSettings.getString(KEY_REFRESH_TOKEN)
+        val operation = withContext(dispatcherProviderInterface.IO) {
+            stateMutex.withLock {
+                refresh?.takeUnless { it.isCompleted } ?: run {
+                    val tokens = readTokens() ?: return@withLock null
+                    val request = encryptedSettings.getString(KEY_PENDING_REFRESH)
+                        ?.let { json.decodeFromString<RefreshRequest>(it) }
+                        ?.takeIf { it.refreshToken == tokens.refreshToken.value }
+                        ?: RefreshRequest(tokens.refreshToken.value, Uuid.random().toString())
+                    encryptedSettings.putString(KEY_PENDING_REFRESH, json.encodeToString(request))
+                    val currentGeneration = generation
+                    /** Cancelling a waiter cannot cancel the app-owned rotation. */
+                    coroutineScope.async {
+                        performRefresh(request, currentGeneration)
+                    }.also { refresh = it }
+                }
+            }
         } ?: return null
-
-        return refreshMutex.withLock {
-            val currentRefreshToken = withContext(dispatcherProviderInterface.IO) {
-                encryptedSettings.getString(KEY_REFRESH_TOKEN)
-            }
-            if (currentRefreshToken != null && currentRefreshToken != oldRefreshToken) {
-                return@withLock getTokens()
-            }
-
-            performRefresh(oldRefreshToken)
-        }
+        return operation.await()
     }
 
     override suspend fun clearTokens() {
-        withContext(dispatcherProviderInterface.IO) {
-            encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
-            encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
+        withContext(NonCancellable + dispatcherProviderInterface.IO) {
+            stateMutex.withLock {
+                encryptedSettings.putString(KEY_TOKENS, null)
+                encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
+                encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
+                encryptedSettings.putString(KEY_PENDING_REFRESH, null)
+                generation++
+                refresh = null
+            }
         }
     }
 
-    private suspend fun performRefresh(refreshToken: String): Tokens? {
-        return runSuspendCatching {
-            networkManager.runPost<RefreshRequest, RefreshResponse>(
-                relativePath = "/refresh",
-                request = RefreshRequest(
-                    refreshToken = refreshToken,
-                ),
-            )
-        }
-            .mapBoth(
-                success = { response ->
-                    val newAccessToken = response.accessToken
-                    val newRefreshToken = response.refreshToken
-
+    private suspend fun performRefresh(request: RefreshRequest, requestGeneration: Long): Tokens? {
+        repeat(REFRESH_ATTEMPTS) { attempt ->
+            if (!isCurrent(request, requestGeneration)) return null
+            val response = try {
+                withTimeout(REFRESH_REQUEST_TIMEOUT_MS) {
+                    networkManager.runPost<RefreshRequest, RefreshResponse>("/refresh", request)
+                }
+            } catch (error: Throwable) {
+                if (error is CancellationException && error !is TimeoutCancellationException) {
+                    throw error
+                }
+                if (!isCurrent(request, requestGeneration)) return null
+                if (error is NetworkError &&
+                    error.statusCode == HttpStatusCode.Unauthorized.value
+                ) {
                     withContext(dispatcherProviderInterface.IO) {
-                        encryptedSettings.putString(KEY_ACCESS_TOKEN, newAccessToken)
-                        encryptedSettings.putString(KEY_REFRESH_TOKEN, newRefreshToken)
+                        stateMutex.withLock {
+                            if (isCurrentLocked(request, requestGeneration)) {
+                                encryptedSettings.putString(KEY_PENDING_REFRESH, null)
+                                logoutErrorAlerter.logout()
+                            }
+                        }
                     }
-
-                    Tokens(
-                        accessToken = AccessToken(newAccessToken),
-                        refreshToken = RefreshToken(newRefreshToken),
+                    return null
+                }
+                val isClientError = error is NetworkError && error.statusCode in 400..499 &&
+                        error.statusCode != 408 && error.statusCode != 429
+                if (isClientError || attempt == REFRESH_ATTEMPTS - 1) throw error
+                Log.e("Token refresh failed: ${error::class.simpleName}; retrying")
+                delay(REFRESH_RETRY_MS)
+                return@repeat
+            }
+            return withContext(NonCancellable + dispatcherProviderInterface.IO) {
+                stateMutex.withLock {
+                    if (!isCurrentLocked(request, requestGeneration)) return@withLock null
+                    val tokens = Tokens(
+                        AccessToken(response.accessToken), RefreshToken(response.refreshToken),
                     )
-
-                },
-                failure = { error ->
-                    if (error is NetworkError &&
-                        error.statusCode == HttpStatusCode.Unauthorized.value
-                    ) {
-                        logoutErrorAlerter.logout()
-                        null
-                    } else {
-                        throw error
-                    }
-                },
-            )
-    }
-
-    private suspend fun getTokensInternal(): Tokens? {
-        return withContext(dispatcherProviderInterface.IO) {
-            val accessToken = encryptedSettings.getString(KEY_ACCESS_TOKEN) ?: run {
-                Log.e("no access token in storage")
-                logoutErrorAlerter.logout()
-                return@withContext null
+                    writeTokens(tokens)
+                    encryptedSettings.putString(KEY_PENDING_REFRESH, null)
+                    tokens
+                }
             }
-
-            val refreshToken = encryptedSettings.getString(KEY_REFRESH_TOKEN) ?: run {
-                Log.e("no refresh token in storage")
-                logoutErrorAlerter.logout()
-                return@withContext null
-            }
-
-            Tokens(
-                accessToken = AccessToken(accessToken),
-                refreshToken = RefreshToken(refreshToken),
-            )
         }
+        error("Refresh attempts exhausted")
     }
+
+    private suspend fun isCurrent(request: RefreshRequest, requestGeneration: Long): Boolean =
+        withContext(dispatcherProviderInterface.IO) {
+            stateMutex.withLock { isCurrentLocked(request, requestGeneration) }
+        }
+
+    private fun isCurrentLocked(request: RefreshRequest, requestGeneration: Long): Boolean =
+        generation == requestGeneration && readTokens()?.refreshToken?.value == request.refreshToken
+
+    private fun readTokens(): Tokens? {
+        val stored = encryptedSettings.getString(KEY_TOKENS)
+        if (stored != null) {
+            val tokens = json.decodeFromString<StoredTokens>(stored)
+            return Tokens(AccessToken(tokens.accessToken), RefreshToken(tokens.refreshToken))
+        }
+        val accessToken = encryptedSettings.getString(KEY_ACCESS_TOKEN) ?: return null
+        val refreshToken = encryptedSettings.getString(KEY_REFRESH_TOKEN) ?: return null
+        return Tokens(AccessToken(accessToken), RefreshToken(refreshToken)).also { writeTokens(it) }
+    }
+
+    private fun writeTokens(tokens: Tokens) {
+        /** Store the pair in one value so readers and app restarts cannot see half a rotation. */
+        encryptedSettings.putString(
+            KEY_TOKENS,
+            json.encodeToString(
+                StoredTokens(tokens.accessToken.value, tokens.refreshToken.value),
+            ),
+        )
+        encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
+        encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
+    }
+
+    @Serializable
+    private data class StoredTokens(val accessToken: String, val refreshToken: String)
 }
 
+private const val KEY_TOKENS = "KEY_TOKENS"
 private const val KEY_ACCESS_TOKEN = "KEY_ACCESS_TOKEN"
 private const val KEY_REFRESH_TOKEN = "KEY_REFRESH_TOKEN"
+private const val KEY_PENDING_REFRESH = "KEY_PENDING_REFRESH"
+private const val REFRESH_REQUEST_TIMEOUT_MS = 30_000L
+private const val REFRESH_RETRY_MS = 5_000L
+private const val REFRESH_ATTEMPTS = 3

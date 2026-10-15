@@ -48,6 +48,7 @@ sqliterDriver = "1.3.3"
 multiplatformSettings = "1.3.0"
 security-crypto = "1.1.0"
 ktor = "3.5.2"
+webrtc = "150.7871.01"
 cryptographyCore = "0.6.0"
 composeHotReload = "1.2.0"
 kotlinxDatetime = "0.8.0"
@@ -120,6 +121,7 @@ multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", vers
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "security-crypto" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+webrtc-android = { module = "io.github.webrtc-sdk:android", version.ref = "webrtc" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }

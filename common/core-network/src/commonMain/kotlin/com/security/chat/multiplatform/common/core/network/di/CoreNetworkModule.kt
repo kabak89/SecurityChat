@@ -43,6 +43,7 @@ public val coreNetworkModule: Module =
                 socketConfig = get(),
                 connectivityObserver = get(),
                 httpClientFactory = get(),
+                tokenManager = get(),
             )
         }
 
@@ -78,5 +79,15 @@ public val coreNetworkModule: Module =
             LogoutErrorAlerter::class,
         )
 
-        singleOf(::TokenManagerImpl) bind TokenManager::class
+        single {
+            TokenManagerImpl(
+                encryptedSettings = get(),
+                logoutErrorAlerter = get(),
+                dispatcherProviderInterface = get(),
+                networkManagerFactory = get(),
+                networkConfig = get(),
+                coroutineScope = get(named(SCOPE_ID_APP)),
+                json = get(),
+            )
+        } bind TokenManager::class
     }

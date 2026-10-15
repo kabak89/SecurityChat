@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
+import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.common.icons.kit.DrawableRes
 import com.security.chat.multiplatform.common.ui.kit.MAX_CONTENT_WIDTH_DP
 import com.security.chat.multiplatform.common.ui.kit.components.ButtonContent
@@ -30,21 +32,31 @@ import com.security.chat.multiplatform.common.ui.kit.components.ButtonPrimary
 import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.call.component.api.CallMainComponent
 import com.security.chat.multiplatform.features.call.ui.screens.call.entity.CallParticipantUM
 import com.security.chat.multiplatform.features.call.ui.screens.call.entity.CallStatusUM
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.localization.generated.resources.call_end
+import securitychat.common.localization.generated.resources.call_error_description
+import securitychat.common.localization.generated.resources.call_error_title
+import securitychat.common.localization.generated.resources.call_join
 import securitychat.common.localization.generated.resources.call_no_online_participants
 import securitychat.common.localization.generated.resources.call_online_participants
+import securitychat.common.localization.generated.resources.call_participant_in_call
 import securitychat.common.localization.generated.resources.call_start
 import securitychat.common.localization.generated.resources.call_status_active
 import securitychat.common.localization.generated.resources.call_status_connecting
 import securitychat.common.localization.generated.resources.call_title
+import securitychat.common.localization.generated.resources.common_close
 
 @Composable
 internal fun CallScreen(
@@ -68,10 +80,12 @@ private fun CallContent(
     onBackClicked: () -> Unit,
     onCallButtonClicked: () -> Unit,
 ) {
+    val hazeState = rememberHazeState()
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(AppTheme.colors.backgroundPrimary)
+            .hazeSource(hazeState)
             .systemBarsPadding(),
     ) {
         ToolbarComponent(
@@ -117,14 +131,27 @@ private fun CallContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(state.onlineParticipants, key = { it.id }) { participant ->
-                        Text(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 12.dp),
-                            text = participant.name,
-                            color = AppTheme.colors.textPrimary,
-                            style = AppTheme.typography.body,
-                        )
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = participant.name,
+                                color = AppTheme.colors.textPrimary,
+                                style = AppTheme.typography.body,
+                            )
+                            if (participant.isInCall) {
+                                Text(
+                                    text = stringResource(StringRes.call_participant_in_call),
+                                    color = AppTheme.colors.textSecondary,
+                                    style = AppTheme.typography.body,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -144,8 +171,10 @@ private fun CallContent(
             ButtonPrimary(
                 modifier = Modifier.fillMaxWidth(),
                 content = ButtonContent.Text(
-                    text = if (state.callStatus == CallStatusUM.Active) {
+                    text = if (state.callStatus != CallStatusUM.Idle) {
                         stringResource(StringRes.call_end)
+                    } else if (state.isCallInProgress) {
+                        stringResource(StringRes.call_join)
                     } else {
                         stringResource(StringRes.call_start)
                     },
@@ -156,6 +185,15 @@ private fun CallContent(
             Spacer(Modifier.height(16.dp))
         }
     }
+    state.alertDialogDescriptor?.let { descriptor ->
+        AlertDialogComponent(
+            content = descriptor.content,
+            hazeState = hazeState,
+            onDismissRequest = descriptor.dismissAction,
+            onPositiveButtonClicked = descriptor.positiveAction,
+            onNegativeButtonClicked = descriptor.negativeAction,
+        )
+    }
 }
 
 @Preview
@@ -165,6 +203,8 @@ internal fun CallScreenPreview() {
         state = CallState(
             onlineParticipants = previewParticipants(),
             callStatus = CallStatusUM.Idle,
+            alertDialogDescriptor = null,
+            isCallInProgress = false,
         ),
     )
 }
@@ -176,6 +216,8 @@ internal fun CallScreenEmptyPreview() {
         state = CallState(
             onlineParticipants = persistentListOf(),
             callStatus = CallStatusUM.Idle,
+            alertDialogDescriptor = null,
+            isCallInProgress = false,
         ),
     )
 }
@@ -187,6 +229,42 @@ internal fun CallScreenConnectingPreview() {
         state = CallState(
             onlineParticipants = previewParticipants(),
             callStatus = CallStatusUM.Connecting,
+            alertDialogDescriptor = null,
+            isCallInProgress = false,
+        ),
+    )
+}
+
+@Preview
+@Composable
+internal fun CallScreenActivePreview() {
+    CallPreview(
+        state = CallState(
+            onlineParticipants = previewParticipants(isInCall = true),
+            callStatus = CallStatusUM.Active,
+            alertDialogDescriptor = null,
+            isCallInProgress = true,
+        ),
+    )
+}
+
+@Preview
+@Composable
+internal fun CallScreenErrorPreview() {
+    CallPreview(
+        state = CallState(
+            onlineParticipants = previewParticipants(),
+            callStatus = CallStatusUM.Idle,
+            alertDialogDescriptor = AlertDialogDescriptor(
+                content = AlertDialogContent(
+                    title = resPrintableText(StringRes.call_error_title),
+                    message = resPrintableText(StringRes.call_error_description),
+                    positiveButtonText = resPrintableText(StringRes.common_close),
+                ),
+                dismissAction = {},
+                positiveAction = {},
+            ),
+            isCallInProgress = false,
         ),
     )
 }
@@ -202,8 +280,24 @@ private fun CallPreview(state: CallState) {
     }
 }
 
-private fun previewParticipants(): ImmutableList<CallParticipantUM> =
+private fun previewParticipants(isInCall: Boolean = false): ImmutableList<CallParticipantUM> =
     persistentListOf(
-        CallParticipantUM(id = "1", name = "alex"),
-        CallParticipantUM(id = "2", name = "maria"),
+        CallParticipantUM(id = "1", name = "alex", isInCall = isInCall),
+        CallParticipantUM(id = "2", name = "maria", isInCall = isInCall),
     )
+
+@Preview
+@Composable
+internal fun CallScreenJoinPreview() {
+    CallPreview(
+        state = CallState(
+            onlineParticipants = persistentListOf(
+                CallParticipantUM(id = "1", name = "alex", isInCall = true),
+                CallParticipantUM(id = "2", name = "maria", isInCall = false),
+            ),
+            callStatus = CallStatusUM.Idle,
+            alertDialogDescriptor = null,
+            isCallInProgress = true,
+        ),
+    )
+}
