@@ -4,6 +4,7 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_retry">Retry</string>
     <string name="common_close">Close</string>
+    <string name="common_next">Next</string>
 
     <string name="settings_main_profile">Profile</string>
     <string name="settings_main_theme">Theme</string>

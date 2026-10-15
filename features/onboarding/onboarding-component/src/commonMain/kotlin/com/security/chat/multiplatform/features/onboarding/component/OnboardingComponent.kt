@@ -5,12 +5,16 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent.Child.OnboardingMain
+import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingComponent.Child.Welcome
 import com.security.chat.multiplatform.features.onboarding.data.di.onboardingDataModule
+import com.security.chat.multiplatform.features.onboarding.domain.OnboardingModel
 import com.security.chat.multiplatform.features.onboarding.domain.di.onboardingDomainModule
 import com.security.chat.multiplatform.features.onboarding.ui.di.onboardingUiModule
 import kotlinx.serialization.Serializable
@@ -33,6 +37,10 @@ public class OnboardingComponentImpl(
             onboardingDataModule,
         )
         getKoin().loadModules(featureModules)
+        doOnCreate {
+            val onboardingModel: OnboardingModel = getKoin().get()
+            onboardingModel.start(parentScope = componentCoroutineScope)
+        }
         doOnDestroy {
             getKoin().unloadModules(featureModules)
         }
@@ -42,7 +50,7 @@ public class OnboardingComponentImpl(
         childStack(
             source = navigation,
             serializer = Params.serializer(),
-            initialConfiguration = Params.OnboardingMain,
+            initialConfiguration = Params.Welcome,
             handleBackButton = true,
             childFactory = ::createChild,
         )
@@ -56,6 +64,16 @@ public class OnboardingComponentImpl(
         componentContext: ComponentContext,
     ): OnboardingComponent.Child {
         return when (params) {
+            Params.Welcome -> {
+                Welcome(
+                    component = WelcomeComponentImpl(
+                        componentContext = componentContext,
+                        onContinueClicked = { navigation.pushNew(Params.OnboardingMain) },
+                        onOnboardingFinished = onFinished,
+                    ),
+                )
+            }
+
             Params.OnboardingMain -> {
                 OnboardingMain(
                     component = OnboardingMainComponentImpl(
@@ -69,6 +87,9 @@ public class OnboardingComponentImpl(
 
     @Serializable
     private sealed class Params {
+        @Serializable
+        data object Welcome : Params()
+
         @Serializable
         data object OnboardingMain : Params()
     }

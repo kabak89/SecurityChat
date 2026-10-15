@@ -13,6 +13,8 @@ public interface OnboardingComponent : BaseComponent, DiScopeHolder, BackHandler
     public fun onBackClicked()
 
     public sealed interface Child {
+        public class Welcome(public val component: WelcomeComponent) : Child
+
         public class OnboardingMain(public val component: OnboardingMainComponent) : Child
     }
 }

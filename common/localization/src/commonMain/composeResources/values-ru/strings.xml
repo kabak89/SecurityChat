@@ -4,6 +4,7 @@
     <string name="common_cancel">Отмена</string>
     <string name="common_retry">Повторить</string>
     <string name="common_close">Закрыть</string>
+    <string name="common_next">Далее</string>
 
     <string name="settings_main_profile">Профиль</string>
     <string name="settings_main_theme">Тема</string>
