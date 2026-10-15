@@ -6,6 +6,13 @@
     <string name="common_close">Close</string>
     <string name="common_next">Next</string>
 
+    <string name="onboarding_welcome_title">Welcome to Paranoya</string>
+
+    <string name="onboarding_welcome_keys">Congratulations on installing Paranoya! This messenger is built for private, secure conversations, where the contents of messages are available only to the people they are addressed to. The app encrypts messages on your device, while the server helps deliver them without gaining access to their text. Below, we explain how keys, encryption, and message delivery work.\n\nBefore starting a conversation, each person generates their own key pair: a public key and a private key. These keys are linked, but serve different purposes. You can share your public key: it lets others protect messages addressed to you. Your private key is needed to decrypt those messages, so it must remain with you alone.\n\nYou then exchange public keys with the other person. You do not need to exchange private keys — keep yours secret.</string>
+    <string name="onboarding_welcome_encryption">Before sending a message, the app encrypts it on your device. Each message gets a separate encryption key, which is protected using the recipient’s public key. Only the corresponding private key can unlock it to read the message.\n\nWhen the message reaches the recipient, their app decrypts its contents on their device. The text stays encrypted during delivery: a public key or access to the server alone is not enough to read it.</string>
+    <string name="onboarding_welcome_storage">The server helps deliver an encrypted message even when the other person is offline. While the message waits for delivery, the server stores its encrypted version. It does not need the original text.\n\nOnce the message is delivered to the recipient, it is deleted from the server. The server is used to transfer messages, rather than keep a permanent archive of your conversations.</string>
+    <string name="onboarding_welcome_privacy">Only the people your messages are addressed to can read them. Even the server cannot decrypt what you send: it receives encrypted data and does not have the recipients’ private keys. The contents of your conversations stay between you and the people you message.</string>
+
     <string name="settings_main_profile">Profile</string>
     <string name="settings_main_theme">Theme</string>
     <string name="settings_main_log_out">Log out</string>

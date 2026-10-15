@@ -16,6 +16,7 @@ kotlin {
             implementation(libs.navigationevent.compose)
 
             implementation(projects.common.coreUi)
+            implementation(projects.common.iconsKit)
             implementation(projects.common.uiKit)
             implementation(projects.common.permission)
 
