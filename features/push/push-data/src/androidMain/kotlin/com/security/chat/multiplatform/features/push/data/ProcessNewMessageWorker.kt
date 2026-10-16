@@ -60,8 +60,6 @@ internal class ProcessNewMessageWorker(
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override suspend fun doWork(): Result {
-        setForeground(getForegroundInfo())
-
         val data = inputData.keyValueMap
 
         Log.d { "new push message: $data" }
