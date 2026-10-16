@@ -124,4 +124,9 @@
     <string name="call_error_description">Check microphone access and try again.</string>
     <string name="call_unsupported_description">Calls are not supported on this platform yet.</string>
     <string name="call_connection_error_description">The call connection was lost or the server could not join the room. Please try again.</string>
+
+    <string name="app_update_ready_title">Update ready</string>
+    <string name="app_update_ready_message">Restart the app to install the new version.</string>
+    <string name="app_update_restart">Restart</string>
+    <string name="app_update_later">Later</string>
 </resources>

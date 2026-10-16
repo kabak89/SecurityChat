@@ -125,4 +125,9 @@
     <string name="call_error_description">Проверьте доступ к микрофону и попробуйте ещё раз.</string>
     <string name="call_unsupported_description">Звонки на этой платформе пока не поддерживаются.</string>
     <string name="call_connection_error_description">Соединение прервано или сервер не смог подключить к звонку. Попробуйте ещё раз.</string>
+
+    <string name="app_update_ready_title">Обновление готово</string>
+    <string name="app_update_ready_message">Перезапустите приложение, чтобы установить новую версию.</string>
+    <string name="app_update_restart">Перезапустить</string>
+    <string name="app_update_later">Позже</string>
 </resources>

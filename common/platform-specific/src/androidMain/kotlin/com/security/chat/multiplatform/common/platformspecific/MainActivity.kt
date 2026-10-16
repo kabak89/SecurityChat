@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import com.arkivanov.decompose.retainedComponent
 import com.security.chat.multiplatform.features.push.navigation.api.IntentBuilderContract
 import com.security.chat.multiplatform.features.root.component.RootComponentImpl
@@ -18,12 +19,14 @@ import com.security.chat.multiplatform.features.root.ui.screens.root.RootContent
 public class MainActivity : ComponentActivity() {
 
     private lateinit var root: RootComponentImpl
+    private val appUpdateViewModel: MainViewModel by viewModels()
 
     private val localNetworkPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        observeAppUpdates(appUpdateViewModel)
         requestLocalNetworkAccessIfNeeded()
         root = retainedComponent { retainedContext ->
             RootComponentImpl(
@@ -33,7 +36,12 @@ public class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            RootContent(root)
+            RootContent(
+                rootComponent = root,
+                isUpdateReady = appUpdateViewModel.isUpdateReady,
+                onUpdateRestart = appUpdateViewModel::restart,
+                onUpdateDismiss = appUpdateViewModel::dismissRestart,
+            )
         }
     }
 

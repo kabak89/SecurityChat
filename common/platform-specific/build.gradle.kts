@@ -14,6 +14,10 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
+            implementation(libs.play.app.update)
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(projects.common.log)
 
             implementation(projects.features.root.rootComponent)
             implementation(projects.features.root.rootUi)
