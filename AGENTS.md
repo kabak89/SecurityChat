@@ -134,6 +134,8 @@ project conventions:
 - **Expression-bodied functions:** keep the expression on the same line as `=` only when the entire
   function fits on one line. If the function spans multiple lines, insert a line break immediately
   after `=` and indent the expression on the next line.
+- **Named arguments:** when calling a function with more than two arguments, specify the names of
+  all arguments.
 
 ## Comments
 

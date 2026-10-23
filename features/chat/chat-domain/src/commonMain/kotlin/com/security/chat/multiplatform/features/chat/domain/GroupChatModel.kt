@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chat.domain
 import androidx.paging.PagingData
 import com.security.chat.multiplatform.common.core.domain.BaseModel
 import com.security.chat.multiplatform.common.core.domain.ScopedModel
+import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
@@ -100,7 +101,10 @@ internal class GroupChatModelImpl(
             .flatMapLatest { (chatId, isActive) ->
                 if ((chatId != null) && isActive) {
                     channelFlow<Unit> {
-                        launch { chatRepo.subscribeToNewMessages(chatId) }
+                        launch {
+                            syncMessages.startOnSubscribe().join()
+                            chatRepo.subscribeToNewMessages(chatId)
+                        }
                         launch { chatRepo.setUserOnline() }
                     }
                 } else {

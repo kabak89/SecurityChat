@@ -79,7 +79,6 @@ internal class GroupChatViewModel(
             .onEach { active ->
                 if (active) {
                     pushModel.clearNotificationsForChat(chatId = params.chatId)
-                    groupChatModel.syncMessages.startOnSubscribe()
                     groupChatModel.onViewActive()
                     pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
                 } else {
