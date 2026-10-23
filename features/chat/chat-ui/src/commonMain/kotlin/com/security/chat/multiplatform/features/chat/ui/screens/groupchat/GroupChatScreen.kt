@@ -546,6 +546,7 @@ internal fun GroupChatScreenPreview() {
                     id = "1",
                     text = "some text",
                     datetimeText = "12:10",
+                    status = MessageStatusUM.Sent,
                 ),
                 MessageUM.Incoming.Text(
                     id = "2",

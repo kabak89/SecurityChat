@@ -16,6 +16,7 @@ internal sealed interface MessageUM : ItemWithId {
             override val id: String,
             override val text: String,
             override val datetimeText: String,
+            val status: MessageStatusUM,
         ) : Outgoing
 
         @Immutable

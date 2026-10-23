@@ -18,4 +18,14 @@ class OutgoingMessageComponentTest : ScreenshotTestBase() {
             OutgoingMessageComponentPreview()
         }
     }
+
+    @Test
+    fun `outgoing text message shows sending indicator next to time`() {
+        runScreenshotTest(
+            screenshotName = "OutgoingMessageComponentSendingPreview",
+            animationTimeMillis = 300L,
+        ) {
+            OutgoingMessageComponentSendingPreview()
+        }
+    }
 }

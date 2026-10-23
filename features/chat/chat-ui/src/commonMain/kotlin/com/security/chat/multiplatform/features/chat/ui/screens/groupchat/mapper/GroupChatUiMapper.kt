@@ -60,6 +60,7 @@ internal fun Message.toUi(): MessageUM {
                 id = id,
                 text = text,
                 datetimeText = datetimeText,
+                status = status.toUi(),
             )
         }
 
@@ -111,7 +112,8 @@ private fun MessageStatus.toUi(): MessageStatusUM {
     return when (this) {
         MessageStatus.Created -> MessageStatusUM.Created
         MessageStatus.Sent -> MessageStatusUM.Sent
-        MessageStatus.ReceivedByReceiver, MessageStatus.Read -> MessageStatusUM.Received
+        MessageStatus.ReceivedByReceiver -> MessageStatusUM.Received
+        MessageStatus.Read -> MessageStatusUM.Read
     }
 }
 

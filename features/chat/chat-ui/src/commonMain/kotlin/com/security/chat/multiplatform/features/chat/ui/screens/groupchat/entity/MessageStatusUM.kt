@@ -4,4 +4,5 @@ internal enum class MessageStatusUM {
     Created,
     Sent,
     Received,
+    Read,
 }

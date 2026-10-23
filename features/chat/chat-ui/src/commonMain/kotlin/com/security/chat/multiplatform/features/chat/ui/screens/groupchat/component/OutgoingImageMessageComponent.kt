@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -103,11 +100,9 @@ internal fun OutgoingImageMessageComponent(
             )
         }
         Spacer(modifier.height(8.dp))
-        Text(
-            modifier = Modifier,
-            text = message.datetimeText,
-            color = AppTheme.colors.textPrimary,
-            style = AppTheme.typography.annotation,
+        OutgoingMessageMetadata(
+            datetimeText = message.datetimeText,
+            status = message.status,
         )
     }
 }
@@ -122,25 +117,6 @@ private fun OutgoingImageContent(
         propagateMinConstraints = true,
     ) {
         ImageComponent(filePath = message.filePath)
-        if (message.status == MessageStatusUM.Created) {
-            val backgroundPrimary = AppTheme.colors.backgroundPrimary
-            val progressBackground = remember(backgroundPrimary) {
-                backgroundPrimary.copy(alpha = 0.8f)
-            }
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .wrapContentSize()
-                    .background(
-                        color = progressBackground,
-                        shape = AppTheme.shapes.circle,
-                    )
-                    .padding(10.dp)
-                    .size(28.dp),
-                color = AppTheme.colors.textPrimary,
-                strokeWidth = 3.dp,
-            )
-        }
     }
 }
 

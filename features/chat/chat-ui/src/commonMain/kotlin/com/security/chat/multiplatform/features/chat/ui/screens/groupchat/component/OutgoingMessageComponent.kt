@@ -3,9 +3,8 @@ package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import sh.calvin.autolinktext.rememberAutoLinkText
 
@@ -37,13 +37,12 @@ internal fun OutgoingMessageComponent(
                 style = AppTheme.typography.body,
             )
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
+        OutgoingMessageMetadata(
             modifier = Modifier
-                .align(alignment = Alignment.Bottom),
-            text = message.datetimeText,
-            color = AppTheme.colors.textPrimary,
-            style = AppTheme.typography.annotation,
+                .align(alignment = Alignment.Bottom)
+                .padding(start = 8.dp),
+            datetimeText = message.datetimeText,
+            status = message.status,
         )
     }
 }
@@ -58,6 +57,25 @@ internal fun OutgoingMessageComponentPreview() {
                 id = "1",
                 text = "some text",
                 datetimeText = "12:10",
+                status = MessageStatusUM.Sent,
+            ),
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun OutgoingMessageComponentSendingPreview() {
+    AppTheme {
+        OutgoingMessageComponent(
+            modifier = Modifier
+                .background(AppTheme.colors.backgroundPrimary)
+                .fillMaxWidth(),
+            message = MessageUM.Outgoing.Text(
+                id = "1",
+                text = "some text text text text text text text text text text text text",
+                datetimeText = "12:10",
+                status = MessageStatusUM.Created,
             ),
         )
     }
@@ -73,6 +91,7 @@ internal fun OutgoingMessageComponentLongTextPreview() {
                 id = "1",
                 text = "some text text text text text text text text text text text text",
                 datetimeText = "12:10",
+                status = MessageStatusUM.Sent,
             ),
         )
     }
