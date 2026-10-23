@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.features.chat.data.common.mapper
 
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 
@@ -17,9 +18,10 @@ internal suspend fun ChatMessageNM.toSM(
                 chatId = chatId,
                 text = decryptMessage(text, key),
                 authorId = authorId,
-                status = Status.Received,
                 timestamp = timestamp,
-                recipients = recipients,
+                recipients = recipients.map {
+                    MessageRecipientSM(userId = it, status = Status.ReceivedByReceiver)
+                },
             )
         }
 
@@ -28,9 +30,10 @@ internal suspend fun ChatMessageNM.toSM(
                 id = id,
                 chatId = chatId,
                 authorId = authorId,
-                status = Status.Received,
                 timestamp = timestamp,
-                recipients = recipients,
+                recipients = recipients.map {
+                    MessageRecipientSM(userId = it, status = Status.ReceivedByReceiver)
+                },
                 fileId = fileId,
                 key = decryptKey(key),
                 isDownloaded = false,

@@ -5,7 +5,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.github.michaelbull.result.coroutines.runSuspendCatching
-import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
 import com.security.chat.multiplatform.common.core.error.NetworkError
 import com.security.chat.multiplatform.common.core.files.FileManager
@@ -28,6 +27,7 @@ import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkMan
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
@@ -48,6 +48,9 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.uuid.Uuid
@@ -76,6 +79,8 @@ internal class ChatRepoImpl(
         )
     }
 
+    private val uploadMutex: Mutex = Mutex()
+
     override suspend fun saveTextMessage(
         message: String,
         chatId: String,
@@ -92,11 +97,13 @@ internal class ChatRepoImpl(
             chatId = chatId,
             text = message,
             authorId = userId,
-            status = Status.Created,
             timestamp = timestamp,
-            recipients = recipients,
+            recipients = recipients.map {
+                MessageRecipientSM(userId = it, status = Status.Created)
+            },
         )
 
+        chatDataHelper.migrateMessageStatuses()
         chatStorage.saveMessage(messageSm)
     }
 
@@ -111,67 +118,60 @@ internal class ChatRepoImpl(
         val messageSm = MessageSM.Image(
             id = messageId,
             chatId = chatId,
-            recipients = message.recipients,
+            recipients = message.recipients.map {
+                MessageRecipientSM(userId = it, status = Status.Created)
+            },
             authorId = userId,
-            status = Status.Created,
             timestamp = timestamp,
             fileId = message.fileId,
             key = message.key,
             isDownloaded = true,
         )
 
+        chatDataHelper.migrateMessageStatuses()
         chatStorage.saveMessage(messageSm)
     }
 
     override suspend fun uploadMessages(chatId: String) {
-        val messagesToUpload = chatStorage.getMessages(
-            chatId = chatId,
-            limit = Long.MAX_VALUE,
-            offset = 0,
-        )
-            .filter { it.status == Status.Created }
+        uploadMutex.withLock {
+            chatDataHelper.migrateMessageStatuses()
+            val userId = checkNotNull(userStorage.getUserId())
+            val messagesToUpload = chatStorage.getMessages(
+                chatId = chatId,
+                limit = Long.MAX_VALUE,
+                offset = 0,
+            )
+                .filter { message ->
+                    message.authorId == userId &&
+                            message.recipients.any { it.status == Status.Created }
+                }
 
-        messagesToUpload.forEach { message ->
-            runSuspendCatching {
-                var isSent = false
-                try {
-                    chatStorage.updateMessageStatus(
-                        id = message.id,
-                        status = Status.Sending,
-                        expectedStatus = Status.Created,
-                    )
+            messagesToUpload.forEach { message ->
+                val request = createSendMessageRequest(message)
+                networkManager.runPost<SendMessageRequest, Unit>(
+                    relativePath = "/messages",
+                    request = request,
+                )
+                withContext(NonCancellable) {
+                    chatStorage.markMessageSent(id = message.id)
+                }
 
-                    val sendMessageRequest = createSendMessageRequest(message)
-                    networkManager.runPost<SendMessageRequest, Unit>(
-                        relativePath = "/messages",
-                        request = sendMessageRequest,
-                    )
-
-                    chatStorage.updateMessageStatus(
-                        id = message.id,
-                        status = Status.Sent,
-                        expectedStatus = Status.Sending,
-                    )
-                    isSent = true
-                } finally {
-                    if (!isSent) {
-                        withContext(NonCancellable) {
-                            chatStorage.updateMessageStatus(
-                                id = message.id,
-                                status = Status.Created,
-                                expectedStatus = Status.Sending,
-                            )
-                        }
-                    }
+                if (message is MessageSM.Image) {
+                    /** The encrypted copy is uploaded already and no longer needed locally. */
+                    deleteEncryptedImageFile(fileId = message.fileId)
                 }
             }
-                .getOrThrow()
-
-            if (message is MessageSM.Image) {
-                /** The encrypted copy is uploaded already and no longer needed locally. */
-                deleteEncryptedImageFile(fileId = message.fileId)
-            }
         }
+    }
+
+    override suspend fun markMessagesReadUpTo(chatId: String, messageId: String) {
+        chatDataHelper.migrateMessageStatuses()
+        val userId = checkNotNull(userStorage.getUserId())
+        chatStorage.markMessagesReadUpTo(
+            chatId = chatId,
+            messageId = messageId,
+            userId = userId,
+        )
     }
 
     override suspend fun fetchMessages(
@@ -196,6 +196,7 @@ internal class ChatRepoImpl(
                 )
             },
         ).flow
+            .onStart { chatDataHelper.migrateMessageStatuses() }
             .map { pagingData ->
                 val userId = checkNotNull(userStorage.getUserId())
                 val imagesDirectoryPath = fileManager.getImagesDirectoryPath()
@@ -386,7 +387,7 @@ internal class ChatRepoImpl(
                     key = key,
                 )
                 val recipients = buildRecipientCipherTexts(
-                    recipients = message.recipients,
+                    recipients = message.recipients.map { it.userId },
                     key = key,
                 )
                 val textMessageRequest = TextMessageRequest(
@@ -405,7 +406,7 @@ internal class ChatRepoImpl(
             is MessageSM.Image -> {
                 uploadImageFile(fileId = message.fileId)
                 val recipients = buildRecipientCipherTexts(
-                    recipients = message.recipients,
+                    recipients = message.recipients.map { it.userId },
                     key = message.key,
                 )
                 val imageMessageRequest = ImageMessageRequest(

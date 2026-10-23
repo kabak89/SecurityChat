@@ -6,6 +6,7 @@ public sealed interface Message {
     public val author: MessageAuthor
     public val timestamp: Long
     public val direction: MessageDirection
+    public val recipients: List<MessageRecipient>
     public val status: MessageStatus
 
     public data class Text(
@@ -13,6 +14,7 @@ public sealed interface Message {
         override val author: MessageAuthor,
         override val timestamp: Long,
         override val direction: MessageDirection,
+        override val recipients: List<MessageRecipient>,
         override val status: MessageStatus,
         val text: String,
     ) : Message
@@ -22,6 +24,7 @@ public sealed interface Message {
         override val author: MessageAuthor,
         override val timestamp: Long,
         override val direction: MessageDirection,
+        override val recipients: List<MessageRecipient>,
         override val status: MessageStatus,
         val filePath: String?,
     ) : Message

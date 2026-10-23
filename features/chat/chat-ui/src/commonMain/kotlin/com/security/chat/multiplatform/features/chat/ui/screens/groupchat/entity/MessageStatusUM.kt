@@ -2,7 +2,6 @@ package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entit
 
 internal enum class MessageStatusUM {
     Created,
-    Sending,
     Sent,
     Received,
 }

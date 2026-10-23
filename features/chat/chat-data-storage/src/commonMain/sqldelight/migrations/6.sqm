@@ -1,0 +1,26 @@
+/** Defer the local recipient's initial status until the current user is available. */
+CREATE TABLE MessageStatusMigration (
+  messageId TEXT PRIMARY KEY NOT NULL
+);
+
+INSERT INTO MessageStatusMigration (messageId)
+SELECT id FROM MessageTable;
+
+ALTER TABLE MessageRecipients ADD COLUMN status TEXT NOT NULL DEFAULT 'Sent';
+
+ALTER TABLE MessageTable RENAME TO MessageTable_v6;
+
+CREATE TABLE MessageTable (
+  id TEXT PRIMARY KEY NOT NULL,
+  chatId TEXT NOT NULL,
+  authorId TEXT NOT NULL,
+  timestamp INTEGER NOT NULL,
+  type TEXT NOT NULL
+);
+
+INSERT INTO MessageTable (id, chatId, authorId, timestamp, type)
+SELECT id, chatId, authorId, timestamp, type FROM MessageTable_v6;
+
+DROP TABLE MessageTable_v6;
+
+CREATE INDEX MessageTable_chatId_timestamp_id ON MessageTable(chatId, timestamp, id);

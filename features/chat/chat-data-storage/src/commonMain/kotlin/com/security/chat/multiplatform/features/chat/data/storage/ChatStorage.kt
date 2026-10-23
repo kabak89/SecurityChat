@@ -5,20 +5,24 @@ import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
-import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.mapStatusToString
+import com.security.chat.multiplatform.features.chat.data.storage.mapper.mapStringToStatus
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toImageTable
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toMessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toTextTable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 public interface ChatStorage {
+    public suspend fun migrateMessageStatuses(userId: String)
     public suspend fun saveMessage(message: MessageSM)
     public suspend fun saveMessages(messages: List<MessageSM>)
     public suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM>
@@ -42,7 +46,8 @@ public interface ChatStorage {
 
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
     public suspend fun updateMessage(message: MessageSM)
-    public suspend fun updateMessageStatus(id: String, status: Status, expectedStatus: Status)
+    public suspend fun markMessageSent(id: String)
+    public suspend fun markMessagesReadUpTo(chatId: String, messageId: String, userId: String)
     public suspend fun clearAll()
 }
 
@@ -59,11 +64,14 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 6,
+                        version = 7,
                     ),
                 )
             },
         )
+
+    private val migrationMutex: Mutex = Mutex()
+    private var migrationCompleted: Boolean = false
 
     override suspend fun saveMessage(message: MessageSM) {
         withContext(dispatcherProvider.IO) {
@@ -165,15 +173,17 @@ internal class ChatStorageImpl(
     override fun observeMessagesChanges(chatId: String): Flow<Unit> {
         return dbCreator.dbFlow
             .flatMapLatest { db ->
-                db.messageTableQueries
-                    .getPaged(
-                        chatId = chatId,
-                        limit = 1L,
-                        offset = 0L,
-                        mapper = ::JoinedMessageRow,
-                    )
-                    .asFlow()
-                    .map { }
+                combine(
+                    db.messageTableQueries
+                        .getPaged(
+                            chatId = chatId,
+                            limit = 1L,
+                            offset = 0L,
+                            mapper = ::JoinedMessageRow,
+                        )
+                        .asFlow(),
+                    db.messageRecipientsQueries.observeChanges(chatId).asFlow(),
+                ) { _, _ -> }
             }
             .flowOn(dispatcherProvider.IO)
     }
@@ -188,13 +198,33 @@ internal class ChatStorageImpl(
         }
     }
 
-    override suspend fun updateMessageStatus(id: String, status: Status, expectedStatus: Status) {
+    override suspend fun markMessageSent(id: String) {
         withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageTableQueries.updateStatus(
-                status = mapStatusToString(status),
-                id = id,
-                expectedStatus = mapStatusToString(expectedStatus),
-            )
+            dbCreator.getDb().messageRecipientsQueries.markSent(messageId = id)
+        }
+    }
+
+    override suspend fun markMessagesReadUpTo(
+        chatId: String,
+        messageId: String,
+        userId: String,
+    ) {
+        withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transaction {
+                val unreadCount = db.messageRecipientsQueries.getUnreadCountUpTo(
+                    userId = userId,
+                    messageId = messageId,
+                    chatId = chatId,
+                ).executeAsOne()
+                if (unreadCount > 0) {
+                    db.messageRecipientsQueries.markReadUpTo(
+                        userId = userId,
+                        messageId = messageId,
+                        chatId = chatId,
+                    )
+                }
+            }
         }
     }
 
@@ -206,6 +236,24 @@ internal class ChatStorageImpl(
                 db.textMessageTableQueries.removeAll()
                 db.imageMessageTableQueries.removeAll()
                 db.messageRecipientsQueries.removeAll()
+                db.messageStatusMigrationQueries.removeAll()
+            }
+        }
+    }
+
+    override suspend fun migrateMessageStatuses(userId: String) {
+        withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            migrationMutex.withLock {
+                if (!migrationCompleted) {
+                    if (db.messageStatusMigrationQueries.getPendingCount().executeAsOne() > 0) {
+                        db.transaction {
+                            db.messageStatusMigrationQueries.initializeLocalStatuses(userId)
+                            db.messageStatusMigrationQueries.removeAll()
+                        }
+                    }
+                    migrationCompleted = true
+                }
             }
         }
     }
@@ -215,10 +263,9 @@ internal class ChatStorageImpl(
         insertMessageDetail(message)
         message.recipients.forEach { recipient ->
             messageRecipientsQueries.insert(
-                MessageRecipients(
-                    messageId = message.id,
-                    userId = recipient,
-                ),
+                messageId = message.id,
+                userId = recipient.userId,
+                status = mapStatusToString(recipient.status),
             )
         }
     }
@@ -233,10 +280,17 @@ internal class ChatStorageImpl(
     private fun ChatDb.attachRecipients(rows: List<JoinedMessageRow>): List<MessageSM> {
         if (rows.isEmpty()) return emptyList()
 
-        val recipientsByMessageId: Map<String, List<String>> = messageRecipientsQueries
-            .getUserIdsByMessageIds(messageIds = rows.map { it.id })
+        val recipientsByMessageId = messageRecipientsQueries
+            .getByMessageIds(messageIds = rows.map { it.id })
             .executeAsList()
-            .groupBy(keySelector = { it.messageId }, valueTransform = { it.userId })
+            .mapNotNull { recipient ->
+                val status = mapStringToStatus(recipient.status) ?: return@mapNotNull null
+                recipient.messageId to MessageRecipientSM(
+                    userId = recipient.userId,
+                    status = status,
+                )
+            }
+            .groupBy(keySelector = { it.first }, valueTransform = { it.second })
 
         return rows.mapNotNull { row ->
             row.toSM(recipients = recipientsByMessageId[row.id].orEmpty())

@@ -28,8 +28,11 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toUi
 import com.security.chat.multiplatform.features.push.domain.PushModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -43,6 +46,8 @@ internal class GroupChatViewModel(
     private val analytics: Analytics,
     private val dispatcherProvider: DispatcherProviderInterface,
 ) : BaseViewModel<GroupChatState, GroupChatEvent>() {
+
+    private val newestVisibleMessageId: MutableStateFlow<String?> = MutableStateFlow(null)
 
     internal val messages: Flow<PagingData<MessageUM>> =
         groupChatModel.getMessagesPager()
@@ -81,6 +86,13 @@ internal class GroupChatViewModel(
                     groupChatModel.onViewInactive()
                     pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
                 }
+            }
+            .flatMapLatest { active ->
+                if (active) newestVisibleMessageId else emptyFlow()
+            }
+            .filterNotNull()
+            .onEach { messageId ->
+                groupChatModel.markMessagesReadUpTo.start(messageId).join()
             }
             .launchIn(viewModelScope)
 
@@ -136,6 +148,10 @@ internal class GroupChatViewModel(
             fullscreenImage = null,
             chatInfo = ChatInfoUM.empty(),
         )
+    }
+
+    fun onNewestVisibleMessageChanged(messageId: String?) {
+        newestVisibleMessageId.value = messageId
     }
 
     fun onMessageEdited(newText: String) {

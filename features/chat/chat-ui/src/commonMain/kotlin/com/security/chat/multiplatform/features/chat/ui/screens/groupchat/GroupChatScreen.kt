@@ -34,10 +34,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -122,6 +126,7 @@ internal fun GroupChatScreen(
             onCallClicked = component::onCallClicked,
             onImageClicked = vm::onImageClicked,
             onFullscreenImageDismissed = vm::onFullscreenImageDismissed,
+            onNewestVisibleMessageChanged = vm::onNewestVisibleMessageChanged,
         )
     }
 }
@@ -142,6 +147,7 @@ private fun GroupChatContent(
     onCallClicked: () -> Unit,
     onImageClicked: (message: MessageUM) -> Unit,
     onFullscreenImageDismissed: () -> Unit,
+    onNewestVisibleMessageChanged: (String?) -> Unit = {},
 ) {
     val photoPickerLauncher = rememberPhotoPickerLauncher(
         onImagePicked = onImagePicked,
@@ -161,6 +167,10 @@ private fun GroupChatContent(
         )
     }
     val fullscreenImage = state.fullscreenImage
+    val onVisibleMessageChanged by rememberUpdatedState(onNewestVisibleMessageChanged)
+    DisposableEffect(Unit) {
+        onDispose { onVisibleMessageChanged(null) }
+    }
     if (fullscreenImage != null && !LocalInspectionMode.current) {
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
@@ -180,6 +190,17 @@ private fun GroupChatContent(
             var editMessageComponentHeight by remember { mutableStateOf(0) }
             val localDensity = LocalDensity.current
             val lazyListState = rememberLazyListState()
+
+            LaunchedEffect(lazyListState, messages) {
+                snapshotFlow {
+                    lazyListState.layoutInfo.visibleItemsInfo
+                        .filter { it.index in 0 until messages.itemCount }
+                        .sortedBy { it.index }
+                        .firstNotNullOfOrNull { item ->
+                            messages.peek(item.index)?.id?.takeIf { it == item.key }
+                        }
+                }.collect { onVisibleMessageChanged(it) }
+            }
 
             StickToNewestMessageEffect(
                 lazyListState = lazyListState,

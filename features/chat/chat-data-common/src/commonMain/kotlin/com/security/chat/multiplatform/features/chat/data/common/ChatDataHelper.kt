@@ -30,6 +30,8 @@ import securitychat.common.localization.generated.resources.push_stub_image
 import kotlin.io.encoding.Base64
 
 public interface ChatDataHelper {
+    /** TODO: Remove this method once the legacy message status migration is no longer needed. */
+    public suspend fun migrateMessageStatuses()
     public suspend fun fetchAndSaveMessages(chatId: String)
     public suspend fun processPushPayload(
         serializedMessages: String,
@@ -87,6 +89,11 @@ internal class ChatDataHelperImpl(
 
     private val downloadLocks: MutableMap<String, DownloadLock> = mutableMapOf()
     private val downloadLocksGuard: Mutex = Mutex()
+
+    override suspend fun migrateMessageStatuses() {
+        val userId = checkNotNull(userStorage.getUserId())
+        chatStorage.migrateMessageStatuses(userId = userId)
+    }
 
     override suspend fun fetchAndSaveMessages(chatId: String) {
         val messages = chatNetworkManager.getMessages(chatId = chatId)
@@ -262,6 +269,8 @@ internal class ChatDataHelperImpl(
         chatId: String,
     ): List<MessageSM> {
         if (messages.isEmpty()) return emptyList()
+
+        migrateMessageStatuses()
 
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
         val recipients = listOf(checkNotNull(userStorage.getUserId()))

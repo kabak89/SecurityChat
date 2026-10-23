@@ -122,7 +122,7 @@ private fun OutgoingImageContent(
         propagateMinConstraints = true,
     ) {
         ImageComponent(filePath = message.filePath)
-        if (message.status == MessageStatusUM.Sending) {
+        if (message.status == MessageStatusUM.Created) {
             val backgroundPrimary = AppTheme.colors.backgroundPrimary
             val progressBackground = remember(backgroundPrimary) {
                 backgroundPrimary.copy(alpha = 0.8f)
@@ -153,7 +153,7 @@ internal fun OutgoingOutgoingImageMessageComponentPreview() {
 @Preview
 @Composable
 internal fun OutgoingImageMessageSendingPreview() {
-    OutgoingImageMessagePreview(status = MessageStatusUM.Sending)
+    OutgoingImageMessagePreview(status = MessageStatusUM.Created)
 }
 
 @Composable

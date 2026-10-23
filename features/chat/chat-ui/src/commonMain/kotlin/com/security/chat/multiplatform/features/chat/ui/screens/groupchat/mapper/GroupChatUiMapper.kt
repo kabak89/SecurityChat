@@ -110,9 +110,8 @@ internal fun Message.toUi(): MessageUM {
 private fun MessageStatus.toUi(): MessageStatusUM {
     return when (this) {
         MessageStatus.Created -> MessageStatusUM.Created
-        MessageStatus.Sending -> MessageStatusUM.Sending
         MessageStatus.Sent -> MessageStatusUM.Sent
-        MessageStatus.Received -> MessageStatusUM.Received
+        MessageStatus.ReceivedByReceiver, MessageStatus.Read -> MessageStatusUM.Received
     }
 }
 

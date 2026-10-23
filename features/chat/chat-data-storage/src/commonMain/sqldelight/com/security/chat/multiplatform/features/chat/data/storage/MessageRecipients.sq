@@ -1,16 +1,61 @@
 CREATE TABLE MessageRecipients (
   messageId TEXT NOT NULL,
   userId TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Sent',
   PRIMARY KEY (messageId, userId)
 );
 
 insert:
-INSERT OR REPLACE INTO MessageRecipients
-VALUES ?;
+INSERT INTO MessageRecipients (messageId, userId, status)
+VALUES (:messageId, :userId, :status)
+ON CONFLICT (messageId, userId) DO UPDATE SET status = excluded.status
+WHERE CASE excluded.status
+  WHEN 'Created' THEN 0 WHEN 'Sent' THEN 1 WHEN 'ReceivedByReceiver' THEN 2 WHEN 'Read' THEN 3
+END > CASE MessageRecipients.status
+  WHEN 'Created' THEN 0 WHEN 'Sent' THEN 1 WHEN 'ReceivedByReceiver' THEN 2 WHEN 'Read' THEN 3
+END;
 
-getUserIdsByMessageIds:
-SELECT messageId, userId FROM MessageRecipients
+getByMessageIds:
+SELECT messageId, userId, status FROM MessageRecipients
 WHERE messageId IN :messageIds;
+
+markSent:
+UPDATE MessageRecipients
+SET status = 'Sent'
+WHERE messageId = :messageId AND status = 'Created';
+
+getUnreadCountUpTo:
+SELECT count(*) FROM MessageRecipients
+WHERE userId = :userId AND status = 'ReceivedByReceiver'
+  AND messageId IN (
+    SELECT message.id
+    FROM MessageTable AS message
+    JOIN MessageTable AS boundary ON boundary.id = :messageId
+    WHERE message.chatId = :chatId AND boundary.chatId = :chatId
+      AND message.authorId != :userId
+      AND (message.timestamp < boundary.timestamp
+        OR (message.timestamp = boundary.timestamp AND message.id <= boundary.id))
+  );
+
+markReadUpTo:
+UPDATE MessageRecipients
+SET status = 'Read'
+WHERE userId = :userId AND status = 'ReceivedByReceiver'
+  AND messageId IN (
+    SELECT message.id
+    FROM MessageTable AS message
+    JOIN MessageTable AS boundary ON boundary.id = :messageId
+    WHERE message.chatId = :chatId AND boundary.chatId = :chatId
+      AND message.authorId != :userId
+      AND (message.timestamp < boundary.timestamp
+        OR (message.timestamp = boundary.timestamp AND message.id <= boundary.id))
+  );
+
+observeChanges:
+SELECT MessageRecipients.messageId, MessageRecipients.userId, MessageRecipients.status
+FROM MessageRecipients
+JOIN MessageTable ON MessageTable.id = MessageRecipients.messageId
+WHERE MessageTable.chatId = :chatId;
 
 removeAll:
 DELETE FROM MessageRecipients;

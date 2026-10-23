@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.features.chat.data.storage.ImageMessageTa
 import com.security.chat.multiplatform.features.chat.data.storage.MessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.TextMessageTable
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 
@@ -13,7 +14,6 @@ internal fun MessageSM.toMessageTable(): MessageTable {
         id = id,
         chatId = chatId,
         authorId = authorId,
-        status = mapStatusToString(status = status),
         timestamp = timestamp,
         type = mapTypeToString(message = this),
     )
@@ -35,15 +35,13 @@ internal fun MessageSM.Image.toImageTable(): ImageMessageTable {
     )
 }
 
-internal fun JoinedMessageRow.toSM(recipients: List<String>): MessageSM? {
-    val status = mapStringToStatus(status) ?: return null
+internal fun JoinedMessageRow.toSM(recipients: List<MessageRecipientSM>): MessageSM? {
     return when (type) {
         TYPE_TEXT -> MessageSM.Text(
             id = id,
             chatId = chatId,
             text = text ?: return logMissingColumn(column = "text"),
             authorId = authorId,
-            status = status,
             timestamp = timestamp,
             recipients = recipients,
         )
@@ -55,7 +53,6 @@ internal fun JoinedMessageRow.toSM(recipients: List<String>): MessageSM? {
             key = key ?: return logMissingColumn(column = "key"),
             isDownloaded = isDownloaded ?: return logMissingColumn(column = "isDownloaded"),
             authorId = authorId,
-            status = status,
             timestamp = timestamp,
             recipients = recipients,
         )
@@ -82,13 +79,13 @@ private fun mapTypeToString(message: MessageSM): String {
 internal fun mapStatusToString(status: Status): String {
     return when (status) {
         Status.Created -> "Created"
-        Status.Sending -> "Sending"
         Status.Sent -> "Sent"
-        Status.Received -> "Received"
+        Status.ReceivedByReceiver -> "ReceivedByReceiver"
+        Status.Read -> "Read"
     }
 }
 
-private fun mapStringToStatus(string: String): Status? {
+internal fun mapStringToStatus(string: String): Status? {
     Status.entries.forEach { status ->
         if (mapStatusToString(status) == string) {
             return status

@@ -126,8 +126,11 @@ from the UI presentation:
 ## Code style
 
 Code style is enforced by ktlint using [.editorconfig](.editorconfig), with the following additional
-project convention:
+project conventions:
 
+- **Class member order:** declare all properties (`val` / `var`), including overridden and delegated
+  properties, at the top of the class body, before any methods. Do not interleave properties and
+  methods.
 - **Expression-bodied functions:** keep the expression on the same line as `=` only when the entire
   function fits on one line. If the function spans multiple lines, insert a line break immediately
   after `=` and indent the expression on the next line.

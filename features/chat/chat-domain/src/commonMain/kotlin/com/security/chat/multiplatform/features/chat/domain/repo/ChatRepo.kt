@@ -21,6 +21,7 @@ public interface ChatRepo {
     )
 
     public suspend fun uploadMessages(chatId: String)
+    public suspend fun markMessagesReadUpTo(chatId: String, messageId: String)
 
     public suspend fun fetchMessages(
         chatId: String,

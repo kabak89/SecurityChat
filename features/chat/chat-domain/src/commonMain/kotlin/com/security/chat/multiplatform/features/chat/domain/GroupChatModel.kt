@@ -27,6 +27,7 @@ public interface GroupChatModel : ScopedModel {
     public val sendImage: Task1<PickedImage, Unit>
     public val sendMessage: Task0<Unit>
     public val syncMessages: Task0<Unit>
+    public val markMessagesReadUpTo: Task1<String, Unit>
 
     public fun setChatId(id: String)
     public fun setCurrentMessageText(text: String)
@@ -46,25 +47,6 @@ internal class GroupChatModelImpl(
     ) {
 
     private val stateFlow: MutableStateFlow<State> = MutableStateFlow(State())
-
-    override fun onPostStart() {
-        super.onPostStart()
-
-        stateFlow
-            .map { it.chatId to it.isActive }
-            .distinctUntilChanged()
-            .flatMapLatest { (chatId, isActive) ->
-                if ((chatId != null) && isActive) {
-                    channelFlow<Unit> {
-                        launch { chatRepo.subscribeToNewMessages(chatId) }
-                        launch { chatRepo.setUserOnline() }
-                    }
-                } else {
-                    emptyFlow()
-                }
-            }
-            .launchIn(scope)
-    }
 
     override val sendImage: Task1<PickedImage, Unit> =
         task { photo ->
@@ -100,6 +82,33 @@ internal class GroupChatModelImpl(
             val chatId = checkNotNull(stateFlow.value.chatId)
             chatRepo.fetchMessages(chatId = chatId)
         }
+
+    override val markMessagesReadUpTo: Task1<String, Unit> =
+        task { messageId ->
+            val state = stateFlow.value
+            val chatId = state.chatId ?: return@task
+            if (!state.isActive) return@task
+            chatRepo.markMessagesReadUpTo(chatId = chatId, messageId = messageId)
+        }
+
+    override fun onPostStart() {
+        super.onPostStart()
+
+        stateFlow
+            .map { it.chatId to it.isActive }
+            .distinctUntilChanged()
+            .flatMapLatest { (chatId, isActive) ->
+                if ((chatId != null) && isActive) {
+                    channelFlow<Unit> {
+                        launch { chatRepo.subscribeToNewMessages(chatId) }
+                        launch { chatRepo.setUserOnline() }
+                    }
+                } else {
+                    emptyFlow()
+                }
+            }
+            .launchIn(scope)
+    }
 
     override fun setChatId(id: String) {
         if (stateFlow.value.chatId != null) {
