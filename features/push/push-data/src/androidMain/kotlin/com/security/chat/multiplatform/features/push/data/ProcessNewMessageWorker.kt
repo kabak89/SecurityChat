@@ -90,7 +90,7 @@ internal class ProcessNewMessageWorker(
         createNewMessagesChannel(notificationManager)
 
         if (!pushStorage.isNotificationForChatMustBeShown(chatId)) {
-            Log.d { "push message for chat $chatId must not be shown" }
+            Log.d { "Skipped notification for active chat: chatId=$chatId" }
             return Result.success()
         }
 

@@ -24,6 +24,30 @@ UPDATE MessageRecipients
 SET status = 'Sent'
 WHERE messageId = :messageId AND status = 'Created';
 
+getOutgoingWithoutOtherRecipients:
+SELECT MessageTable.id
+FROM MessageTable
+WHERE MessageTable.chatId = :chatId AND MessageTable.authorId = :authorId
+  AND NOT EXISTS (
+    SELECT 1 FROM MessageRecipients
+    WHERE MessageRecipients.messageId = MessageTable.id
+      AND MessageRecipients.userId != :authorId
+  );
+
+getOutgoingRecipientStatus:
+SELECT MessageRecipients.status
+FROM MessageRecipients
+JOIN MessageTable ON MessageTable.id = MessageRecipients.messageId
+WHERE MessageRecipients.messageId = :messageId
+  AND MessageRecipients.userId = :receivedByUserId
+  AND MessageTable.chatId = :chatId AND MessageTable.authorId = :authorId
+  AND MessageRecipients.userId != :authorId;
+
+markReceived:
+UPDATE MessageRecipients
+SET status = 'ReceivedByReceiver'
+WHERE messageId = :messageId AND userId = :userId AND status IN ('Created', 'Sent');
+
 getUnreadCountUpTo:
 SELECT count(*) FROM MessageRecipients
 WHERE userId = :userId AND status = 'ReceivedByReceiver'

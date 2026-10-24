@@ -3,13 +3,12 @@ package com.security.chat.multiplatform.features.chat.data.common.mapper
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
-import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 
 internal suspend fun ChatMessageNM.toSM(
     chatId: String,
     decryptMessage: suspend (encryptedText: String, key: String) -> String,
     decryptKey: suspend (key: String) -> String,
-    recipients: List<String>,
+    recipients: List<MessageRecipientSM>,
 ): MessageSM {
     return when (this) {
         is ChatMessageNM.Text -> {
@@ -19,9 +18,7 @@ internal suspend fun ChatMessageNM.toSM(
                 text = decryptMessage(text, key),
                 authorId = authorId,
                 timestamp = timestamp,
-                recipients = recipients.map {
-                    MessageRecipientSM(userId = it, status = Status.ReceivedByReceiver)
-                },
+                recipients = recipients,
             )
         }
 
@@ -31,9 +28,7 @@ internal suspend fun ChatMessageNM.toSM(
                 chatId = chatId,
                 authorId = authorId,
                 timestamp = timestamp,
-                recipients = recipients.map {
-                    MessageRecipientSM(userId = it, status = Status.ReceivedByReceiver)
-                },
+                recipients = recipients,
                 fileId = fileId,
                 key = decryptKey(key),
                 isDownloaded = false,

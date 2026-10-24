@@ -22,6 +22,7 @@ kotlin {
             implementation(projects.common.localization)
 
             implementation(projects.common.coreTime)
+            implementation(projects.common.coreComponent)
             implementation(projects.common.coreNetwork)
             implementation(projects.common.coreThreading)
             implementation(projects.common.coreFiles)

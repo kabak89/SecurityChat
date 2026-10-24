@@ -30,6 +30,7 @@ public interface ChatRepo {
     public fun getMessagesPager(chatId: String): Flow<PagingData<Message>>
 
     public suspend fun subscribeToNewMessages(chatId: String)
+    public suspend fun subscribeToEvents(chatId: String)
     public suspend fun setUserOnline()
 
     public suspend fun copyImageToCache(image: PickedImage): FileDescriptor

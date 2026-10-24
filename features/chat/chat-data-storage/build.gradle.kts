@@ -30,6 +30,15 @@ kotlin {
 
             implementation(projects.common.coreDb)
         }
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.junit.jupiter)
+            implementation(libs.junit.platform.launcher)
+            implementation(libs.sqldelight.driver.sqlite.get().toString()) {
+                exclude(group = "org.xerial", module = "sqlite-jdbc")
+            }
+        }
     }
 
     cocoapods {

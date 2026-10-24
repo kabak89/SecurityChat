@@ -14,5 +14,13 @@ kotlin {
             api(projects.common.error)
             api(libs.paging.common)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+        jvmTest.dependencies {
+            implementation(libs.junit.jupiter)
+            implementation(libs.junit.platform.launcher)
+        }
     }
 }

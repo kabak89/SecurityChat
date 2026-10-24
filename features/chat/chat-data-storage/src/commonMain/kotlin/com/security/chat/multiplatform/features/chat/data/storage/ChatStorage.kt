@@ -1,12 +1,15 @@
 package com.security.chat.multiplatform.features.chat.data.storage
 
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReceivedEventSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.mapStatusToString
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.mapStringToStatus
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toImageTable
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -25,6 +29,10 @@ public interface ChatStorage {
     public suspend fun migrateMessageStatuses(userId: String)
     public suspend fun saveMessage(message: MessageSM)
     public suspend fun saveMessages(messages: List<MessageSM>)
+    public suspend fun saveReceivedMessages(messages: List<MessageSM>, receivedByUserId: String)
+    public suspend fun enqueueStoredReceivedEvents(chatId: String, receivedByUserId: String)
+    public fun observePendingReceivedEvents(receivedByUserId: String): Flow<List<MessageReceivedEventSM>>
+    public suspend fun markReceivedEventPublished(id: String, receivedByUserId: String)
     public suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM>
     public suspend fun getNewestMessages(chatId: String, limit: Long): List<MessageSM>
     public suspend fun getOlderMessages(
@@ -47,6 +55,19 @@ public interface ChatStorage {
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
     public suspend fun updateMessage(message: MessageSM)
     public suspend fun markMessageSent(id: String)
+    public suspend fun restoreOutgoingMessageRecipients(
+        chatId: String,
+        authorId: String,
+        recipientUserIds: List<String>,
+    )
+
+    /** Returns true for a matching outgoing recipient, including an already processed delivery. */
+    public suspend fun markMessageReceived(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+        receivedByUserId: String,
+    ): Boolean
     public suspend fun markMessagesReadUpTo(chatId: String, messageId: String, userId: String)
     public suspend fun clearAll()
 }
@@ -64,7 +85,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 7,
+                        version = 8,
                     ),
                 )
             },
@@ -109,6 +130,65 @@ internal class ChatStorageImpl(
                         mapper = ::JoinedMessageRow,
                     )
                     .executeAsList(),
+            )
+        }
+    }
+
+    override suspend fun saveReceivedMessages(
+        messages: List<MessageSM>,
+        receivedByUserId: String,
+    ) {
+        if (messages.isEmpty()) return
+        withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transaction {
+                messages.forEach { db.persistMessage(it) }
+                db.messageReceivedEventsQueries.enqueue(
+                    eventIdPrefix = "message.received:${receivedByUserId.length}:$receivedByUserId:",
+                    receivedByUserId = receivedByUserId,
+                    messageIds = messages.map { it.id },
+                )
+            }
+        }
+    }
+
+    override suspend fun enqueueStoredReceivedEvents(chatId: String, receivedByUserId: String) {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageReceivedEventsQueries.enqueueStored(
+                eventIdPrefix = "message.received:${receivedByUserId.length}:$receivedByUserId:",
+                receivedByUserId = receivedByUserId,
+                chatId = chatId,
+            )
+        }
+    }
+
+    override fun observePendingReceivedEvents(
+        receivedByUserId: String,
+    ): Flow<List<MessageReceivedEventSM>> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.messageReceivedEventsQueries.getPending(receivedByUserId)
+                    .asFlow().mapToList(dispatcherProvider.IO)
+            }
+            .map { rows ->
+                rows.map { row ->
+                    MessageReceivedEventSM(
+                        id = row.id,
+                        messageId = row.messageId,
+                        chatId = row.chatId,
+                        recipientUserId = row.recipientUserId,
+                        receivedByUserId = row.receivedByUserId,
+                    )
+                }
+            }
+            .flowOn(dispatcherProvider.IO)
+    }
+
+    override suspend fun markReceivedEventPublished(id: String, receivedByUserId: String) {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageReceivedEventsQueries.markPublished(
+                id = id,
+                receivedByUserId = receivedByUserId,
             )
         }
     }
@@ -204,6 +284,32 @@ internal class ChatStorageImpl(
         }
     }
 
+    override suspend fun restoreOutgoingMessageRecipients(
+        chatId: String,
+        authorId: String,
+        recipientUserIds: List<String>,
+    ) {
+        if (recipientUserIds.isEmpty()) return
+        withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transaction {
+                val messageIds = db.messageRecipientsQueries.getOutgoingWithoutOtherRecipients(
+                    chatId = chatId,
+                    authorId = authorId,
+                ).executeAsList()
+                for (messageId in messageIds) {
+                    for (recipientUserId in recipientUserIds) {
+                        db.messageRecipientsQueries.insert(
+                            messageId = messageId,
+                            userId = recipientUserId,
+                            status = mapStatusToString(Status.Sent),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun markMessagesReadUpTo(
         chatId: String,
         messageId: String,
@@ -228,6 +334,34 @@ internal class ChatStorageImpl(
         }
     }
 
+    override suspend fun markMessageReceived(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+        receivedByUserId: String,
+    ): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                val status = db.messageRecipientsQueries.getOutgoingRecipientStatus(
+                    messageId = messageId,
+                    receivedByUserId = receivedByUserId,
+                    chatId = chatId,
+                    authorId = authorId,
+                ).executeAsOneOrNull()?.let(::mapStringToStatus)
+                    ?: return@transactionWithResult false
+
+                if (status == Status.Created || status == Status.Sent) {
+                    db.messageRecipientsQueries.markReceived(
+                        messageId = messageId,
+                        userId = receivedByUserId,
+                    )
+                }
+                true
+            }
+        }
+    }
+
     override suspend fun clearAll() {
         withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
@@ -237,6 +371,7 @@ internal class ChatStorageImpl(
                 db.imageMessageTableQueries.removeAll()
                 db.messageRecipientsQueries.removeAll()
                 db.messageStatusMigrationQueries.removeAll()
+                db.messageReceivedEventsQueries.removeAll()
             }
         }
     }

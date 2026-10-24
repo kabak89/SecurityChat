@@ -16,5 +16,12 @@ kotlin {
             implementation(projects.common.coreNetwork)
             implementation(projects.common.log)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
+        jvmTest.dependencies {
+            implementation(libs.junit.jupiter)
+            implementation(libs.junit.platform.launcher)
+        }
     }
 }

@@ -16,6 +16,7 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.core.time.TimeProvider
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.ChatDataHelper
+import com.security.chat.multiplatform.features.chat.data.common.ChatEventsPublisher
 import com.security.chat.multiplatform.features.chat.data.common.ChatPresenceHelper
 import com.security.chat.multiplatform.features.chat.data.entity.FindUserResponse
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
@@ -24,6 +25,7 @@ import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequ
 import com.security.chat.multiplatform.features.chat.data.entity.TextMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
+import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
@@ -70,6 +72,7 @@ internal class ChatRepoImpl(
     private val json: Json,
     private val chatsDataHelper: ChatsDataHelper,
     private val chatPresenceHelper: ChatPresenceHelper,
+    private val chatEventsPublisher: ChatEventsPublisher,
 ) : ChatRepo {
 
     private val networkManager: NetworkManager by lazy {
@@ -264,6 +267,45 @@ internal class ChatRepoImpl(
 
     override suspend fun setUserOnline() {
         chatPresenceHelper.setUserOnline()
+    }
+
+    override suspend fun subscribeToEvents(chatId: String) {
+        val userId = requireNotNull(userStorage.getUserId())
+        chatDataHelper.migrateMessageStatuses()
+        chatDataHelper.restoreOutgoingMessageRecipients(chatId)
+        chatEventsPublisher.start(chatId)
+        chatNetworkManager.getEventsFlow(chatId).collect { event ->
+            runSuspendCatching {
+                val processed = when (event) {
+                    is ChatEventNM.MessageReceived -> {
+                        if (event.chatId != chatId) {
+                            Log.e(
+                                "Skipped chat event from another chat: " +
+                                        "id=${event.id}, chatId=${event.chatId}",
+                            )
+                            return@collect
+                        }
+                        chatStorage.markMessageReceived(
+                            chatId = chatId,
+                            messageId = event.messageId,
+                            authorId = userId,
+                            receivedByUserId = event.receivedByUserId,
+                        )
+                    }
+                }
+                if (processed) {
+                    chatNetworkManager.acknowledgeEvent(event)
+                } else {
+                    Log.e(
+                        "Skipped chat event without a matching outgoing message recipient: " +
+                                "id=${event.id}",
+                    )
+                }
+            }
+                .onErr { error ->
+                    Log.e(error, "Failed to process chat event: id=${event.id}")
+                }
+        }
     }
 
     override suspend fun copyImageToCache(image: PickedImage): FileDescriptor {

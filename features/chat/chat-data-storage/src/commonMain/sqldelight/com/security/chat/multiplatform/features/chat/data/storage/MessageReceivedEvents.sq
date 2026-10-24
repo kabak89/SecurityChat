@@ -1,0 +1,39 @@
+CREATE TABLE MessageReceivedEvents (
+  id TEXT PRIMARY KEY NOT NULL,
+  messageId TEXT NOT NULL,
+  chatId TEXT NOT NULL,
+  recipientUserId TEXT NOT NULL,
+  receivedByUserId TEXT NOT NULL,
+  published INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (messageId, receivedByUserId)
+);
+
+CREATE INDEX MessageReceivedEvents_pending ON MessageReceivedEvents(receivedByUserId, published);
+
+enqueue:
+INSERT OR IGNORE INTO MessageReceivedEvents
+  (id, messageId, chatId, recipientUserId, receivedByUserId)
+SELECT :eventIdPrefix || id,
+  id, chatId, authorId, :receivedByUserId
+FROM MessageTable
+WHERE authorId != :receivedByUserId AND id IN :messageIds;
+
+enqueueStored:
+INSERT OR IGNORE INTO MessageReceivedEvents
+  (id, messageId, chatId, recipientUserId, receivedByUserId)
+SELECT :eventIdPrefix || id,
+  id, chatId, authorId, :receivedByUserId
+FROM MessageTable
+WHERE authorId != :receivedByUserId AND chatId = :chatId;
+
+getPending:
+SELECT * FROM MessageReceivedEvents
+WHERE receivedByUserId = :receivedByUserId AND published = 0
+ORDER BY rowid;
+
+markPublished:
+UPDATE MessageReceivedEvents SET published = 1
+WHERE id = :id AND receivedByUserId = :receivedByUserId;
+
+removeAll:
+DELETE FROM MessageReceivedEvents;

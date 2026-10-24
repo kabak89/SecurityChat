@@ -12,7 +12,10 @@ import com.security.chat.multiplatform.features.chat.data.common.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
+import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
+import com.security.chat.multiplatform.features.chats.data.common.ChatsDataHelper
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
@@ -32,6 +35,7 @@ import kotlin.io.encoding.Base64
 public interface ChatDataHelper {
     /** TODO: Remove this method once the legacy message status migration is no longer needed. */
     public suspend fun migrateMessageStatuses()
+    public suspend fun restoreOutgoingMessageRecipients(chatId: String)
     public suspend fun fetchAndSaveMessages(chatId: String)
     public suspend fun processPushPayload(
         serializedMessages: String,
@@ -85,6 +89,8 @@ internal class ChatDataHelperImpl(
     private val chatStorage: ChatStorage,
     private val fileManager: FileManager,
     private val dispatcherProvider: DispatcherProviderInterface,
+    private val chatEventsPublisher: ChatEventsPublisher,
+    private val chatsDataHelper: ChatsDataHelper,
 ) : ChatDataHelper {
 
     private val downloadLocks: MutableMap<String, DownloadLock> = mutableMapOf()
@@ -93,6 +99,15 @@ internal class ChatDataHelperImpl(
     override suspend fun migrateMessageStatuses() {
         val userId = checkNotNull(userStorage.getUserId())
         chatStorage.migrateMessageStatuses(userId = userId)
+    }
+
+    override suspend fun restoreOutgoingMessageRecipients(chatId: String) {
+        val userId = checkNotNull(userStorage.getUserId())
+        chatStorage.restoreOutgoingMessageRecipients(
+            chatId = chatId,
+            authorId = userId,
+            recipientUserIds = getOtherParticipantIds(chatId = chatId, userId = userId),
+        )
     }
 
     override suspend fun fetchAndSaveMessages(chatId: String) {
@@ -273,21 +288,28 @@ internal class ChatDataHelperImpl(
         migrateMessageStatuses()
 
         val privateKey = checkNotNull(userStorage.getKeys()?.privateKey)
-        val recipients = listOf(checkNotNull(userStorage.getUserId()))
-
-        val userId = userStorage.getUserId()
-
-        Log.d { "userId = $userId" }
+        val userId = checkNotNull(userStorage.getUserId())
+        val incomingRecipients = listOf(
+            MessageRecipientSM(userId = userId, status = Status.ReceivedByReceiver),
+        )
+        val outgoingRecipients = if (messages.any { it.authorId == userId }) {
+            getOtherParticipantIds(chatId = chatId, userId = userId).map { participantId ->
+                MessageRecipientSM(userId = participantId, status = Status.Sent)
+            }
+        } else {
+            emptyList()
+        }
 
         val messagesToStore = messages.mapNotNull {
             it.toSMOrNull(
                 chatId = chatId,
                 privateKey = privateKey,
-                recipients = recipients,
+                recipients = if (it.authorId == userId) outgoingRecipients else incomingRecipients,
             )
         }
 
-        chatStorage.saveMessages(messages = messagesToStore)
+        chatStorage.saveReceivedMessages(messages = messagesToStore, receivedByUserId = userId)
+        chatEventsPublisher.start(chatId)
         val messageIds = messagesToStore.map { it.id }
 
         confirmReceivingMessages(
@@ -296,6 +318,14 @@ internal class ChatDataHelperImpl(
         )
 
         return messagesToStore
+    }
+
+    private suspend fun getOtherParticipantIds(chatId: String, userId: String): List<String> {
+        val chat = chatsDataHelper.getChatInfo(chatId) ?: run {
+            chatsDataHelper.fetchChatInfo(chatId)
+            checkNotNull(chatsDataHelper.getChatInfo(chatId))
+        }
+        return (chat.participantIds + chat.authorId).distinct().filter { it != userId }
     }
 
     private suspend fun confirmReceivingMessages(
@@ -366,7 +396,7 @@ internal class ChatDataHelperImpl(
     private suspend fun ChatMessageNM.toSMOrNull(
         chatId: String,
         privateKey: String,
-        recipients: List<String>,
+        recipients: List<MessageRecipientSM>,
     ): MessageSM? {
         return runSuspendCatching {
             val message = toSM(

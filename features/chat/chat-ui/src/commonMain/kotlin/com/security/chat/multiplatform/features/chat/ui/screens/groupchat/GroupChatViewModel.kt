@@ -76,16 +76,6 @@ internal class GroupChatViewModel(
             .launchIn(viewModelScope)
 
         viewActivable.activeFlow
-            .onEach { active ->
-                if (active) {
-                    pushModel.clearNotificationsForChat(chatId = params.chatId)
-                    groupChatModel.onViewActive()
-                    pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
-                } else {
-                    groupChatModel.onViewInactive()
-                    pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
-                }
-            }
             .flatMapLatest { active ->
                 if (active) newestVisibleMessageId else emptyFlow()
             }
@@ -137,6 +127,24 @@ internal class GroupChatViewModel(
             }
             .flowOn(dispatcherProvider.Default)
             .launchIn(viewModelScope)
+    }
+
+    override fun onViewActive() {
+        pushModel.setShowNotificationsForChat(chatId = params.chatId, show = false)
+        pushModel.clearNotificationsForChat(chatId = params.chatId)
+        groupChatModel.onViewActive()
+        super.onViewActive()
+    }
+
+    override fun onViewInactive() {
+        pushModel.setShowNotificationsForChat(chatId = params.chatId, show = true)
+        groupChatModel.onViewInactive()
+        super.onViewInactive()
+    }
+
+    override fun onCleared() {
+        onViewInactive()
+        super.onCleared()
     }
 
     override fun createInitialState(): GroupChatState {

@@ -103,7 +103,8 @@ internal class GroupChatModelImpl(
                     channelFlow<Unit> {
                         launch {
                             syncMessages.startOnSubscribe().join()
-                            chatRepo.subscribeToNewMessages(chatId)
+                            launch { chatRepo.subscribeToNewMessages(chatId) }
+                            launch { chatRepo.subscribeToEvents(chatId) }
                         }
                         launch { chatRepo.setUserOnline() }
                     }
