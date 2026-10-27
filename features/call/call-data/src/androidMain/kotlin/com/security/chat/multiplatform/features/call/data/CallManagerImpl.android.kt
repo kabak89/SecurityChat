@@ -18,6 +18,7 @@ import com.security.chat.multiplatform.features.call.domain.entity.CallManagerSt
 import com.security.chat.multiplatform.features.call.domain.entity.CallPeerConnection
 import com.security.chat.multiplatform.features.call.domain.entity.CallSignal
 import com.security.chat.multiplatform.features.call.domain.entity.errors.CallMediaError
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
@@ -94,7 +95,7 @@ internal actual class CallManagerImpl actual constructor(
                 if (appContext.checkSelfPermission(Manifest.permission.RECORD_AUDIO) !=
                     PackageManager.PERMISSION_GRANTED
                 ) {
-                    throw CallMediaError("Microphone permission is required")
+                    throw CallMediaError.MicrophonePermission()
                 }
                 try {
                     initializeWebRtc(appContext)
@@ -121,6 +122,12 @@ internal actual class CallManagerImpl actual constructor(
                     state.value = CallManagerState(isStarted = true, isMicrophoneEnabled = true)
                 } catch (error: Throwable) {
                     releaseResources()
+                    if (error is Exception && error !is CancellationException) {
+                        throw CallMediaError.Audio(
+                            message = "Failed to start call audio",
+                            cause = error,
+                        )
+                    }
                     throw error
                 }
             }
@@ -149,10 +156,10 @@ internal actual class CallManagerImpl actual constructor(
                 ) {
                     val rtc = currentFactory.createPeerConnection(
                         configuration, observer(connection, token, scope),
-                    ) ?: throw CallMediaError("Failed to create peer connection")
+                    ) ?: throw CallMediaError.Connection("Failed to create peer connection")
                     peers[connection] = Peer(rtc, token, isInitiator)
                     rtc.addTrack(currentAudioTrack, listOf("call-audio-stream"))
-                        ?: throw CallMediaError("Failed to add audio track")
+                        ?: throw CallMediaError.Connection("Failed to add audio track")
                     if (isInitiator) {
                         val offer = rtc.createDescription(isOffer = true)
                         rtc.applyDescription(offer, local = true)
@@ -286,7 +293,7 @@ internal actual class CallManagerImpl actual constructor(
             .build()
         audioFocus = request
         if (manager.requestAudioFocus(request) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            throw CallMediaError("Audio focus is unavailable")
+            throw CallMediaError.Audio("Audio focus is unavailable")
         }
         previousAudioMode = manager.mode
         manager.mode = AudioManager.MODE_IN_COMMUNICATION
@@ -344,7 +351,9 @@ internal actual class CallManagerImpl actual constructor(
         if (signals.subscriptionCount.value == 0 ||
             !signals.tryEmit(SignalEmission(generation.value, signal))
         ) {
-            throw CallMediaError("Outgoing call signal could not be delivered to its collector")
+            throw CallMediaError.Connection(
+                "Outgoing call signal could not be delivered to its collector",
+            )
         }
     }
 
@@ -389,7 +398,7 @@ internal actual class CallManagerImpl actual constructor(
                     if (value == CallConnectionState.Failed || value == CallConnectionState.Closed) {
                         failConnection(
                             connection, checkNotNull(peers[connection]),
-                            CallMediaError("WebRTC connection entered $newState"),
+                            CallMediaError.Connection("WebRTC connection entered $newState"),
                         )
                     } else {
                         updateConnection(connection, value)
@@ -461,7 +470,9 @@ private suspend fun PeerConnection.createDescription(isOffer: Boolean): SessionD
                 }
 
                 override fun onCreateFailure(error: String) {
-                    continuation.resumeWithException(CallMediaError("SDP creation failed: $error"))
+                    continuation.resumeWithException(
+                        CallMediaError.Connection("SDP creation failed: $error"),
+                    )
                 }
 
                 override fun onSetSuccess() = Unit
@@ -485,7 +496,7 @@ private suspend fun PeerConnection.applyDescription(sdp: SessionDescription, loc
 
                 override fun onSetFailure(error: String) {
                     continuation.resumeWithException(
-                        CallMediaError("SDP application failed: $error"),
+                        CallMediaError.Connection("SDP application failed: $error"),
                     )
                 }
 
@@ -509,7 +520,7 @@ private suspend fun PeerConnection.applyIce(candidate: IceCandidate) {
 
                     override fun onAddFailure(error: String) {
                         continuation.resumeWithException(
-                            CallMediaError("ICE application failed: $error"),
+                            CallMediaError.Connection("ICE application failed: $error"),
                         )
                     }
                 },

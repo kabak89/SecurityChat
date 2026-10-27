@@ -98,9 +98,13 @@ placeholders.
 
 ## Inside the client
 
-The user must grant microphone permission before starting. The Android implementation checks the
-permission again in `start`. This sequence assumes that the screen is active and the server has
-already confirmed focused presence for this device.
+The permissions screen requests microphone access and, on Android 17+ when targeting API 37+, local
+network access. Missing permissions are requested one at a time; the call screen opens only after
+all required permissions are granted. Denial offers app settings with an explanation for the missing
+permission, and returning from settings checks the grants again. Older Android versions skip the
+local network request. The Android implementation also checks microphone permission again in
+`start`. This sequence assumes that the screen is active and the server has already confirmed
+focused presence for this device.
 
 ```mermaid
 sequenceDiagram

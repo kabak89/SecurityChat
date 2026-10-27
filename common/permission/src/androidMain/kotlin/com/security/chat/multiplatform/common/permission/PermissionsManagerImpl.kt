@@ -31,6 +31,13 @@ internal actual class PermissionsManagerImpl : PermissionsManager, KoinComponent
     }
 
     override fun isPermissionAllowed(permission: Permission): AllowanceResult {
+        if (permission == Permission.LocalNetwork &&
+            (Build.VERSION.SDK_INT < LOCAL_NETWORK_PERMISSION_MIN_SDK ||
+                    context.applicationInfo.targetSdkVersion < LOCAL_NETWORK_PERMISSION_MIN_SDK)
+        ) {
+            return AllowanceResult.Allowed
+        }
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
             permission == Permission.Notifications
         ) {
@@ -50,3 +57,5 @@ internal actual class PermissionsManagerImpl : PermissionsManager, KoinComponent
         }
     }
 }
+
+private const val LOCAL_NETWORK_PERMISSION_MIN_SDK: Int = 37

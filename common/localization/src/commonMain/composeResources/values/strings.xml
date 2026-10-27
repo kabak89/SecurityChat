@@ -112,18 +112,22 @@
     <string name="call_join">Join</string>
     <string name="call_participant_in_call">In call</string>
     <string name="call_end">End call</string>
-
-    <string name="call_permissions_title">Permissions</string>
-    <string name="call_permission_description">Allow microphone access so other participants can hear you during calls.\n\nCalls will not work without this permission.</string>
-    <string name="call_permission_grant">Allow</string>
-    <string name="call_permission_do_not_grant">Don’t allow</string>
-    <string name="call_permission_restricted_title">Microphone access required</string>
-    <string name="call_permission_restricted_message">Calls require microphone access. You can allow access in the app settings.</string>
-    <string name="call_permission_open_settings">Open settings</string>
-    <string name="call_error_title">Could not start the call</string>
-    <string name="call_error_description">Check microphone access and try again.</string>
+    <string name="call_error_title">Call error</string>
+    <string name="call_error_description">Call audio could not start or was interrupted. Please try again.</string>
+    <string name="call_microphone_permission_error_description">Calls require microphone access. You can allow access in the app settings.</string>
     <string name="call_unsupported_description">Calls are not supported on this platform yet.</string>
-    <string name="call_connection_error_description">The call connection was lost or the server could not join the room. Please try again.</string>
+    <string name="call_connection_error_description">The call could not connect or the connection was lost. Check your network connection and try again.</string>
+
+    <string name="permissions_title">Permissions</string>
+    <string name="permissions_microphone_description">Allow microphone access so other participants can hear you during calls.\n\nCalls will not work without this permission.</string>
+    <string name="permissions_local_network_description">Allow access to devices on your local network so calls can connect when participants use the same Wi-Fi network.</string>
+    <string name="permissions_local_network_restricted_title">Local network access required</string>
+    <string name="permissions_local_network_restricted_message">Calls with participants on the same Wi-Fi network need local network access. You can allow access in the app settings.</string>
+    <string name="permissions_grant">Allow</string>
+    <string name="permissions_do_not_grant">Don’t allow</string>
+    <string name="permissions_microphone_restricted_title">Microphone access required</string>
+    <string name="permissions_microphone_restricted_message">Calls require microphone access. You can allow access in the app settings.</string>
+    <string name="permissions_open_settings">Open settings</string>
 
     <string name="app_update_ready_title">Update ready</string>
     <string name="app_update_ready_message">Restart the app to install the new version.</string>

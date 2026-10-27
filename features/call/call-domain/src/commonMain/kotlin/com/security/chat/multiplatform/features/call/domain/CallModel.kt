@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -194,14 +195,18 @@ internal class CallModelImpl(
                 callManager.start(joined.iceServers)
                 launch {
                     combine(callManager.getStateFlow(), connections) { media, expected ->
-                        !media.isStarted || (expected.isNotEmpty() && expected.all { connection ->
-                            when (media.connections[connection]) {
-                                CallConnectionState.Failed, CallConnectionState.Closed -> true
-                                else -> false
-                            }
-                        })
-                    }.first { it }
-                    throw CallMediaError("Call audio stopped or all peer connections failed")
+                        when {
+                            !media.isStarted -> CallMediaError.Audio("Call audio stopped")
+                            expected.isNotEmpty() && expected.all { connection ->
+                                when (media.connections[connection]) {
+                                    CallConnectionState.Failed, CallConnectionState.Closed -> true
+                                    else -> false
+                                }
+                            } -> CallMediaError.Connection("All peer connections failed")
+
+                            else -> null
+                        }
+                    }.filterNotNull().first().let { throw it }
                 }
                 reconcile(joined, connections)
                 for (event in incoming) {

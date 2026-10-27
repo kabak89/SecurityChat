@@ -81,6 +81,11 @@ Rule of thumb: keep a module component-scoped for as long as it has a single con
   mutable state.
 - **ViewModel State:** The default state for a screen is defined by overriding `createInitialState`
   in its `ViewModel`.
+- **String resources:** Prefix screen-specific string resource IDs with the screen name in
+  snake_case, without the `Screen` suffix (e.g., `permissions_*` for `PermissionsScreen` and
+  `call_*` for `CallScreen`). Keep each screen's strings in one contiguous block and separate blocks
+  for different screens with a blank line. Use the same IDs, grouping, and order in every localized
+  `strings.xml` file. Update all code and test references when renaming IDs.
 - **DB access:** in SQLDelight-backed `{name}-data-storage` modules use a single
   `DatabaseCreator<T>`
   instance per database (never create more than one for the same DB). Obtain the DB via

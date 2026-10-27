@@ -38,16 +38,20 @@ import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.call.component.api.PermissionsComponent
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
-import securitychat.common.localization.generated.resources.call_permission_description
-import securitychat.common.localization.generated.resources.call_permission_do_not_grant
-import securitychat.common.localization.generated.resources.call_permission_grant
-import securitychat.common.localization.generated.resources.call_permission_open_settings
-import securitychat.common.localization.generated.resources.call_permission_restricted_message
-import securitychat.common.localization.generated.resources.call_permission_restricted_title
-import securitychat.common.localization.generated.resources.call_permissions_title
 import securitychat.common.localization.generated.resources.common_cancel
+import securitychat.common.localization.generated.resources.permissions_do_not_grant
+import securitychat.common.localization.generated.resources.permissions_grant
+import securitychat.common.localization.generated.resources.permissions_local_network_description
+import securitychat.common.localization.generated.resources.permissions_local_network_restricted_message
+import securitychat.common.localization.generated.resources.permissions_local_network_restricted_title
+import securitychat.common.localization.generated.resources.permissions_microphone_description
+import securitychat.common.localization.generated.resources.permissions_microphone_restricted_message
+import securitychat.common.localization.generated.resources.permissions_microphone_restricted_title
+import securitychat.common.localization.generated.resources.permissions_open_settings
+import securitychat.common.localization.generated.resources.permissions_title
 
 @Composable
 internal fun PermissionsScreen(
@@ -57,16 +61,25 @@ internal fun PermissionsScreen(
         component = component,
         screenName = "PermissionsScreen",
     ) { state: PermissionsState, vm: PermissionsViewModel ->
-        val permissionLauncher = createLauncher(
+        val microphoneLauncher = createLauncher(
             permission = Permission.RecordAudio,
-            onResult = vm::onRecordAudioPermissionResult,
+            onResult = { vm.onPermissionResult(Permission.RecordAudio, it) },
+        )
+        val localNetworkLauncher = createLauncher(
+            permission = Permission.LocalNetwork,
+            onResult = { vm.onPermissionResult(Permission.LocalNetwork, it) },
+        )
+        val launchers = mapOf(
+            Permission.RecordAudio to microphoneLauncher,
+            Permission.LocalNetwork to localNetworkLauncher,
         )
 
         SingleEventEffect(
             sideEffectFlow = vm.viewEvent,
         ) { event ->
             when (event) {
-                PermissionsEvent.RequestRecordAudioPermission -> permissionLauncher.request()
+                is PermissionsEvent.RequestPermission ->
+                    launchers.getValue(event.permission).request()
             }
         }
 
@@ -105,10 +118,18 @@ private fun PermissionsContent(
                     onClicked = onBackClicked,
                 ),
                 centerContent = CenterContent.Title(
-                    text = stringResource(StringRes.call_permissions_title),
+                    text = stringResource(StringRes.permissions_title),
                 ),
             )
             if (state.isPermissionRequired) {
+                val descriptions = listOfNotNull(
+                    if (Permission.RecordAudio in state.requiredPermissions) {
+                        stringResource(StringRes.permissions_microphone_description)
+                    } else null,
+                    if (Permission.LocalNetwork in state.requiredPermissions) {
+                        stringResource(StringRes.permissions_local_network_description)
+                    } else null,
+                )
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -122,7 +143,7 @@ private fun PermissionsContent(
                         modifier = Modifier
                             .weight(1f)
                             .verticalScroll(rememberScrollState()),
-                        text = stringResource(StringRes.call_permission_description),
+                        text = descriptions.joinToString("\n\n"),
                         color = AppTheme.colors.textPrimary,
                         style = AppTheme.typography.body,
                     )
@@ -130,7 +151,7 @@ private fun PermissionsContent(
                     ButtonPrimary(
                         modifier = Modifier.fillMaxWidth(),
                         content = ButtonContent.Text(
-                            text = stringResource(StringRes.call_permission_grant),
+                            text = stringResource(StringRes.permissions_grant),
                         ),
                         onClicked = onAllowClicked,
                     )
@@ -138,7 +159,7 @@ private fun PermissionsContent(
                     ButtonPrimary(
                         modifier = Modifier.fillMaxWidth(),
                         content = ButtonContent.Text(
-                            text = stringResource(StringRes.call_permission_do_not_grant),
+                            text = stringResource(StringRes.permissions_do_not_grant),
                         ),
                         onClicked = onDenyClicked,
                     )
@@ -166,7 +187,7 @@ internal fun PermissionsScreenPreview() {
         PermissionsContent(
             modifier = Modifier.fillMaxSize(),
             state = PermissionsState(
-                isPermissionRequired = true,
+                requiredPermissions = persistentListOf(Permission.RecordAudio),
                 hasNavigatedToCall = false,
                 alertDialogDescriptor = null,
             ),
@@ -184,14 +205,89 @@ internal fun PermissionsScreenRestrictedPreview() {
         PermissionsContent(
             modifier = Modifier.fillMaxSize(),
             state = PermissionsState(
-                isPermissionRequired = true,
+                requiredPermissions = persistentListOf(Permission.RecordAudio),
                 hasNavigatedToCall = false,
                 alertDialogDescriptor = AlertDialogDescriptor(
                     content = AlertDialogContent(
-                        title = resPrintableText(StringRes.call_permission_restricted_title),
-                        message = resPrintableText(StringRes.call_permission_restricted_message),
+                        title = resPrintableText(StringRes.permissions_microphone_restricted_title),
+                        message = resPrintableText(
+                            StringRes.permissions_microphone_restricted_message,
+                        ),
                         positiveButtonText = resPrintableText(
-                            StringRes.call_permission_open_settings,
+                            StringRes.permissions_open_settings,
+                        ),
+                        negativeButtonText = resPrintableText(StringRes.common_cancel),
+                    ),
+                    dismissAction = {},
+                    positiveAction = {},
+                    negativeAction = {},
+                ),
+            ),
+            onBackClicked = {},
+            onAllowClicked = {},
+            onDenyClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun PermissionsScreenMicrophoneAndLocalNetworkPreview() {
+    AppTheme {
+        PermissionsContent(
+            modifier = Modifier.fillMaxSize(),
+            state = PermissionsState(
+                requiredPermissions = persistentListOf(
+                    Permission.RecordAudio,
+                    Permission.LocalNetwork,
+                ),
+                hasNavigatedToCall = false,
+                alertDialogDescriptor = null,
+            ),
+            onBackClicked = {},
+            onAllowClicked = {},
+            onDenyClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun PermissionsScreenLocalNetworkPreview() {
+    AppTheme {
+        PermissionsContent(
+            modifier = Modifier.fillMaxSize(),
+            state = PermissionsState(
+                requiredPermissions = persistentListOf(Permission.LocalNetwork),
+                hasNavigatedToCall = false,
+                alertDialogDescriptor = null,
+            ),
+            onBackClicked = {},
+            onAllowClicked = {},
+            onDenyClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun PermissionsScreenLocalNetworkRestrictedPreview() {
+    AppTheme {
+        PermissionsContent(
+            modifier = Modifier.fillMaxSize(),
+            state = PermissionsState(
+                requiredPermissions = persistentListOf(Permission.LocalNetwork),
+                hasNavigatedToCall = false,
+                alertDialogDescriptor = AlertDialogDescriptor(
+                    content = AlertDialogContent(
+                        title = resPrintableText(
+                            StringRes.permissions_local_network_restricted_title,
+                        ),
+                        message = resPrintableText(
+                            StringRes.permissions_local_network_restricted_message,
+                        ),
+                        positiveButtonText = resPrintableText(
+                            StringRes.permissions_open_settings,
                         ),
                         negativeButtonText = resPrintableText(StringRes.common_cancel),
                     ),

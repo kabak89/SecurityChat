@@ -113,18 +113,22 @@
     <string name="call_join">Присоединиться</string>
     <string name="call_participant_in_call">На звонке</string>
     <string name="call_end">Завершить</string>
-
-    <string name="call_permissions_title">Разрешения</string>
-    <string name="call_permission_description">Разрешите доступ к микрофону, чтобы собеседники слышали вас во время звонков.\n\nБез этого разрешения звонки работать не будут.</string>
-    <string name="call_permission_grant">Разрешить</string>
-    <string name="call_permission_do_not_grant">Не разрешать</string>
-    <string name="call_permission_restricted_title">Нужен доступ к микрофону</string>
-    <string name="call_permission_restricted_message">Для звонков нужен доступ к микрофону. Вы можете разрешить доступ в настройках приложения.</string>
-    <string name="call_permission_open_settings">Открыть настройки</string>
-    <string name="call_error_title">Не удалось начать звонок</string>
-    <string name="call_error_description">Проверьте доступ к микрофону и попробуйте ещё раз.</string>
+    <string name="call_error_title">Ошибка звонка</string>
+    <string name="call_error_description">Не удалось запустить звук звонка или его работа прервалась. Попробуйте ещё раз.</string>
+    <string name="call_microphone_permission_error_description">Для звонков нужен доступ к микрофону. Вы можете разрешить доступ в настройках приложения.</string>
     <string name="call_unsupported_description">Звонки на этой платформе пока не поддерживаются.</string>
-    <string name="call_connection_error_description">Соединение прервано или сервер не смог подключить к звонку. Попробуйте ещё раз.</string>
+    <string name="call_connection_error_description">Не удалось установить соединение или связь прервалась. Проверьте подключение к сети и попробуйте ещё раз.</string>
+
+    <string name="permissions_title">Разрешения</string>
+    <string name="permissions_microphone_description">Разрешите доступ к микрофону, чтобы собеседники слышали вас во время звонков.\n\nБез этого разрешения звонки работать не будут.</string>
+    <string name="permissions_local_network_description">Разрешите доступ к устройствам в локальной сети, чтобы звонки работали, когда участники подключены к одной сети Wi-Fi.</string>
+    <string name="permissions_local_network_restricted_title">Нужен доступ к локальной сети</string>
+    <string name="permissions_local_network_restricted_message">Для звонков с участниками в одной сети Wi-Fi нужен доступ к локальной сети. Вы можете разрешить его в настройках приложения.</string>
+    <string name="permissions_grant">Разрешить</string>
+    <string name="permissions_do_not_grant">Не разрешать</string>
+    <string name="permissions_microphone_restricted_title">Нужен доступ к микрофону</string>
+    <string name="permissions_microphone_restricted_message">Для звонков нужен доступ к микрофону. Вы можете разрешить доступ в настройках приложения.</string>
+    <string name="permissions_open_settings">Открыть настройки</string>
 
     <string name="app_update_ready_title">Обновление готово</string>
     <string name="app_update_ready_message">Перезапустите приложение, чтобы установить новую версию.</string>

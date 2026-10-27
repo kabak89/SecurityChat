@@ -8,12 +8,18 @@ import com.security.chat.multiplatform.features.call.domain.entity.errors.CallSi
 import securitychat.common.localization.generated.resources.call_connection_error_description
 import securitychat.common.localization.generated.resources.call_error_description
 import securitychat.common.localization.generated.resources.call_error_title
+import securitychat.common.localization.generated.resources.call_microphone_permission_error_description
 import securitychat.common.localization.generated.resources.call_unsupported_description
 
 internal fun callErrorMapper(error: Throwable): UiError? {
     val description = when (error) {
-        is CallSignalingError -> StringRes.call_connection_error_description
-        is CallMediaError -> StringRes.call_error_description
+        is CallSignalingError, is CallMediaError.Connection ->
+            StringRes.call_connection_error_description
+
+        is CallMediaError.MicrophonePermission ->
+            StringRes.call_microphone_permission_error_description
+
+        is CallMediaError.Audio -> StringRes.call_error_description
         is NotImplementedError -> StringRes.call_unsupported_description
         else -> return null
     }

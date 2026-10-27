@@ -37,8 +37,10 @@ import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.Aler
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.call.component.api.CallMainComponent
+import com.security.chat.multiplatform.features.call.domain.entity.errors.CallMediaError
 import com.security.chat.multiplatform.features.call.ui.screens.call.entity.CallParticipantUM
 import com.security.chat.multiplatform.features.call.ui.screens.call.entity.CallStatusUM
+import com.security.chat.multiplatform.features.call.ui.screens.call.mapper.callErrorMapper
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
@@ -46,8 +48,6 @@ import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.localization.generated.resources.call_end
-import securitychat.common.localization.generated.resources.call_error_description
-import securitychat.common.localization.generated.resources.call_error_title
 import securitychat.common.localization.generated.resources.call_join
 import securitychat.common.localization.generated.resources.call_no_online_participants
 import securitychat.common.localization.generated.resources.call_online_participants
@@ -251,14 +251,32 @@ internal fun CallScreenActivePreview() {
 @Preview
 @Composable
 internal fun CallScreenErrorPreview() {
+    CallErrorPreview(CallMediaError.Audio("Call audio stopped"))
+}
+
+@Preview
+@Composable
+internal fun CallScreenConnectionErrorPreview() {
+    CallErrorPreview(CallMediaError.Connection("All peer connections failed"))
+}
+
+@Preview
+@Composable
+internal fun CallScreenMicrophonePermissionErrorPreview() {
+    CallErrorPreview(CallMediaError.MicrophonePermission())
+}
+
+@Composable
+private fun CallErrorPreview(error: CallMediaError) {
+    val uiError = requireNotNull(callErrorMapper(error))
     CallPreview(
         state = CallState(
             onlineParticipants = previewParticipants(),
             callStatus = CallStatusUM.Idle,
             alertDialogDescriptor = AlertDialogDescriptor(
                 content = AlertDialogContent(
-                    title = resPrintableText(StringRes.call_error_title),
-                    message = resPrintableText(StringRes.call_error_description),
+                    title = uiError.title,
+                    message = uiError.description,
                     positiveButtonText = resPrintableText(StringRes.common_close),
                 ),
                 dismissAction = {},

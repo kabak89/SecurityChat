@@ -6,6 +6,27 @@ import org.junit.jupiter.api.Test
 class PermissionsScreenTest : ScreenshotTestBase() {
 
     @Test
+    fun `microphone and local network permissions screen preview`() {
+        runScreenshotTest("PermissionsScreenMicrophoneAndLocalNetworkPreview") {
+            PermissionsScreenMicrophoneAndLocalNetworkPreview()
+        }
+    }
+
+    @Test
+    fun `local network permission screen preview`() {
+        runScreenshotTest("PermissionsScreenLocalNetworkPreview") {
+            PermissionsScreenLocalNetworkPreview()
+        }
+    }
+
+    @Test
+    fun `local network permission restricted preview`() {
+        runScreenshotTest("PermissionsScreenLocalNetworkRestrictedPreview") {
+            PermissionsScreenLocalNetworkRestrictedPreview()
+        }
+    }
+
+    @Test
     fun `permissions screen preview`() {
         runScreenshotTest(screenshotName = "PermissionsScreenPreview") {
             PermissionsScreenPreview()

@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.features.call.domain
 
+import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.call.domain.entity.CallConnectionState
 import com.security.chat.multiplatform.features.call.domain.entity.CallIceServer
@@ -25,6 +26,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -35,6 +38,8 @@ import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class CallModelTest {
@@ -113,6 +118,30 @@ class CallModelTest {
         assertEquals(CallManagerState(), f.manager.state.value)
         assertEquals(listOf("call"), f.session.left)
         assertEquals(1, f.repo.closeCount)
+        assertIs<CallMediaError.Connection>(f.callErrors.single())
+    }
+
+    @Test
+    fun `audio stopping reports an audio error instead of a connection error`() = runTest {
+        val f = fixture()
+        f.start()
+        f.manager.state.value = CallManagerState()
+        runCurrent()
+        assertIs<CallMediaError.Audio>(f.callErrors.single())
+        assertEquals(CallStatus.Idle, f.model.getCallStatusFlow().first())
+        assertEquals(listOf("call"), f.session.left)
+    }
+
+    @Test
+    fun `microphone permission failure is preserved after call cleanup`() = runTest {
+        val f = fixture()
+        val error = CallMediaError.MicrophonePermission()
+        f.manager.startError = error
+        f.model.startCall.start()
+        runCurrent()
+        assertSame(error, f.callErrors.single())
+        assertEquals(CallManagerState(), f.manager.state.value)
+        assertEquals(listOf("call"), f.session.left)
     }
 
     @Test
@@ -274,13 +303,15 @@ class CallModelTest {
     @Test
     fun `failed media start leaves room and cleans up partial audio`() = runTest {
         val f = fixture()
-        f.manager.failStart = true
+        val error = CallMediaError.Audio("Media start failed")
+        f.manager.startError = error
         val job = f.model.startCall.start()
         runCurrent()
         job.join()
         assertEquals(listOf("call"), f.session.left)
         assertEquals(CallManagerState(), f.manager.state.value)
         assertEquals(1, f.repo.closeCount)
+        assertSame(error, f.callErrors.single())
     }
 
     @Test
@@ -366,6 +397,10 @@ class CallModelTest {
             },
         )
         val lifetime = model.start(scope.backgroundScope)
+        val callErrors = mutableListOf<Throwable>()
+        private val errorObservation = model.startCall.jobFlow.asLceState()
+            .onEach { result -> result.error?.let { callErrors += it } }
+            .launchIn(scope.backgroundScope)
         private val testScope = scope
 
         init {
@@ -448,7 +483,7 @@ class CallModelTest {
         val signalFailures = mutableSetOf<CallPeerConnection>()
         var yieldAfterConnect = false
         var startCount = 0
-        var failStart = false
+        var startError: Throwable? = null
         var suspendStart = false
         override fun getStateFlow() = state
         override fun getOutgoingSignalsFlow() = signals
@@ -457,7 +492,7 @@ class CallModelTest {
             servers = iceServers
             state.value = CallManagerState(isStarted = true, isMicrophoneEnabled = true)
             if (suspendStart) awaitCancellation()
-            if (failStart) error("Media start failed")
+            startError?.let { throw it }
         }
 
         override suspend fun connect(connection: CallPeerConnection, isInitiator: Boolean) {
@@ -467,7 +502,7 @@ class CallModelTest {
                         (connection to CallConnectionState.Connecting),
             )
             if (connection in connectFailures) {
-                failConnection(connection, CallMediaError("Peer creation failed"))
+                failConnection(connection, CallMediaError.Connection("Peer creation failed"))
             }
             if (yieldAfterConnect) yield()
         }
@@ -476,7 +511,10 @@ class CallModelTest {
             check(connected.any { it.first == signal.connection })
             if (state.value.connections[signal.connection] == CallConnectionState.Failed) return
             if (signal.connection in signalFailures) {
-                failConnection(signal.connection, CallMediaError("SDP application failed"))
+                failConnection(
+                    signal.connection,
+                    CallMediaError.Connection("SDP application failed"),
+                )
                 return
             }
             received += signal

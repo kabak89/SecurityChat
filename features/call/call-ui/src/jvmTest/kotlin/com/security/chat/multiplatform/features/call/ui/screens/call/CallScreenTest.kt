@@ -34,4 +34,16 @@ class CallScreenTest : ScreenshotTestBase() {
     fun `call error screen preview`() {
         runScreenshotTest("CallScreenErrorPreview") { CallScreenErrorPreview() }
     }
+
+    @Test
+    fun `connection error screen preview`() {
+        runScreenshotTest("CallScreenConnectionErrorPreview") { CallScreenConnectionErrorPreview() }
+    }
+
+    @Test
+    fun `microphone permission error screen preview`() {
+        runScreenshotTest("CallScreenMicrophonePermissionErrorPreview") {
+            CallScreenMicrophonePermissionErrorPreview()
+        }
+    }
 }

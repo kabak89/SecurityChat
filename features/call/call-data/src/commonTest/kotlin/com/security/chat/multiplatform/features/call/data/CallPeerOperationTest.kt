@@ -19,7 +19,10 @@ class CallPeerOperationTest {
     @Test
     fun `media and native errors fail only their peer operation`() = runTest {
         val failures = mutableListOf<Throwable>()
-        val errors = listOf(CallMediaError("SDP failed"), IllegalArgumentException("Invalid ICE"))
+        val errors = listOf(
+            CallMediaError.Connection("SDP failed"),
+            IllegalArgumentException("Invalid ICE"),
+        )
         for (error in errors) {
             runPeerOperation(onFailure = { failures += it }) { throw error }
         }

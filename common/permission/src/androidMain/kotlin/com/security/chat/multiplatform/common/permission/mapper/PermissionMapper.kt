@@ -7,5 +7,6 @@ internal fun Permission.toAndroid(): String {
     return when (this) {
         Permission.Notifications -> Manifest.permission.POST_NOTIFICATIONS
         Permission.RecordAudio -> Manifest.permission.RECORD_AUDIO
+        Permission.LocalNetwork -> Manifest.permission.ACCESS_LOCAL_NETWORK
     }
 }

@@ -9,52 +9,65 @@ import com.security.chat.multiplatform.common.permission.entity.Permission
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.call.component.api.PermissionsComponent
-import securitychat.common.localization.generated.resources.call_permission_open_settings
-import securitychat.common.localization.generated.resources.call_permission_restricted_message
-import securitychat.common.localization.generated.resources.call_permission_restricted_title
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import securitychat.common.localization.generated.resources.common_cancel
+import securitychat.common.localization.generated.resources.permissions_local_network_restricted_message
+import securitychat.common.localization.generated.resources.permissions_local_network_restricted_title
+import securitychat.common.localization.generated.resources.permissions_microphone_restricted_message
+import securitychat.common.localization.generated.resources.permissions_microphone_restricted_title
+import securitychat.common.localization.generated.resources.permissions_open_settings
 
 internal class PermissionsViewModel(
     private val component: PermissionsComponent,
     private val permissionsManager: PermissionsManager,
 ) : BaseViewModel<PermissionsState, PermissionsEvent>() {
 
-    override fun createInitialState(): PermissionsState = PermissionsState(
-        isPermissionRequired = false,
-        hasNavigatedToCall = false,
-        alertDialogDescriptor = null,
-    )
+    private val callPermissions = listOf(Permission.RecordAudio, Permission.LocalNetwork)
+    private var requestedPermission: Permission? = null
+
+    override fun createInitialState(): PermissionsState =
+        PermissionsState(
+            requiredPermissions = persistentListOf(),
+            hasNavigatedToCall = false,
+            alertDialogDescriptor = null,
+        )
 
     override fun onViewActive() {
         super.onViewActive()
 
-        val allowance = permissionsManager.isPermissionAllowed(Permission.RecordAudio)
-        updatePermissionState(allowance)
+        updatePermissionState()
     }
 
     fun onAllowClicked() {
-        val allowance = permissionsManager.isPermissionAllowed(Permission.RecordAudio)
-        updatePermissionState(allowance)
-
-        if (allowance is AllowanceResult.Restricted) {
-            sendEvent(PermissionsEvent.RequestRecordAudioPermission)
-        }
+        if (requestedPermission != null || currentViewState.hasNavigatedToCall) return
+        updatePermissionState()?.let(::requestPermission)
     }
 
-    fun onRecordAudioPermissionResult(allowance: AllowanceResult) {
-        updatePermissionState(allowance)
-
-        if (allowance is AllowanceResult.Restricted) {
-            showPermissionRestrictedDialog()
+    fun onPermissionResult(permission: Permission, allowance: AllowanceResult) {
+        if (requestedPermission != permission) return
+        requestedPermission = null
+        val remainingPermission = updatePermissionState() ?: return
+        when (allowance) {
+            AllowanceResult.Allowed -> requestPermission(remainingPermission)
+            AllowanceResult.Restricted -> showPermissionRestrictedDialog()
         }
     }
 
     fun showPermissionRestrictedDialog() {
+        val permission = currentViewState.requiredPermissions.firstOrNull() ?: return
+        val isLocalNetwork = permission == Permission.LocalNetwork
         val descriptor = AlertDialogDescriptor(
             content = AlertDialogContent(
-                title = resPrintableText(StringRes.call_permission_restricted_title),
-                message = resPrintableText(StringRes.call_permission_restricted_message),
-                positiveButtonText = resPrintableText(StringRes.call_permission_open_settings),
+                title = resPrintableText(
+                    if (isLocalNetwork) StringRes.permissions_local_network_restricted_title
+                    else StringRes.permissions_microphone_restricted_title,
+                ),
+                message = resPrintableText(
+                    if (isLocalNetwork) StringRes.permissions_local_network_restricted_message
+                    else StringRes.permissions_microphone_restricted_message,
+                ),
+                positiveButtonText = resPrintableText(StringRes.permissions_open_settings),
                 negativeButtonText = resPrintableText(StringRes.common_cancel),
             ),
             dismissAction = ::close,
@@ -67,11 +80,19 @@ internal class PermissionsViewModel(
         updateState { it.copy(alertDialogDescriptor = descriptor) }
     }
 
-    private fun updatePermissionState(allowance: AllowanceResult) {
-        val isAllowed = allowance is AllowanceResult.Allowed
+    private fun requestPermission(permission: Permission) {
+        requestedPermission = permission
+        sendEvent(PermissionsEvent.RequestPermission(permission))
+    }
+
+    private fun updatePermissionState(): Permission? {
+        val requiredPermissions = callPermissions.filter {
+            permissionsManager.isPermissionAllowed(it) is AllowanceResult.Restricted
+        }.toImmutableList()
+        val isAllowed = requiredPermissions.isEmpty()
         updateState {
             it.copy(
-                isPermissionRequired = !isAllowed,
+                requiredPermissions = requiredPermissions,
                 alertDialogDescriptor = if (isAllowed) null else it.alertDialogDescriptor,
             )
         }
@@ -79,6 +100,7 @@ internal class PermissionsViewModel(
             updateState { it.copy(hasNavigatedToCall = true) }
             component.onPermissionsGranted()
         }
+        return requiredPermissions.firstOrNull()
     }
 
     private fun close() {
