@@ -11,4 +11,5 @@ plugins {
     alias(libs.plugins.buildkonfig).apply(false)
     alias(libs.plugins.googleServices).apply(false)
     alias(libs.plugins.firebaseCrashlytics).apply(false)
+    alias(libs.plugins.mokkery).apply(false)
 }

@@ -69,7 +69,7 @@ class ScreenshotTestPlugin : Plugin<Project> {
             val isScreenshotRun = isRecord || isCheck
 
             useJUnitPlatform {
-                if (isScreenshotRun) {
+                if (isScreenshotRun && name != UI_TEST_TASK_NAME) {
                     includeTags("screenshot")
                 } else {
                     excludeTags("screenshot")

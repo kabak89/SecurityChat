@@ -2,10 +2,12 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     id("securitychat.convention.base")
+    id("securitychat.convention.ui-test")
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.mokkery)
 }
 
 conventionBasePlugin {
@@ -99,6 +101,13 @@ kotlin {
             implementation(compose.desktop.currentOs)
 
             implementation(libs.kotlinx.coroutines.swing)
+        }
+        jvmTest.dependencies {
+            implementation(projects.common.coreTest)
+            implementation(projects.common.localization)
+
+            implementation(libs.compose.resources)
+            implementation(libs.ktor.client.mock)
         }
     }
 }

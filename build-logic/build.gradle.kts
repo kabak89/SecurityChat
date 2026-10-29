@@ -40,5 +40,9 @@ gradlePlugin {
             id = "securitychat.convention.screenshot"
             implementationClass = "com.securitychat.gradle.ScreenshotTestPlugin"
         }
+        register("securitychatConventionUiTest") {
+            id = "securitychat.convention.ui-test"
+            implementationClass = "com.securitychat.gradle.UiTestPlugin"
+        }
     }
 }
