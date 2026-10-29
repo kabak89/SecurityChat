@@ -37,6 +37,8 @@ public interface ChatDataHelper {
     public suspend fun migrateMessageStatuses()
     public suspend fun restoreOutgoingMessageRecipients(chatId: String)
     public suspend fun fetchAndSaveMessages(chatId: String)
+
+    /** Saves the push payload and returns all unread incoming message previews for the chat. */
     public suspend fun processPushPayload(
         serializedMessages: String,
         chatId: String,
@@ -119,10 +121,15 @@ internal class ChatDataHelperImpl(
         serializedMessages: String,
         chatId: String,
     ): List<String> {
+        migrateMessageStatuses()
         val messages = chatNetworkManager.processNewMessages(serializedMessages)
-        val storedMessages = saveAndConfirmReceivingOfMessages(messages = messages, chatId = chatId)
+        saveAndConfirmReceivingOfMessages(messages = messages, chatId = chatId)
+        val unreadMessages = chatStorage.getUnreadMessages(
+            chatId = chatId,
+            userId = checkNotNull(userStorage.getUserId()),
+        )
 
-        return storedMessages.map { message ->
+        return unreadMessages.map { message ->
             when (message) {
                 is MessageSM.Text -> message.text
                 is MessageSM.Image -> getString(StringRes.push_stub_image)

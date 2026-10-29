@@ -104,6 +104,14 @@ internal class ProcessNewMessageWorker(
             chatId = chatId,
         )
 
+        if (
+            notificationInfo.messages.isEmpty() ||
+            !pushStorage.isNotificationForChatMustBeShown(chatId)
+        ) {
+            pushRepository.clearNotificationsForChat(chatId)
+            return Result.success()
+        }
+
         val intent = intentBuilder.getOpenGroupChatIntent(
             context = applicationContext,
             chatId = chatId,
@@ -124,6 +132,8 @@ internal class ProcessNewMessageWorker(
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(notificationInfo.title)
             .setContentText(notificationInfo.description)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationInfo.description))
+            .setNumber(notificationInfo.messages.size)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

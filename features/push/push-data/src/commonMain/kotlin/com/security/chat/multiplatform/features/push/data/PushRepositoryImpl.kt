@@ -81,7 +81,7 @@ public class PushRepositoryImpl(
 
         return NotificationInfo(
             title = title,
-            description = messagesTexts.joinToString(separator = "\n"),
+            messages = messagesTexts,
         )
     }
 

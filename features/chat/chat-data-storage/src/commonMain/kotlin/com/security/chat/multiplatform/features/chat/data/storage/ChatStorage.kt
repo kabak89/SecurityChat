@@ -35,6 +35,7 @@ public interface ChatStorage {
     public suspend fun markReceivedEventPublished(id: String, receivedByUserId: String)
     public suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM>
     public suspend fun getNewestMessages(chatId: String, limit: Long): List<MessageSM>
+    public suspend fun getUnreadMessages(chatId: String, userId: String): List<MessageSM>
     public suspend fun getOlderMessages(
         chatId: String,
         beforeTimestamp: Long,
@@ -201,6 +202,21 @@ internal class ChatStorageImpl(
                     .getNewest(
                         chatId = chatId,
                         limit = limit,
+                        mapper = ::JoinedMessageRow,
+                    )
+                    .executeAsList(),
+            )
+        }
+    }
+
+    override suspend fun getUnreadMessages(chatId: String, userId: String): List<MessageSM> {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.attachRecipients(
+                db.messageTableQueries
+                    .getUnread(
+                        chatId = chatId,
+                        userId = userId,
                         mapper = ::JoinedMessageRow,
                     )
                     .executeAsList(),
