@@ -16,6 +16,37 @@ class ChatEventMapperTest {
     private val json = Json { ignoreUnknownKeys = true }
     private val payload =
         """{"messageId":"message","chatId":"chat","receivedByUserId":"peer"}"""
+    private val readPayload =
+        """{"messageId":"message","chatId":"chat","readByUserId":"peer"}"""
+
+    @Test
+    fun `read message decodes the serialized payload and retains the transport session`() {
+        val event = assertIs<ChatEventNM.MessageRead>(
+            envelope(type = "message.read", payload = readPayload)
+                .toChatEventNM(connectionId = 12L, json = json),
+        )
+        assertEquals("event", event.id)
+        assertEquals(12L, event.connectionId)
+        assertEquals("message", event.messageId)
+        assertEquals("chat", event.chatId)
+        assertEquals("peer", event.readByUserId)
+    }
+
+    @Test
+    fun `malformed read payload and missing or blank event id are skipped`() {
+        for (payload in listOf("{}", "not JSON", this.payload)) {
+            assertNull(
+                envelope(type = "message.read", payload = payload)
+                    .toChatEventNM(connectionId = 1L, json = json),
+            )
+        }
+        for (id in listOf(null, "", " ")) {
+            assertNull(
+                envelope(type = "message.read", payload = readPayload, id = id)
+                    .toChatEventNM(connectionId = 1L, json = json),
+            )
+        }
+    }
 
     @Test
     fun `received message decodes the serialized payload and retains the transport session`() {

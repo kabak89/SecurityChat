@@ -37,6 +37,12 @@ kotlin {
             implementation(projects.features.chats.chatsDataStorage)
             implementation(projects.features.chats.chatsDataCommon)
         }
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.junit.jupiter)
+            implementation(libs.junit.platform.launcher)
+        }
     }
 
     android {

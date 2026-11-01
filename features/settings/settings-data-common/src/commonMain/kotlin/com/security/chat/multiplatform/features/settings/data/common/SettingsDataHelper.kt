@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.features.settings.data.common
 
 import com.security.chat.multiplatform.common.core.files.FileManager
 import com.security.chat.multiplatform.common.core.network.TokenManager
+import com.security.chat.multiplatform.features.chat.data.common.ChatEventsPublisher
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
@@ -16,10 +17,12 @@ internal class SettingsDataHelperImpl(
     private val chatStorage: ChatStorage,
     private val fileManager: FileManager,
     private val tokensManager: TokenManager,
+    private val chatEventsPublisher: ChatEventsPublisher,
 ) : SettingsDataHelper {
 
     override suspend fun clearLocalStorages() {
         userStorage.clearAll()
+        chatEventsPublisher.stop()
         chatsStorage.clearAll()
         chatStorage.clearAll()
         fileManager.clearAllFiles()

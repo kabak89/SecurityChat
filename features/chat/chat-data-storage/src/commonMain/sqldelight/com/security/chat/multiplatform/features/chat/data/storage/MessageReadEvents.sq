@@ -1,0 +1,50 @@
+CREATE TABLE MessageReadEvents (
+  id TEXT PRIMARY KEY NOT NULL,
+  messageId TEXT NOT NULL,
+  chatId TEXT NOT NULL,
+  recipientUserId TEXT NOT NULL,
+  readByUserId TEXT NOT NULL,
+  published INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (messageId, readByUserId)
+);
+
+CREATE INDEX MessageReadEvents_pending ON MessageReadEvents(readByUserId, published);
+
+enqueueUpTo:
+INSERT OR IGNORE INTO MessageReadEvents
+  (id, messageId, chatId, recipientUserId, readByUserId)
+SELECT :eventIdPrefix || message.id,
+  message.id, message.chatId, message.authorId, :readByUserId
+FROM MessageTable AS message
+JOIN MessageRecipients ON MessageRecipients.messageId = message.id
+JOIN MessageTable AS boundary ON boundary.id = :messageId
+WHERE message.chatId = :chatId AND boundary.chatId = :chatId
+  AND message.authorId != :readByUserId
+  AND MessageRecipients.userId = :readByUserId
+  AND MessageRecipients.status = 'ReceivedByReceiver'
+  AND (message.timestamp < boundary.timestamp
+    OR (message.timestamp = boundary.timestamp AND message.id <= boundary.id))
+ORDER BY message.timestamp ASC, message.id ASC;
+
+enqueueStored:
+INSERT OR IGNORE INTO MessageReadEvents
+  (id, messageId, chatId, recipientUserId, readByUserId)
+SELECT :eventIdPrefix || MessageTable.id,
+  MessageTable.id, MessageTable.chatId, MessageTable.authorId, :readByUserId
+FROM MessageTable
+JOIN MessageRecipients ON MessageRecipients.messageId = MessageTable.id
+WHERE MessageTable.chatId = :chatId AND MessageTable.authorId != :readByUserId
+  AND MessageRecipients.userId = :readByUserId AND MessageRecipients.status = 'Read'
+ORDER BY MessageTable.timestamp ASC, MessageTable.id ASC;
+
+getPending:
+SELECT * FROM MessageReadEvents
+WHERE readByUserId = :readByUserId AND published = 0
+ORDER BY rowid;
+
+markPublished:
+UPDATE MessageReadEvents SET published = 1
+WHERE id = :id AND readByUserId = :readByUserId;
+
+removeAll:
+DELETE FROM MessageReadEvents;

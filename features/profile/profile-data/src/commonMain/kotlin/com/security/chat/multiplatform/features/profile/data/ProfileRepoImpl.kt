@@ -5,14 +5,18 @@ import com.security.chat.multiplatform.common.encryption.RsaSqueezer
 import com.security.chat.multiplatform.features.profile.domain.entity.Profile
 import com.security.chat.multiplatform.features.profile.domain.entity.UpdateProfileParams
 import com.security.chat.multiplatform.features.profile.domain.repo.ProfileRepo
+import com.security.chat.multiplatform.features.settings.data.common.SettingsDataHelper
 import com.security.chat.multiplatform.features.user.data.network.UserNetworkManager
 import com.security.chat.multiplatform.features.user.data.network.entity.UpdateProfileNM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 internal class ProfileRepoImpl(
     private val userStorage: UserStorage,
     private val userNetworkManager: UserNetworkManager,
     private val logoutErrorAlerter: LogoutErrorAlerter,
+    private val settingsDataHelper: SettingsDataHelper,
 ) : ProfileRepo {
 
     override suspend fun fetchUserInfo() {
@@ -42,6 +46,12 @@ internal class ProfileRepoImpl(
 
     override suspend fun deleteProfile() {
         userNetworkManager.deleteProfile()
-        logoutErrorAlerter.logout()
+        withContext(NonCancellable) {
+            try {
+                settingsDataHelper.clearLocalStorages()
+            } finally {
+                logoutErrorAlerter.logout()
+            }
+        }
     }
 }

@@ -3,7 +3,9 @@ package com.security.chat.multiplatform.features.chat.data.network.mapper
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatEventEnvelope
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_READ_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_RECEIVED_EVENT_TYPE
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReadEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReceivedEventPayload
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -27,6 +29,22 @@ internal fun JsonElement.toChatEventNM(connectionId: Long, json: Json): ChatEven
                     messageId = payload.messageId,
                     chatId = payload.chatId,
                     receivedByUserId = payload.receivedByUserId,
+                )
+            }
+
+            MESSAGE_READ_EVENT_TYPE -> {
+                val id = envelope.id?.takeIf { it.isNotBlank() }
+                if (id == null) {
+                    Log.e("Skipped message.read event without an id")
+                    return null
+                }
+                val payload = json.decodeFromString<MessageReadEventPayload>(envelope.payload)
+                ChatEventNM.MessageRead(
+                    id = id,
+                    connectionId = connectionId,
+                    messageId = payload.messageId,
+                    chatId = payload.chatId,
+                    readByUserId = payload.readByUserId,
                 )
             }
 

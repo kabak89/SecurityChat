@@ -8,15 +8,16 @@ import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retryWhen
@@ -28,6 +29,7 @@ import kotlin.time.Duration.Companion.seconds
 
 public interface ChatEventsPublisher {
     public suspend fun start(chatId: String)
+    public suspend fun stop()
 }
 
 internal class ChatEventsPublisherImpl(
@@ -44,9 +46,11 @@ internal class ChatEventsPublisherImpl(
     override suspend fun start(chatId: String) {
         val userId = userStorage.getUserId() ?: return
         startMutex.withLock {
+            if (userStorage.getUserId() != userId) return
             val key = userId to chatId
             if (key !in restoredChats) {
                 chatStorage.enqueueStoredReceivedEvents(chatId = chatId, receivedByUserId = userId)
+                chatStorage.enqueueStoredReadEvents(chatId = chatId, readByUserId = userId)
                 restoredChats += key
             }
             if (publisherUserId == userId && publisherJob?.isActive == true) return
@@ -56,14 +60,25 @@ internal class ChatEventsPublisherImpl(
         }
     }
 
+    override suspend fun stop() {
+        startMutex.withLock {
+            publisherJob?.cancelAndJoin()
+            publisherJob = null
+            publisherUserId = null
+            restoredChats.clear()
+        }
+    }
+
     private suspend fun publishPendingEvents(userId: String) {
         val retryRequired = MutableStateFlow(false)
         var observationRetryDelay = INITIAL_RETRY_DELAY
-        val queueChanges = chatStorage.observePendingReceivedEvents(userId)
+        val queueChanges = combine(
+            chatStorage.observePendingReceivedEvents(userId),
+            chatStorage.observePendingReadEvents(userId),
+        ) { _, _ -> Unit }
             .onEach { observationRetryDelay = INITIAL_RETRY_DELAY }
-            .map { Unit }
             .retryWhen { error, _ ->
-                Log.e(error, "Retrying delivery queue observation in $observationRetryDelay")
+                Log.e(error, "Retrying chat event queues observation in $observationRetryDelay")
                 delay(observationRetryDelay)
                 observationRetryDelay = (observationRetryDelay * 2).coerceAtMost(MAX_RETRY_DELAY)
                 true
@@ -73,7 +88,7 @@ internal class ChatEventsPublisherImpl(
                 flow {
                     var retryDelay = INITIAL_RETRY_DELAY
                     while (true) {
-                        Log.d { "Retrying pending delivery events in $retryDelay" }
+                        Log.d { "Retrying pending chat events in $retryDelay" }
                         delay(retryDelay)
                         emit(Unit)
                         retryDelay = (retryDelay * 2).coerceAtMost(MAX_RETRY_DELAY)
@@ -115,9 +130,27 @@ internal class ChatEventsPublisherImpl(
                         succeeded = false
                     }
             }
+            val readEvents = chatStorage.observePendingReadEvents(userId).first()
+            for (event in readEvents) {
+                if (userStorage.getUserId() != userId) return@runSuspendCatching
+                runSuspendCatching {
+                    chatNetworkManager.publishMessageReadEvent(
+                        eventId = event.id,
+                        messageId = event.messageId,
+                        chatId = event.chatId,
+                        recipientUserId = event.recipientUserId,
+                        readByUserId = event.readByUserId,
+                    )
+                    chatStorage.markReadEventPublished(id = event.id, readByUserId = userId)
+                }
+                    .onErr { error ->
+                        Log.e(error, "Failed to publish read event: id=${event.id}")
+                        succeeded = false
+                    }
+            }
         }
             .onErr { error ->
-                Log.e(error, "Failed to process pending delivery events")
+                Log.e(error, "Failed to process pending chat events")
                 succeeded = false
             }
         return succeeded

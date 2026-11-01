@@ -23,6 +23,13 @@ internal data class MessageReceivedEventPayload(
 )
 
 @Serializable
+internal data class MessageReadEventPayload(
+    val messageId: String,
+    val chatId: String,
+    val readByUserId: String,
+)
+
+@Serializable
 internal data class ChatEventAcknowledgementRequest(
     val eventId: String,
     val eventType: String,
@@ -42,3 +49,4 @@ internal data class ChatEventAcknowledgement(val eventId: String)
 internal data class ChatEventError(val code: String, val message: String)
 
 internal const val MESSAGE_RECEIVED_EVENT_TYPE: String = "message.received"
+internal const val MESSAGE_READ_EVENT_TYPE: String = "message.read"

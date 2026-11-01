@@ -48,6 +48,12 @@ UPDATE MessageRecipients
 SET status = 'ReceivedByReceiver'
 WHERE messageId = :messageId AND userId = :userId AND status IN ('Created', 'Sent');
 
+markRead:
+UPDATE MessageRecipients
+SET status = 'Read'
+WHERE messageId = :messageId AND userId = :userId
+  AND status IN ('Created', 'Sent', 'ReceivedByReceiver');
+
 getUnreadCountUpTo:
 SELECT count(*) FROM MessageRecipients
 WHERE userId = :userId AND status = 'ReceivedByReceiver'

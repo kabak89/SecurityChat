@@ -16,7 +16,9 @@ import com.security.chat.multiplatform.features.chat.data.network.entity.network
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.GetMessagesResponse
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_READ_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_RECEIVED_EVENT_TYPE
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReadEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReceivedEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessagesReceivedRequest
 import com.security.chat.multiplatform.features.chat.data.network.mapper.toChatEventNM
@@ -49,6 +51,14 @@ public interface ChatNetworkManager {
         chatId: String,
         recipientUserId: String,
         receivedByUserId: String,
+    )
+
+    public suspend fun publishMessageReadEvent(
+        eventId: String,
+        messageId: String,
+        chatId: String,
+        recipientUserId: String,
+        readByUserId: String,
     )
 
     public suspend fun confirmReceivingMessages(
@@ -127,6 +137,7 @@ internal class ChatNetworkManagerImpl(
     override suspend fun acknowledgeEvent(event: ChatEventNM) {
         val type = when (event) {
             is ChatEventNM.MessageReceived -> MESSAGE_RECEIVED_EVENT_TYPE
+            is ChatEventNM.MessageRead -> MESSAGE_READ_EVENT_TYPE
         }
         liveEventsManager.send(
             message = ChatEventAcknowledgementRequest(eventId = event.id, eventType = type),
@@ -172,6 +183,43 @@ internal class ChatNetworkManagerImpl(
                 ),
             ),
         )
+        publishEvent(request)
+    }
+
+    override suspend fun publishMessageReadEvent(
+        eventId: String,
+        messageId: String,
+        chatId: String,
+        recipientUserId: String,
+        readByUserId: String,
+    ) {
+        val request = ChatEventPublishRequest(
+            recipientUserId = recipientUserId,
+            chatId = chatId,
+            event = ChatEventEnvelope(
+                id = eventId,
+                type = MESSAGE_READ_EVENT_TYPE,
+                payload = json.encodeToString(
+                    MessageReadEventPayload(
+                        messageId = messageId,
+                        chatId = chatId,
+                        readByUserId = readByUserId,
+                    ),
+                ),
+            ),
+        )
+        publishEvent(request)
+    }
+
+    override suspend fun downloadFile(fileId: String, destinationPath: String) {
+        networkManager.runGetFile(
+            relativePath = "/files/$fileId",
+            destinationPath = destinationPath,
+        )
+    }
+
+    private suspend fun publishEvent(request: ChatEventPublishRequest) {
+        val eventId = requireNotNull(request.event.id)
         val acknowledgement = withTimeoutOrNull(15.seconds) {
             liveEventsManager.subscribe<ChatEventEnvelope, ChatEventPublishRequest>(
                 subscribeMessage = request,
@@ -189,13 +237,8 @@ internal class ChatNetworkManagerImpl(
                                 .eventId == eventId
                 }
         }
-        checkNotNull(acknowledgement) { "Timed out publishing delivery event: id=$eventId" }
-    }
-
-    override suspend fun downloadFile(fileId: String, destinationPath: String) {
-        networkManager.runGetFile(
-            relativePath = "/files/$fileId",
-            destinationPath = destinationPath,
-        )
+        checkNotNull(acknowledgement) {
+            "Timed out publishing ${request.event.type} event: id=$eventId"
+        }
     }
 }

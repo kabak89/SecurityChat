@@ -6,6 +6,7 @@ import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
+import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReadEventSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReceivedEventSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
@@ -33,6 +34,9 @@ public interface ChatStorage {
     public suspend fun enqueueStoredReceivedEvents(chatId: String, receivedByUserId: String)
     public fun observePendingReceivedEvents(receivedByUserId: String): Flow<List<MessageReceivedEventSM>>
     public suspend fun markReceivedEventPublished(id: String, receivedByUserId: String)
+    public suspend fun enqueueStoredReadEvents(chatId: String, readByUserId: String)
+    public fun observePendingReadEvents(readByUserId: String): Flow<List<MessageReadEventSM>>
+    public suspend fun markReadEventPublished(id: String, readByUserId: String)
     public suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM>
     public suspend fun getNewestMessages(chatId: String, limit: Long): List<MessageSM>
     public suspend fun getUnreadMessages(chatId: String, userId: String): List<MessageSM>
@@ -69,6 +73,15 @@ public interface ChatStorage {
         authorId: String,
         receivedByUserId: String,
     ): Boolean
+
+    /** Returns true for a matching outgoing recipient, including an already processed read. */
+    public suspend fun markMessageRead(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+        readByUserId: String,
+    ): Boolean
+
     public suspend fun markMessagesReadUpTo(chatId: String, messageId: String, userId: String)
     public suspend fun clearAll()
 }
@@ -86,7 +99,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 8,
+                        version = 9,
                     ),
                 )
             },
@@ -190,6 +203,45 @@ internal class ChatStorageImpl(
             dbCreator.getDb().messageReceivedEventsQueries.markPublished(
                 id = id,
                 receivedByUserId = receivedByUserId,
+            )
+        }
+    }
+
+    override suspend fun enqueueStoredReadEvents(chatId: String, readByUserId: String) {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageReadEventsQueries.enqueueStored(
+                eventIdPrefix = "message.read:${readByUserId.length}:$readByUserId:",
+                readByUserId = readByUserId,
+                chatId = chatId,
+            )
+        }
+    }
+
+    override fun observePendingReadEvents(readByUserId: String): Flow<List<MessageReadEventSM>> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.messageReadEventsQueries.getPending(readByUserId)
+                    .asFlow().mapToList(dispatcherProvider.IO)
+            }
+            .map { rows ->
+                rows.map { row ->
+                    MessageReadEventSM(
+                        id = row.id,
+                        messageId = row.messageId,
+                        chatId = row.chatId,
+                        recipientUserId = row.recipientUserId,
+                        readByUserId = row.readByUserId,
+                    )
+                }
+            }
+            .flowOn(dispatcherProvider.IO)
+    }
+
+    override suspend fun markReadEventPublished(id: String, readByUserId: String) {
+        withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().messageReadEventsQueries.markPublished(
+                id = id,
+                readByUserId = readByUserId,
             )
         }
     }
@@ -340,6 +392,12 @@ internal class ChatStorageImpl(
                     chatId = chatId,
                 ).executeAsOne()
                 if (unreadCount > 0) {
+                    db.messageReadEventsQueries.enqueueUpTo(
+                        eventIdPrefix = "message.read:${userId.length}:$userId:",
+                        readByUserId = userId,
+                        messageId = messageId,
+                        chatId = chatId,
+                    )
                     db.messageRecipientsQueries.markReadUpTo(
                         userId = userId,
                         messageId = messageId,
@@ -388,6 +446,35 @@ internal class ChatStorageImpl(
                 db.messageRecipientsQueries.removeAll()
                 db.messageStatusMigrationQueries.removeAll()
                 db.messageReceivedEventsQueries.removeAll()
+                db.messageReadEventsQueries.removeAll()
+            }
+        }
+    }
+
+    override suspend fun markMessageRead(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+        readByUserId: String,
+    ): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                val status = db.messageRecipientsQueries.getOutgoingRecipientStatus(
+                    messageId = messageId,
+                    receivedByUserId = readByUserId,
+                    chatId = chatId,
+                    authorId = authorId,
+                ).executeAsOneOrNull()?.let(::mapStringToStatus)
+                    ?: return@transactionWithResult false
+
+                if (status != Status.Read) {
+                    db.messageRecipientsQueries.markRead(
+                        messageId = messageId,
+                        userId = readByUserId,
+                    )
+                }
+                true
             }
         }
     }

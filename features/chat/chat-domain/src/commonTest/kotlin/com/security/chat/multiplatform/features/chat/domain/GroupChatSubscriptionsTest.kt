@@ -26,6 +26,25 @@ import kotlin.test.assertTrue
 
 class GroupChatSubscriptionsTest {
     @Test
+    fun `messages are marked read only while the chat is active`() =
+        runTest {
+            val repo = FakeChatRepo()
+            val model = startModel(repo)
+            runCurrent()
+
+            model.markMessagesReadUpTo.start("hidden").join()
+            assertTrue(repo.readMessageIds.isEmpty())
+
+            model.onViewActive()
+            model.markMessagesReadUpTo.start("visible").join()
+            assertEquals(listOf("visible"), repo.readMessageIds)
+
+            model.onViewInactive()
+            model.markMessagesReadUpTo.start("background").join()
+            assertEquals(listOf("visible"), repo.readMessageIds)
+        }
+
+    @Test
     fun `both subscriptions start after HTTP sync and stop when inactive`() =
         runTest {
             val repo = FakeChatRepo()
@@ -82,6 +101,7 @@ class GroupChatSubscriptionsTest {
 
     private class FakeChatRepo : ChatRepo {
         val syncCompleted = CompletableDeferred<Unit>()
+        val readMessageIds = mutableListOf<String>()
         var syncCount = 0
         var subscriptionCount = 0
         var messagesActive = false
@@ -121,7 +141,10 @@ class GroupChatSubscriptionsTest {
             Unit
 
         override suspend fun uploadMessages(chatId: String) = Unit
-        override suspend fun markMessagesReadUpTo(chatId: String, messageId: String) = Unit
+        override suspend fun markMessagesReadUpTo(chatId: String, messageId: String) {
+            assertEquals("chat", chatId)
+            readMessageIds += messageId
+        }
         override fun getMessagesPager(chatId: String): Flow<PagingData<Message>> = emptyFlow()
         override fun getChatInfoFlow(chatId: String): Flow<ChatInfo?> = emptyFlow()
         override suspend fun copyImageToCache(image: PickedImage): FileDescriptor = error("Unused")

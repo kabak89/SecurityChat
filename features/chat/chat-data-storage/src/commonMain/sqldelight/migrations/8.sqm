@@ -1,0 +1,11 @@
+CREATE TABLE MessageReadEvents (
+  id TEXT PRIMARY KEY NOT NULL,
+  messageId TEXT NOT NULL,
+  chatId TEXT NOT NULL,
+  recipientUserId TEXT NOT NULL,
+  readByUserId TEXT NOT NULL,
+  published INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (messageId, readByUserId)
+);
+
+CREATE INDEX MessageReadEvents_pending ON MessageReadEvents(readByUserId, published);

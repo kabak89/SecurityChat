@@ -175,6 +175,7 @@ internal class ChatRepoImpl(
             messageId = messageId,
             userId = userId,
         )
+        chatEventsPublisher.start(chatId)
     }
 
     override suspend fun fetchMessages(
@@ -276,20 +277,29 @@ internal class ChatRepoImpl(
         chatEventsPublisher.start(chatId)
         chatNetworkManager.getEventsFlow(chatId).collect { event ->
             runSuspendCatching {
+                if (event.chatId != chatId) {
+                    Log.e(
+                        "Skipped chat event from another chat: " +
+                                "id=${event.id}, chatId=${event.chatId}",
+                    )
+                    return@collect
+                }
                 val processed = when (event) {
                     is ChatEventNM.MessageReceived -> {
-                        if (event.chatId != chatId) {
-                            Log.e(
-                                "Skipped chat event from another chat: " +
-                                        "id=${event.id}, chatId=${event.chatId}",
-                            )
-                            return@collect
-                        }
                         chatStorage.markMessageReceived(
                             chatId = chatId,
                             messageId = event.messageId,
                             authorId = userId,
                             receivedByUserId = event.receivedByUserId,
+                        )
+                    }
+
+                    is ChatEventNM.MessageRead -> {
+                        chatStorage.markMessageRead(
+                            chatId = chatId,
+                            messageId = event.messageId,
+                            authorId = userId,
+                            readByUserId = event.readByUserId,
                         )
                     }
                 }
