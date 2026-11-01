@@ -13,6 +13,11 @@ insert:
 INSERT OR REPLACE INTO MessageTable
 VALUES ?;
 
+getLastMessageTimestamps:
+SELECT chatId, MAX(timestamp) AS lastMessageTimestamp
+FROM MessageTable
+GROUP BY chatId;
+
 -- The read queries below LEFT JOIN every detail table. Only the payload columns of the row's
 -- `type` are non-null (text for Text; fileId + key for Image). When a new message type is added,
 -- add its detail table as another LEFT JOIN and its payload columns here.

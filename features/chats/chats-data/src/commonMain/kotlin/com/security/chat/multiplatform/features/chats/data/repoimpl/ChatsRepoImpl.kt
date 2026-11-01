@@ -4,6 +4,7 @@ import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.core.network.NetworkManager
 import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
+import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chats.data.entity.UserChatsResponse
 import com.security.chat.multiplatform.features.chats.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chats.data.mapper.toSM
@@ -26,6 +27,7 @@ internal class ChatsRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
     private val userStorage: UserStorage,
     private val chatsStorage: ChatsStorage,
+    private val chatStorage: ChatStorage,
     private val usersStorage: UsersStorage,
     private val usersNetworkManager: UsersNetworkManager,
     private val connectivityObserver: ConnectivityObserver,
@@ -101,6 +103,13 @@ internal class ChatsRepoImpl(
                             }
                         }
                 }
+            }
+            .combine(chatStorage.observeLastMessageTimestamps()) { chats, lastMessageTimestamps ->
+                chats.sortedWith(
+                    compareByDescending<Chat> { lastMessageTimestamps[it.id] == null }
+                        .thenByDescending { lastMessageTimestamps[it.id] }
+                        .thenBy { it.id },
+                )
             }
             .distinctUntilChanged()
     }

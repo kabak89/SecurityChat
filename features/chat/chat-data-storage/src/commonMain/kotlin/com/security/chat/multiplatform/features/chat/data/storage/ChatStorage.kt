@@ -19,6 +19,7 @@ import com.security.chat.multiplatform.features.chat.data.storage.mapper.toSM
 import com.security.chat.multiplatform.features.chat.data.storage.mapper.toTextTable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -58,6 +59,7 @@ public interface ChatStorage {
     ): List<MessageSM>
 
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
+    public fun observeLastMessageTimestamps(): Flow<Map<String, Long>>
     public suspend fun updateMessage(message: MessageSM)
     public suspend fun markMessageSent(id: String)
     public suspend fun restoreOutgoingMessageRecipients(
@@ -316,6 +318,22 @@ internal class ChatStorageImpl(
                 rows = joinedMessageRows,
             )
         }
+    }
+
+    override fun observeLastMessageTimestamps(): Flow<Map<String, Long>> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.messageTableQueries.getLastMessageTimestamps()
+                    .asFlow()
+                    .mapToList(dispatcherProvider.IO)
+            }
+            .map { rows ->
+                rows.mapNotNull { row ->
+                    row.lastMessageTimestamp?.let { timestamp -> row.chatId to timestamp }
+                }.toMap()
+            }
+            .distinctUntilChanged()
+            .flowOn(dispatcherProvider.IO)
     }
 
     override fun observeMessagesChanges(chatId: String): Flow<Unit> {
