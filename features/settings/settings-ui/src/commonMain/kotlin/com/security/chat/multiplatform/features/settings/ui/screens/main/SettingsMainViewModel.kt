@@ -30,6 +30,7 @@ internal class SettingsMainViewModel(
             items = listOf(
                 SettingItem.Profile,
                 SettingItem.Theme,
+                SettingItem.Notifications,
                 SettingItem.Logout,
             ),
             dialogData = null,
@@ -55,6 +56,7 @@ internal class SettingsMainViewModel(
             }
 
             is SettingItem.Theme -> sendEvent(SettingsMainEvent.GoToTheme)
+            is SettingItem.Notifications -> sendEvent(SettingsMainEvent.GoToNotifications)
             is SettingItem.Profile -> sendEvent(SettingsMainEvent.GoToProfile)
         }
     }

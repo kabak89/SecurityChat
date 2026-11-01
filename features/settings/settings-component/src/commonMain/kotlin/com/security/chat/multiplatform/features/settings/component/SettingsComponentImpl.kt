@@ -11,6 +11,7 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.profile.component.ProfileComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Notifications
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Profile
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.SettingsMain
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Theme
@@ -66,6 +67,7 @@ public class SettingsComponentImpl(
                         componentContext = componentContext,
                         onExit = onExit,
                         onGoToTheme = { navigation.push(Params.Theme) },
+                        onGoToNotifications = { navigation.push(Params.Notifications) },
                         onGoToProfile = { navigation.push(Params.Profile) },
                     ),
                 )
@@ -88,6 +90,15 @@ public class SettingsComponentImpl(
                     ),
                 )
             }
+
+            Params.Notifications -> {
+                Notifications(
+                    component = NotificationsComponentImpl(
+                        componentContext = componentContext,
+                        onBack = navigation::pop,
+                    ),
+                )
+            }
         }
     }
 
@@ -98,6 +109,9 @@ public class SettingsComponentImpl(
 
         @Serializable
         data object Theme : Params()
+
+        @Serializable
+        data object Notifications : Params()
 
         @Serializable
         data object Profile : Params()

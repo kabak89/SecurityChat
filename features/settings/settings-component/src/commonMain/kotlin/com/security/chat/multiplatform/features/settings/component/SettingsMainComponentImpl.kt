@@ -9,6 +9,7 @@ import com.security.chat.multiplatform.features.settings.domain.SettingsModel
 internal class SettingsMainComponentImpl(
     private val onExit: () -> Unit,
     private val onGoToTheme: () -> Unit,
+    private val onGoToNotifications: () -> Unit,
     private val onGoToProfile: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsMainComponent,
@@ -34,6 +35,10 @@ internal class SettingsMainComponentImpl(
 
     override fun onGoToProfileClicked() {
         onGoToProfile()
+    }
+
+    override fun onGoToNotificationsClicked() {
+        onGoToNotifications()
     }
 
 }

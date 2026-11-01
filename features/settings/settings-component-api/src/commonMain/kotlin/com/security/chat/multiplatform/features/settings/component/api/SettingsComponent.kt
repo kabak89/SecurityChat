@@ -16,6 +16,7 @@ public interface SettingsComponent : BaseComponent, DiScopeHolder, BackHandlerOw
     public sealed interface Child {
         public class SettingsMain(public val component: SettingsMainComponent) : Child
         public class Theme(public val component: ThemeComponent) : Child
+        public class Notifications(public val component: NotificationsComponent) : Child
         public class Profile(public val component: ProfileComponent) : Child
     }
 }

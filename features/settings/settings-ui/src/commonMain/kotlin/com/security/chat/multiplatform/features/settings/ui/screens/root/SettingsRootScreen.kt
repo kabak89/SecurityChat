@@ -8,6 +8,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.security.chat.multiplatform.features.profile.ui.screens.root.ProfileRootScreen
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.SettingsMainScreen
+import com.security.chat.multiplatform.features.settings.ui.screens.notifications.NotificationsScreen
 import com.security.chat.multiplatform.features.settings.ui.screens.theme.ThemeScreen
 
 @Composable
@@ -37,6 +38,12 @@ public fun SettingsRootScreen(
 
                 is SettingsComponent.Child.Profile -> {
                     ProfileRootScreen(
+                        component = child.component,
+                    )
+                }
+
+                is SettingsComponent.Child.Notifications -> {
+                    NotificationsScreen(
                         component = child.component,
                     )
                 }

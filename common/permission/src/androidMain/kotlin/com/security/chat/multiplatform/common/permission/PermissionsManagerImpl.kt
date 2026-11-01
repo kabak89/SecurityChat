@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.security.chat.multiplatform.common.permission.entity.AllowanceResult
 import com.security.chat.multiplatform.common.permission.entity.Permission
@@ -31,15 +32,17 @@ internal actual class PermissionsManagerImpl : PermissionsManager, KoinComponent
     }
 
     override fun isPermissionAllowed(permission: Permission): AllowanceResult {
+        if (permission == Permission.Notifications) {
+            return if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                AllowanceResult.Allowed
+            } else {
+                AllowanceResult.Restricted
+            }
+        }
+
         if (permission == Permission.LocalNetwork &&
             (Build.VERSION.SDK_INT < LOCAL_NETWORK_PERMISSION_MIN_SDK ||
                     context.applicationInfo.targetSdkVersion < LOCAL_NETWORK_PERMISSION_MIN_SDK)
-        ) {
-            return AllowanceResult.Allowed
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
-            permission == Permission.Notifications
         ) {
             return AllowanceResult.Allowed
         }

@@ -13,6 +13,8 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.koin.core)
             implementation(libs.compose.runtime)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(projects.common.log)
         }
         androidMain.dependencies {
             implementation(libs.androidx.core)

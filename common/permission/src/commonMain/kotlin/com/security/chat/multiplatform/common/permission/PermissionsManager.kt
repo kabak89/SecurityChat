@@ -9,6 +9,9 @@ public interface PermissionsManager {
 
     public fun isPermissionAllowed(permission: Permission): AllowanceResult
 
+    public suspend fun checkPermission(permission: Permission): AllowanceResult =
+        isPermissionAllowed(permission)
+
     public fun openAppSettings()
 }
 

@@ -15,7 +15,17 @@
 
     <string name="settings_main_profile">Профиль</string>
     <string name="settings_main_theme">Тема</string>
+    <string name="settings_main_notifications">Уведомления</string>
     <string name="settings_main_log_out">Выйти</string>
+
+    <string name="notifications_title">Уведомления</string>
+    <string name="notifications_description">Уведомления помогают сразу узнавать о новых сообщениях и вовремя отвечать на них, даже когда приложение закрыто.</string>
+    <string name="notifications_allowed">Показ уведомлений разрешён.</string>
+    <string name="notifications_not_allowed">Показ уведомлений не разрешён.</string>
+    <string name="notifications_grant">Разрешить</string>
+    <string name="notifications_restricted_title">Показ уведомлений не разрешён</string>
+    <string name="notifications_restricted_message">Вы можете разрешить показ уведомлений в настройках приложения.</string>
+    <string name="notifications_open_settings">Открыть настройки</string>
 
     <string name="chat_list_title">Чаты</string>
     <string name="chat_list_title_not_connected">Нет соединения</string>

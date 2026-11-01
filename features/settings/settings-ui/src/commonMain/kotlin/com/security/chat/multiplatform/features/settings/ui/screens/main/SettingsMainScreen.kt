@@ -52,6 +52,7 @@ internal fun SettingsMainScreen(
             onDismissDialog = vm::onDismissDialogClicked,
             onDialogActionClicked = vm::onDialogActionClicked,
             onOnGoToThemeClicked = component::onGoToThemeClicked,
+            onGoToNotificationsClicked = component::onGoToNotificationsClicked,
             onOnGoToProfileClicked = component::onGoToProfileClicked,
         )
     }
@@ -67,6 +68,7 @@ private fun SettingsMainScreenContent(
     onDismissDialog: () -> Unit,
     onDialogActionClicked: (action: DialogData.ButtonAction) -> Unit,
     onOnGoToThemeClicked: () -> Unit,
+    onGoToNotificationsClicked: () -> Unit,
     onOnGoToProfileClicked: () -> Unit,
 ) {
     SingleEventEffect(
@@ -74,6 +76,7 @@ private fun SettingsMainScreenContent(
         collector = { event ->
             when (event) {
                 SettingsMainEvent.GoToTheme -> onOnGoToThemeClicked()
+                SettingsMainEvent.GoToNotifications -> onGoToNotificationsClicked()
                 SettingsMainEvent.GoToProfile -> onOnGoToProfileClicked()
             }
         },
@@ -159,6 +162,9 @@ internal fun SettingsMainScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             state = SettingsMainState(
                 items = listOf(
+                    SettingItem.Profile,
+                    SettingItem.Theme,
+                    SettingItem.Notifications,
                     SettingItem.Logout,
                 ),
                 dialogData = null,
@@ -170,6 +176,7 @@ internal fun SettingsMainScreenPreview() {
             onDismissDialog = {},
             onDialogActionClicked = {},
             onOnGoToThemeClicked = {},
+            onGoToNotificationsClicked = {},
             onOnGoToProfileClicked = {},
         )
     }
@@ -201,6 +208,7 @@ internal fun SettingsMainScreenPreviewWithDialog() {
             onDismissDialog = {},
             onDialogActionClicked = {},
             onOnGoToThemeClicked = {},
+            onGoToNotificationsClicked = {},
             onOnGoToProfileClicked = {},
         )
     }

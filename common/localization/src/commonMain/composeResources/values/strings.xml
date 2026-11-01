@@ -15,7 +15,17 @@
 
     <string name="settings_main_profile">Profile</string>
     <string name="settings_main_theme">Theme</string>
+    <string name="settings_main_notifications">Notifications</string>
     <string name="settings_main_log_out">Log out</string>
+
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_description">Notifications help you hear about new messages and reply on time, even when the app is closed.</string>
+    <string name="notifications_allowed">Notifications are allowed.</string>
+    <string name="notifications_not_allowed">Notifications are not allowed.</string>
+    <string name="notifications_grant">Allow</string>
+    <string name="notifications_restricted_title">Notifications are not allowed</string>
+    <string name="notifications_restricted_message">You can allow notifications in the app settings.</string>
+    <string name="notifications_open_settings">Open settings</string>
 
     <string name="chat_list_title">Chats</string>
     <string name="chat_list_title_not_connected">Offline</string>

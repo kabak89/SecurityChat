@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.entity.PrintableText
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import securitychat.common.localization.generated.resources.settings_main_log_out
+import securitychat.common.localization.generated.resources.settings_main_notifications
 import securitychat.common.localization.generated.resources.settings_main_profile
 import securitychat.common.localization.generated.resources.settings_main_theme
 
@@ -26,5 +27,10 @@ internal sealed interface SettingItem {
     data object Logout : SettingItem {
         override val title: PrintableText
             get() = resPrintableText(StringRes.settings_main_log_out)
+    }
+
+    data object Notifications : SettingItem {
+        override val title: PrintableText
+            get() = resPrintableText(StringRes.settings_main_notifications)
     }
 }
