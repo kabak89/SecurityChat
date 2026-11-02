@@ -19,7 +19,6 @@ kotlin {
             implementation(projects.features.user.userDataStorage)
             implementation(projects.features.chats.chatsDataStorage)
             implementation(projects.features.chat.chatDataStorage)
-            implementation(projects.features.chat.chatDataCommon)
         }
         jvmTest.dependencies {
             implementation(libs.kotlin.test)

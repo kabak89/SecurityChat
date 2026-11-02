@@ -15,7 +15,9 @@ import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
-import com.security.chat.multiplatform.features.chats.data.common.ChatsDataHelper
+import com.security.chat.multiplatform.features.chats.data.network.ChatsNetworkManager
+import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
+import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
@@ -92,7 +94,8 @@ internal class ChatDataHelperImpl(
     private val fileManager: FileManager,
     private val dispatcherProvider: DispatcherProviderInterface,
     private val chatEventsPublisher: ChatEventsPublisher,
-    private val chatsDataHelper: ChatsDataHelper,
+    private val chatsStorage: ChatsStorage,
+    private val chatsNetworkManager: ChatsNetworkManager,
 ) : ChatDataHelper {
 
     private val downloadLocks: MutableMap<String, DownloadLock> = mutableMapOf()
@@ -328,11 +331,18 @@ internal class ChatDataHelperImpl(
     }
 
     private suspend fun getOtherParticipantIds(chatId: String, userId: String): List<String> {
-        val chat = chatsDataHelper.getChatInfo(chatId) ?: run {
-            chatsDataHelper.fetchChatInfo(chatId)
-            checkNotNull(chatsDataHelper.getChatInfo(chatId))
+        val chat = chatsStorage.getChat(chatId) ?: run {
+            val response = chatsNetworkManager.getChatInfo(chatId)
+            chatsStorage.saveChat(
+                ChatSM.GroupChat(
+                    id = response.id,
+                    authorId = response.authorId,
+                    members = response.participantIds,
+                ),
+            )
+            checkNotNull(chatsStorage.getChat(chatId))
         }
-        return (chat.participantIds + chat.authorId).distinct().filter { it != userId }
+        return (chat.members + chat.authorId).distinct().filter { it != userId }
     }
 
     private suspend fun confirmReceivingMessages(

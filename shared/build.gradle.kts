@@ -74,6 +74,7 @@ kotlin {
 
             implementation(projects.features.addChat.addChatDataCommon)
             implementation(projects.features.chats.chatsDataCommon)
+            implementation(projects.features.chats.chatsDataNetwork)
             implementation(projects.features.chat.chatDataCommon)
             implementation(projects.features.users.usersDataCommon)
             implementation(projects.features.users.usersDataNetwork)

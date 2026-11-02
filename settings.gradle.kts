@@ -79,6 +79,7 @@ include(
     ":features:chats:chats-data",
     ":features:chats:chats-data-storage",
     ":features:chats:chats-data-common",
+    ":features:chats:chats-data-network",
 )
 include(
     ":features:chat:chat-component",

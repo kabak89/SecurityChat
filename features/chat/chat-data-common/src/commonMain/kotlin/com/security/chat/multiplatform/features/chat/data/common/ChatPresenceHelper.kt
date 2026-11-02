@@ -4,7 +4,8 @@ import com.security.chat.multiplatform.common.core.network.LiveEventsManager
 import com.security.chat.multiplatform.features.chat.data.common.entity.OnlineInfoMessage
 import com.security.chat.multiplatform.features.chat.data.common.entity.OnlineStatusPublisherMessage
 import com.security.chat.multiplatform.features.chat.data.common.entity.OnlineStatusSubscribeMessage
-import com.security.chat.multiplatform.features.chats.data.common.ChatsDataHelper
+import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
+import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -23,7 +24,7 @@ public interface ChatPresenceHelper {
 
 internal class ChatPresenceHelperImpl(
     private val liveEventsManager: LiveEventsManager,
-    private val chatsDataHelper: ChatsDataHelper,
+    private val chatsStorage: ChatsStorage,
     private val userStorage: UserStorage,
 ) : ChatPresenceHelper {
 
@@ -38,11 +39,14 @@ internal class ChatPresenceHelperImpl(
     }
 
     override fun getOnlineParticipantIdsFlow(chatId: String): Flow<List<String>> {
-        return chatsDataHelper.getChatInfoFlow(chatId)
+        return chatsStorage.getChatFlow(chatId)
             .map { chat ->
                 if (chat == null) return@map emptyList()
                 val userId = requireNotNull(userStorage.getUserId())
-                (chat.participantIds + chat.authorId).distinct().filter { it != userId }
+                when (chat) {
+                    is ChatSM.GroupChat ->
+                        (chat.members + chat.authorId).distinct().filter { it != userId }
+                }
             }
             .distinctUntilChanged()
             .flatMapLatest { participantIds ->

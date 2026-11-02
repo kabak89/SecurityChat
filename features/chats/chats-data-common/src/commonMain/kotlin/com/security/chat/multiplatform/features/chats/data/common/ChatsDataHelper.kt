@@ -1,11 +1,8 @@
 package com.security.chat.multiplatform.features.chats.data.common
 
-import com.security.chat.multiplatform.common.core.network.NetworkManager
-import com.security.chat.multiplatform.common.core.network.NetworkManagerFactory
-import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.features.chats.data.common.entity.ChatInfo
-import com.security.chat.multiplatform.features.chats.data.common.entity.network.ChatDetailsResponse
 import com.security.chat.multiplatform.features.chats.data.common.mapper.toSM
+import com.security.chat.multiplatform.features.chats.data.network.ChatsNetworkManager
 import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import kotlinx.coroutines.flow.Flow
@@ -21,22 +18,11 @@ public interface ChatsDataHelper {
 
 internal class ChatsDataHelperImpl(
     private val chatsStorage: ChatsStorage,
-    private val networkManagerFactory: NetworkManagerFactory,
-    private val networkConfig: NetworkConfig,
+    private val chatsNetworkManager: ChatsNetworkManager,
 ) : ChatsDataHelper {
 
-    private val networkManager: NetworkManager by lazy {
-        networkManagerFactory.build(
-            baseUrl = "${networkConfig.host}:${networkConfig.port}",
-            needAuthorization = true,
-        )
-    }
-
     override suspend fun fetchChatInfo(chatId: String) {
-        val response: ChatDetailsResponse = networkManager.runGet(
-            relativePath = "/chats/info",
-            request = mapOf("id" to chatId),
-        )
+        val response = chatsNetworkManager.getChatInfo(chatId)
 
         chatsStorage.saveChat(
             chat = ChatSM.GroupChat(
