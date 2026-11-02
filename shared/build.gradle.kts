@@ -89,6 +89,7 @@ kotlin {
 
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.settings.settingsDataCommon)
+            implementation(projects.features.settings.settingsData)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
@@ -105,6 +106,8 @@ kotlin {
         jvmTest.dependencies {
             implementation(projects.common.coreTest)
             implementation(projects.common.localization)
+            implementation(projects.features.settings.settingsComponent)
+            implementation(projects.features.settings.settingsDomain)
 
             implementation(libs.compose.resources)
             implementation(libs.ktor.client.mock)

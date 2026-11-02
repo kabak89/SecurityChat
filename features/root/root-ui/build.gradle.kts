@@ -22,8 +22,7 @@ kotlin {
             implementation(projects.features.splash.splashUi)
             implementation(projects.features.authorize.authorizeUi)
             implementation(projects.features.main.mainUi)
-            implementation(projects.features.main.mainComponent)
-            implementation(projects.features.settings.settingsDataStorage)
+            implementation(projects.features.settings.settingsDomain)
             implementation(projects.features.onboarding.onboardingUi)
         }
         androidMain.dependencies {

@@ -1,11 +1,14 @@
 package com.security.chat.multiplatform.features.root.ui.screens.root
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
@@ -15,8 +18,8 @@ import com.security.chat.multiplatform.features.authorize.ui.screens.authorize.A
 import com.security.chat.multiplatform.features.main.ui.screens.main.MainScreen
 import com.security.chat.multiplatform.features.onboarding.ui.screens.root.OnboardingRootScreen
 import com.security.chat.multiplatform.features.root.component.api.RootComponent
-import com.security.chat.multiplatform.features.settings.data.storage.SettingsStorage
-import com.security.chat.multiplatform.features.settings.data.storage.entity.ThemeSM
+import com.security.chat.multiplatform.features.settings.domain.entity.Theme
+import com.security.chat.multiplatform.features.settings.domain.repo.SettingsRepo
 import com.security.chat.multiplatform.features.splash.ui.screens.splash.SplashScreen
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -28,22 +31,18 @@ public fun RootContent(
     onUpdateRestart: () -> Unit = {},
     onUpdateDismiss: () -> Unit = {},
 ) {
-    val settingsStorage: SettingsStorage = rootComponent.getKoin().get()
-    val theme = settingsStorage.getCurrentThemeFlow().collectAsState(ThemeSM.Auto).value
+    val settingsRepo = remember(rootComponent) { rootComponent.getKoin().get<SettingsRepo>() }
+    val themeFlow = remember(settingsRepo) { settingsRepo.getTheme() }
+    val theme = themeFlow.collectAsState(Theme.Auto).value
 
-    val useDarkTheme = when (theme) {
-        ThemeSM.Auto -> isSystemInDarkTheme()
-        ThemeSM.Dark -> true
-        ThemeSM.Light -> false
-    }
-
-    AppTheme(
-        useDarkTheme = useDarkTheme,
-    ) {
-        val hazeState = rememberHazeState()
-        Box(modifier = Modifier.fillMaxSize()) {
+    RootScreenContent(
+        theme = theme,
+        isUpdateReady = isUpdateReady,
+        onUpdateRestart = onUpdateRestart,
+        onUpdateDismiss = onUpdateDismiss,
+        content = { modifier ->
             Children(
-                modifier = Modifier.fillMaxSize().hazeSource(hazeState),
+                modifier = modifier,
                 stack = rootComponent.childStack,
                 animation = predictiveBackAnimation(
                     backHandler = rootComponent.backHandler,
@@ -59,6 +58,30 @@ public fun RootContent(
                     }
                 },
             )
+        },
+    )
+}
+
+@Composable
+private fun RootScreenContent(
+    theme: Theme,
+    isUpdateReady: Boolean,
+    onUpdateRestart: () -> Unit,
+    onUpdateDismiss: () -> Unit,
+    content: @Composable (Modifier) -> Unit,
+) {
+    val useDarkTheme = when (theme) {
+        Theme.Auto -> isSystemInDarkTheme()
+        Theme.Dark -> true
+        Theme.Light -> false
+    }
+
+    AppTheme(
+        useDarkTheme = useDarkTheme,
+    ) {
+        val hazeState = rememberHazeState()
+        Box(modifier = Modifier.fillMaxSize()) {
+            content(Modifier.fillMaxSize().hazeSource(hazeState))
             if (isUpdateReady) {
                 AppUpdateDialog(
                     hazeState = hazeState,
@@ -68,4 +91,32 @@ public fun RootContent(
             }
         }
     }
+}
+
+@Preview
+@Composable
+internal fun RootScreenPreview() {
+    RootScreenContent(
+        theme = Theme.Light,
+        isUpdateReady = true,
+        onUpdateRestart = {},
+        onUpdateDismiss = {},
+        content = { modifier ->
+            Box(modifier = modifier.background(AppTheme.colors.backgroundPrimary))
+        },
+    )
+}
+
+@Preview
+@Composable
+internal fun RootScreenDarkPreview() {
+    RootScreenContent(
+        theme = Theme.Dark,
+        isUpdateReady = true,
+        onUpdateRestart = {},
+        onUpdateDismiss = {},
+        content = { modifier ->
+            Box(modifier = modifier.background(AppTheme.colors.backgroundPrimary))
+        },
+    )
 }

@@ -15,7 +15,6 @@ import com.security.chat.multiplatform.features.settings.component.api.SettingsC
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Profile
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.SettingsMain
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Theme
-import com.security.chat.multiplatform.features.settings.data.di.settingsDataModule
 import com.security.chat.multiplatform.features.settings.domain.di.settingsDomainModule
 import com.security.chat.multiplatform.features.settings.ui.di.settingsUiModule
 import kotlinx.serialization.Serializable
@@ -35,7 +34,6 @@ public class SettingsComponentImpl(
         val featureModules = listOf(
             settingsUiModule,
             settingsDomainModule,
-            settingsDataModule,
         )
         getKoin().loadModules(featureModules)
         doOnDestroy {

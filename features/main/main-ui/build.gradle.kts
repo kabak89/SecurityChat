@@ -13,7 +13,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.common.coreUi)
 
-            implementation(projects.features.main.mainComponentApi)
+            api(projects.features.main.mainComponentApi)
             implementation(projects.features.chats.chatsUi)
             implementation(projects.features.chat.chatUi)
             implementation(projects.features.chatInfo.chatInfoUi)

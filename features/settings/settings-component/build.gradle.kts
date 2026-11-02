@@ -14,7 +14,6 @@ kotlin {
 
             implementation(projects.features.settings.settingsUi)
             implementation(projects.features.settings.settingsDomain)
-            implementation(projects.features.settings.settingsData)
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.chat.chatDataStorage)
             implementation(projects.features.profile.profileComponent)
