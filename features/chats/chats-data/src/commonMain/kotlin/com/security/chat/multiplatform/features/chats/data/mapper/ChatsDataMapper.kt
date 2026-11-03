@@ -6,7 +6,7 @@ import com.security.chat.multiplatform.features.chats.data.storage.entity.ChatSM
 import com.security.chat.multiplatform.features.chats.domain.entity.Chat
 import com.security.chat.multiplatform.features.chats.domain.entity.ChatMember
 
-internal fun Chat.GroupChat.toSM(): ChatSM.GroupChat {
+internal fun Chat.toSM(): ChatSM.GroupChat {
     return ChatSM.GroupChat(
         id = id,
         authorId = author.id,
@@ -17,22 +17,24 @@ internal fun Chat.GroupChat.toSM(): ChatSM.GroupChat {
 internal fun ChatSM.GroupChat.toDomain(
     members: List<ChatMember>,
     author: ChatMember,
-): Chat.GroupChat {
-    return Chat.GroupChat(
+): Chat {
+    return Chat(
         id = id,
         author = author,
         members = members,
+        unreadCount = 0L,
     )
 }
 
 internal fun UserChatsResponse.GroupChat.toDomain(
     members: List<ChatMember>,
     author: ChatMember,
-): Chat.GroupChat {
-    return Chat.GroupChat(
+): Chat {
+    return Chat(
         id = id,
         author = author,
         members = members,
+        unreadCount = 0L,
     )
 }
 

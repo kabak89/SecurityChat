@@ -7,4 +7,5 @@ internal data class ChatItem(
     val id: String,
     val text: String,
     val abbreviation: String,
+    val unreadCount: Long,
 )

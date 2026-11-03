@@ -60,6 +60,7 @@ public interface ChatStorage {
 
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
     public fun observeLastMessageTimestamps(): Flow<Map<String, Long>>
+    public fun observeUnreadCounts(userId: String): Flow<Map<String, Long>>
     public suspend fun updateMessage(message: MessageSM)
     public suspend fun markMessageSent(id: String)
     public suspend fun restoreOutgoingMessageRecipients(
@@ -332,6 +333,18 @@ internal class ChatStorageImpl(
                     row.lastMessageTimestamp?.let { timestamp -> row.chatId to timestamp }
                 }.toMap()
             }
+            .distinctUntilChanged()
+            .flowOn(dispatcherProvider.IO)
+    }
+
+    override fun observeUnreadCounts(userId: String): Flow<Map<String, Long>> {
+        return dbCreator.dbFlow
+            .flatMapLatest { db ->
+                db.messageTableQueries.getUnreadCounts(userId)
+                    .asFlow()
+                    .mapToList(dispatcherProvider.IO)
+            }
+            .map { rows -> rows.associate { it.chatId to it.unreadCount } }
             .distinctUntilChanged()
             .flowOn(dispatcherProvider.IO)
     }

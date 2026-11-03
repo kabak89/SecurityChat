@@ -13,6 +13,20 @@ class ChatListScreenTest : ScreenshotTestBase() {
     }
 
     @Test
+    fun `chat list with unread counts and wrapping titles`() {
+        runScreenshotTest(screenshotName = "ChatListContentUnreadPreview") {
+            ChatListContentUnreadPreview()
+        }
+    }
+
+    @Test
+    fun `chat list with unread counts in dark theme`() {
+        runScreenshotTest(screenshotName = "ChatListContentUnreadDarkPreview") {
+            ChatListContentUnreadPreview(useDarkTheme = true)
+        }
+    }
+
+    @Test
     fun chatListContentLoadingPreview() {
         runScreenshotTest(screenshotName = "ChatListContentLoadingPreview") {
             ChatListContentLoadingPreview()

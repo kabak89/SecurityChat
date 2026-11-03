@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -204,11 +205,31 @@ private fun ChatComponent(
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-            modifier = Modifier,
+            modifier = Modifier.weight(1f),
             text = chat.text,
             color = AppTheme.colors.textPrimary,
             style = AppTheme.typography.title2,
         )
+        if (chat.unreadCount > 0L) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .heightIn(min = 24.dp)
+                    .widthIn(min = 24.dp)
+                    .background(
+                        color = AppTheme.colors.accent,
+                        shape = AppTheme.shapes.circle,
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = chat.unreadCount.toString(),
+                    color = AppTheme.colors.contrast,
+                    style = AppTheme.typography.annotation,
+                )
+            }
+        }
     }
 }
 
@@ -226,11 +247,63 @@ internal fun ChatListContentPreview() {
                             id = "id-1",
                             text = "user_1",
                             abbreviation = "U1",
+                            unreadCount = 0L,
                         ),
                         ChatItem(
                             id = "id-2",
                             text = "user_2",
                             abbreviation = "U2",
+                            unreadCount = 0L,
+                        ),
+                    ),
+                ),
+                errorDialogContent = null,
+                isConnectedToInternet = true,
+            ),
+            events = emptyFlow(),
+            onAddClicked = {},
+            onSettingsClicked = {},
+            onRefreshChatsTriggered = {},
+            onCloseErrorDialogClicked = {},
+            onReloadChatsClicked = {},
+            onGroupChatClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun ChatListContentUnreadPreview(useDarkTheme: Boolean = false) {
+    AppTheme(useDarkTheme = useDarkTheme) {
+        ChatListContent(
+            modifier = Modifier.fillMaxSize(),
+            state = ChatListState(
+                loadingState = UiLceState.Ready,
+                chats = Chats(
+                    items = listOf(
+                        ChatItem(
+                            id = "id-1",
+                            text = "user_1",
+                            abbreviation = "U1",
+                            unreadCount = 1L,
+                        ),
+                        ChatItem(
+                            id = "id-2",
+                            text = "user_2",
+                            abbreviation = "U2",
+                            unreadCount = 12L,
+                        ),
+                        ChatItem(
+                            id = "id-3",
+                            text = "Alice, Bob, Charlie, Diana, Elizabeth, Frank, George, Helen",
+                            abbreviation = "AB",
+                            unreadCount = 1234L,
+                        ),
+                        ChatItem(
+                            id = "id-4",
+                            text = "Alice, Bob, Charlie, Diana, Elizabeth, Frank, George, Helen",
+                            abbreviation = "AB",
+                            unreadCount = 0L,
                         ),
                     ),
                 ),

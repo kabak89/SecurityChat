@@ -21,7 +21,9 @@ import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 
 internal class ChatsRepoImpl(
     private val networkManagerFactory: NetworkManagerFactory,
@@ -111,6 +113,11 @@ internal class ChatsRepoImpl(
                         .thenBy { it.id },
                 )
             }
+            .combine(getUnreadCountsFlow()) { chats, unreadCounts ->
+                chats.map { chat ->
+                    chat.copy(unreadCount = unreadCounts[chat.id] ?: 0L)
+                }
+            }
             .distinctUntilChanged()
     }
 
@@ -165,6 +172,17 @@ internal class ChatsRepoImpl(
 
     override fun isConnectedToInternetFlow(): Flow<Boolean> {
         return connectivityObserver.isOnline
+    }
+
+    private fun getUnreadCountsFlow(): Flow<Map<String, Long>> {
+        return flow {
+            val userId = userStorage.getUserId()
+            if (userId == null) {
+                emit(emptyMap())
+            } else {
+                emitAll(chatStorage.observeUnreadCounts(userId))
+            }
+        }
     }
 
     private suspend fun getAndSaveUser(id: String): UserNM {

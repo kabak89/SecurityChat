@@ -10,14 +10,21 @@ import com.security.chat.multiplatform.features.chat.data.storage.entity.Message
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class UnreadMessagesTest {
     @Test
     fun `unread query filters by user and chat and orders incoming messages chronologically`() =
@@ -91,10 +98,111 @@ class UnreadMessagesTest {
                     isDownloaded = true,
                 )
                 storage.saveMessages(messages + image)
+                storage.saveMessages(messages + image)
+                assertEquals(mapOf("chat" to 101L), storage.observeUnreadCounts("me").first())
 
                 val unread = storage.getUnreadMessages(chatId = "chat", userId = "me")
                 assertEquals(messages + image, unread)
                 assertIs<MessageSM.Image>(unread.last())
+            }
+        }
+
+    @Test
+    fun `unread counts use every non read incoming status for the current recipient`() =
+        runTest {
+            withStorage { storage ->
+                storage.saveMessages(
+                    listOf(
+                        message(id = "received", timestamp = 1).copy(
+                            recipients = listOf(
+                                MessageRecipientSM("me", Status.ReceivedByReceiver),
+                                MessageRecipientSM("other-user", Status.Read),
+                            ),
+                        ),
+                        message(id = "sent", timestamp = 2, status = Status.Sent),
+                        message(id = "created", timestamp = 3, status = Status.Created),
+                        message(id = "read", timestamp = 4, status = Status.Read).copy(
+                            recipients = listOf(
+                                MessageRecipientSM("me", Status.Read),
+                                MessageRecipientSM("other-user", Status.ReceivedByReceiver),
+                            ),
+                        ),
+                        message(id = "outgoing", timestamp = 5, authorId = "me"),
+                        message(id = "other-user", timestamp = 6, recipientId = "other-user"),
+                        message(id = "other-chat", timestamp = 7, chatId = "other-chat"),
+                    ),
+                )
+
+                assertEquals(
+                    mapOf("chat" to 3L, "other-chat" to 1L),
+                    storage.observeUnreadCounts("me").first(),
+                )
+                assertEquals(
+                    mapOf("chat" to 2L),
+                    storage.observeUnreadCounts("other-user").first(),
+                )
+                assertTrue(storage.observeUnreadCounts("missing-user").first().isEmpty())
+            }
+        }
+
+    @Test
+    fun `unread counts update on delivery reading and clearing without duplicate counts`() =
+        runTest {
+            withStorage { storage ->
+                val counts = mutableListOf<Map<String, Long>>()
+                val collection = backgroundScope.launch {
+                    storage.observeUnreadCounts("me").toList(counts)
+                }
+                try {
+                    runCurrent()
+                    assertEquals(emptyMap(), counts.last())
+
+                    val first = message(id = "first", timestamp = 1)
+                    val second = message(id = "second", timestamp = 2)
+                    storage.saveReceivedMessages(
+                        messages = listOf(first, second),
+                        receivedByUserId = "me",
+                    )
+                    runCurrent()
+                    assertEquals(mapOf("chat" to 2L), counts.last())
+
+                    storage.saveReceivedMessages(
+                        messages = listOf(first, second),
+                        receivedByUserId = "me",
+                    )
+                    runCurrent()
+                    assertEquals(2, counts.size)
+
+                    storage.markMessagesReadUpTo(
+                        chatId = "chat",
+                        messageId = "first",
+                        userId = "me",
+                    )
+                    runCurrent()
+                    assertEquals(mapOf("chat" to 1L), counts.last())
+
+                    storage.markMessagesReadUpTo(
+                        chatId = "chat",
+                        messageId = "second",
+                        userId = "me",
+                    )
+                    runCurrent()
+                    assertEquals(emptyMap(), counts.last())
+
+                    storage.saveReceivedMessages(messages = listOf(first), receivedByUserId = "me")
+                    runCurrent()
+                    assertEquals(emptyMap(), counts.last())
+
+                    storage.saveMessage(message(id = "third", timestamp = 3))
+                    runCurrent()
+                    assertEquals(mapOf("chat" to 1L), counts.last())
+
+                    storage.clearAll()
+                    runCurrent()
+                    assertEquals(emptyMap(), counts.last())
+                } finally {
+                    collection.cancelAndJoin()
+                }
             }
         }
 
