@@ -22,7 +22,7 @@ uses **Koin**.
 
 Module list is defined in [settings.gradle.kts](settings.gradle.kts).
 
-## Feature architecture (six modules)
+## Feature architecture
 
 Each feature is split into layered modules with the Gradle path
 `:features:<name>:<name>-<layer>`:
@@ -32,6 +32,7 @@ Each feature is split into layered modules with the Gradle path
 | `{name}-domain`        | Repository interfaces, domain entities, `ScopedModel`        |
 | `{name}-data`          | `RepoImpl`, data mappers                                     |
 | `{name}-data-common`   | Shared data logic, helpers (must NOT depend on `domain`)     |
+| `{name}-data-network`  | Network requests, transport entities and network mappers     |
 | `{name}-data-storage`  | Storage, `*SM` entities, storage mappers                     |
 | `{name}-ui`            | Compose screens, `State`/`Event`/`ViewModel` (`viewModelOf`) |
 | `{name}-component-api` | Decompose root contract + `Child` (sealed)                   |
@@ -39,6 +40,41 @@ Each feature is split into layered modules with the Gradle path
 
 Reference feature: `features/settings`. For the full skeleton, naming rules, dependency graph and
 checklist, see `.cursor/skills/feature-template/SKILL.md` (and `reference.md` next to it).
+
+## Module dependency rules
+
+`securitychat.convention.base` automatically applies the dependency validation plugin. It rejects
+forbidden direct project dependencies during Gradle configuration, including unused configurations,
+platform source sets, and test source sets. External libraries and transitive dependencies are
+outside this check.
+
+| Source module type | Allowed target module types                                                                                   |
+|--------------------|---------------------------------------------------------------------------------------------------------------|
+| `domain`           | `common`                                                                                                      |
+| `ui`               | `common`, `domain`, `component-api`, `ui`                                                                     |
+| `data`             | `common`, `domain`, `data-network`, `data-storage`, `data-common`                                             |
+| `data-network`     | `common`                                                                                                      |
+| `data-storage`     | `common`                                                                                                      |
+| `data-common`      | `common`, `data-network`, `data-storage`                                                                      |
+| `component`        | `common`, `component`, `component-api`, `ui`, `domain`, `data`, `data-network`, `data-storage`, `data-common` |
+| `component-api`    | `common`, `component-api`                                                                                     |
+| `common`           | `common`                                                                                                      |
+
+The allowed target type may belong to another feature. Module types are inferred from full paths:
+`:common:*` always means `common`, and feature paths must follow
+`:features:<feature>:<feature>-<layer>`. Unknown module types fail validation.
+
+Exceptions use exact paths:
+
+- `:shared` and `:androidApp` assemble the application and have unrestricted outgoing dependencies.
+- `:common:platform-specific` has unrestricted outgoing dependencies; it remains a `common` target.
+- `:features:push:push-navigation-api` and `:features:push:push-navigation-impl` are excluded in
+  both
+  directions.
+
+The matrix and exceptions live in `build-logic` `ModuleDependencyRules.kt`. Run
+`./gradlew -p build-logic test` to verify the policy and its Gradle integration. Normal Gradle Sync
+and build commands enforce the rule automatically.
 
 ## Dependency injection (Koin)
 

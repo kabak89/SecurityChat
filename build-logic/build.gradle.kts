@@ -28,10 +28,22 @@ dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.android.gradleApi)
     compileOnly(libs.kotlin.gradlePlugin)
+
+    testImplementation(gradleTestKit())
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 gradlePlugin {
     plugins {
+        register("securitychatConventionDependencies") {
+            id = "securitychat.convention.dependencies"
+            implementationClass = "com.securitychat.gradle.ModuleDependencyValidationPlugin"
+        }
         register("securitychatConventionBase") {
             id = "securitychat.convention.base"
             implementationClass = "com.securitychat.gradle.ConventionBasePlugin"

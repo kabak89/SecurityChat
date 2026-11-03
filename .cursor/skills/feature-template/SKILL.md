@@ -42,7 +42,7 @@ Gradle subfeature: `:features:<featureName>:<featureName>-<layer>` (e.g.
 | Module                 | Purpose                                                     | Typical dependencies                                              |
 |------------------------|-------------------------------------------------------------|-------------------------------------------------------------------|
 | `{name}-domain`        | Repositories (interfaces), domain entities, `ScopedModel`   | `projects.common.coreDomain`                                      |
-| `{name}-data`          | `RepoImpl`, data mappers                                    | domain, data-storage, other features when needed                  |
+| `{name}-data`          | `RepoImpl`, data mappers                                    | common, domain, data-network, data-storage, data-common           |
 | `{name}-data-storage`  | Storage, `*SM` entities, storage mappers                    | `common.settings`, `core-component`, Koin, coroutines — as needed |
 | `{name}-ui`            | Compose, screens, ViewModel, `viewModelOf`                  | `common.coreUi`, `component-api` (api), domain                    |
 | `{name}-component-api` | Decompose root contract + child components (`Child` sealed) | `common.coreComponent`                                            |
@@ -53,6 +53,13 @@ Reference
 
 Plugin everywhere: `id("securitychat.convention.base")` and the
 `conventionBasePlugin { namespace = "..." }` block.
+
+The base plugin enforces the [module dependency rules](../../../AGENTS.md#module-dependency-rules)
+during Gradle configuration for production and test source sets. `data-common` may depend only on
+common, data-network and data-storage modules; data-network and data-storage may depend only on
+common modules. UI may also depend on other UI modules and component-api contracts. Components
+assemble features and may use any of the supported feature layers. Unknown layer names fail
+validation, so update the classifier, matrix and tests before introducing a new module type.
 
 ## Dependency graph (logical)
 
