@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.security.chat.multiplatform.common.core.db.DatabaseCreator
 import com.security.chat.multiplatform.common.core.db.SecuredDatabaseDriverFactory
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
+import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.storage.entity.JoinedMessageRow
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReadEventSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReceivedEventSM
@@ -87,6 +88,26 @@ public interface ChatStorage {
 
     public suspend fun markMessagesReadUpTo(chatId: String, messageId: String, userId: String)
     public suspend fun clearAll()
+
+    public suspend fun getMessage(chatId: String, messageId: String): MessageSM?
+    public suspend fun isMessageDeleted(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+    ): Boolean
+
+    /** Records an author-scoped deletion and returns the removed image file ID for cache cleanup. */
+    public suspend fun deleteMessage(
+        chatId: String,
+        messageId: String,
+        deletedByUserId: String,
+    ): String?
+
+    public suspend fun enqueueMessageDeletion(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+    ): Boolean
 }
 
 internal class ChatStorageImpl(
@@ -102,7 +123,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 9,
+                        version = 11,
                     ),
                 )
             },
@@ -371,8 +392,15 @@ internal class ChatStorageImpl(
         withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
             db.transaction {
-                db.messageTableQueries.insert(message.toMessageTable())
-                db.insertMessageDetail(message)
+                if (db.deletedMessagesQueries.isDeleted(
+                        messageId = message.id,
+                        chatId = message.chatId,
+                        authorId = message.authorId,
+                    ).executeAsOne() == 0L
+                ) {
+                    db.messageTableQueries.insert(message.toMessageTable())
+                    db.insertMessageDetail(message)
+                }
             }
         }
     }
@@ -478,6 +506,8 @@ internal class ChatStorageImpl(
                 db.messageStatusMigrationQueries.removeAll()
                 db.messageReceivedEventsQueries.removeAll()
                 db.messageReadEventsQueries.removeAll()
+                db.deletedMessagesQueries.removeAll()
+                db.pendingMessageDeletionsQueries.removeAll()
             }
         }
     }
@@ -527,7 +557,104 @@ internal class ChatStorageImpl(
         }
     }
 
+    override suspend fun getMessage(chatId: String, messageId: String): MessageSM? {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.attachRecipients(
+                db.messageTableQueries.getMessage(
+                    messageId = messageId,
+                    chatId = chatId,
+                    mapper = ::JoinedMessageRow,
+                ).executeAsList(),
+            ).singleOrNull()
+        }
+    }
+
+    override suspend fun isMessageDeleted(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+    ): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().deletedMessagesQueries.isDeleted(
+                messageId = messageId,
+                chatId = chatId,
+                authorId = authorId,
+            ).executeAsOne() > 0
+        }
+    }
+
+    override suspend fun deleteMessage(
+        chatId: String,
+        messageId: String,
+        deletedByUserId: String,
+    ): String? {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                val message = db.messageTableQueries.getMessage(
+                    messageId = messageId,
+                    chatId = chatId,
+                    mapper = ::JoinedMessageRow,
+                ).executeAsOneOrNull()
+                if (message != null && message.authorId != deletedByUserId) {
+                    Log.e("Skipped deletion by another author: messageId=$messageId")
+                    return@transactionWithResult null
+                }
+                db.deletedMessagesQueries.insert(
+                    messageId = messageId,
+                    chatId = chatId,
+                    deletedByUserId = deletedByUserId,
+                )
+                db.pendingMessageDeletionsQueries.remove(
+                    chatId = chatId,
+                    messageId = messageId,
+                    authorId = deletedByUserId,
+                )
+                if (message == null) return@transactionWithResult null
+                db.messageReceivedEventsQueries.removeByMessageId(
+                    messageId = messageId,
+                    chatId = chatId,
+                )
+                db.messageReadEventsQueries.removeByMessageId(
+                    messageId = messageId,
+                    chatId = chatId,
+                )
+                db.messageRecipientsQueries.removeById(messageId)
+                db.messageStatusMigrationQueries.removeById(messageId)
+                db.textMessageTableQueries.removeById(messageId)
+                db.imageMessageTableQueries.removeById(messageId)
+                db.messageTableQueries.removeById(messageId)
+                message.fileId
+            }
+        }
+    }
+
+    override suspend fun enqueueMessageDeletion(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+    ): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                val queries = db.pendingMessageDeletionsQueries
+                queries.enqueue(chatId = chatId, messageId = messageId, authorId = authorId)
+                queries.isPending(chatId = chatId, messageId = messageId, authorId = authorId)
+                    .executeAsOne() > 0L
+            }
+        }
+    }
+
     private suspend fun ChatDb.persistMessage(message: MessageSM) {
+        if (deletedMessagesQueries.isDeleted(
+                messageId = message.id,
+                chatId = message.chatId,
+                authorId = message.authorId,
+            ).executeAsOne() > 0
+        ) {
+            return
+        }
         messageTableQueries.insert(message.toMessageTable())
         insertMessageDetail(message)
         message.recipients.forEach { recipient ->

@@ -25,6 +25,7 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.groupChatErrorMapper
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.isNotImageError
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.messageDeletionErrorMapper
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toUi
 import com.security.chat.multiplatform.features.push.domain.PushModel
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +38,11 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import securitychat.common.localization.generated.resources.common_cancel
 import securitychat.common.localization.generated.resources.common_close
+import securitychat.common.localization.generated.resources.group_chat_delete_confirm
+import securitychat.common.localization.generated.resources.group_chat_delete_confirmation_description
+import securitychat.common.localization.generated.resources.group_chat_delete_confirmation_title
 
 internal class GroupChatViewModel(
     private val groupChatModel: GroupChatModel,
@@ -119,6 +124,39 @@ internal class GroupChatViewModel(
             }
             .launchIn(viewModelScope)
 
+        groupChatModel.deleteMessage.jobFlow.asLceState()
+            .map { it.toUiLceState(::messageDeletionErrorMapper) }
+            .onEach { deletionState ->
+                when (deletionState) {
+                    is UiLceState.Error -> updateState {
+                        it.copy(
+                            deletingMessageId = null,
+                            alertDialogDescriptor = AlertDialogDescriptor(
+                                content = AlertDialogContent(
+                                    title = deletionState.error.title,
+                                    message = deletionState.error.description,
+                                    positiveButtonText = resPrintableText(StringRes.common_close),
+                                ),
+                                positiveAction = ::dismissMessageDialog,
+                                dismissAction = ::dismissMessageDialog,
+                            ),
+                        )
+                    }
+
+                    UiLceState.Ready -> updateState {
+                        it.copy(
+                            deletingMessageId = null,
+                            fullscreenImage = it.fullscreenImage.takeUnless { image ->
+                                image?.messageId == it.deletingMessageId
+                            },
+                        )
+                    }
+
+                    UiLceState.Loading, UiLceState.NotStarted -> Unit
+                }
+            }
+            .launchIn(viewModelScope)
+
         groupChatModel.getChatInfoFlow()
             .filterNotNull()
             .onEach { chatInfo ->
@@ -154,6 +192,8 @@ internal class GroupChatViewModel(
             alertDialogDescriptor = null,
             fullscreenImage = null,
             chatInfo = ChatInfoUM.empty(),
+            messageMenuId = null,
+            deletingMessageId = null,
         )
     }
 
@@ -198,6 +238,7 @@ internal class GroupChatViewModel(
 
         updateState {
             it.copy(
+                messageMenuId = null,
                 fullscreenImage = FullscreenImageUM(
                     messageId = message.id,
                     filePath = filePath,
@@ -209,4 +250,47 @@ internal class GroupChatViewModel(
     fun onFullscreenImageDismissed() {
         updateState { it.copy(fullscreenImage = null) }
     }
+
+    fun onMessageClicked(message: MessageUM.Outgoing) {
+        if (currentViewState.deletingMessageId != null) return
+        updateState { it.copy(messageMenuId = message.id) }
+    }
+
+    fun onMessageMenuDismissed() {
+        updateState { it.copy(messageMenuId = null) }
+    }
+
+    fun onDeleteMessageClicked() {
+        val messageId = currentViewState.messageMenuId ?: return
+        if (currentViewState.deletingMessageId != null) return
+        updateState {
+            it.copy(
+                messageMenuId = null,
+                alertDialogDescriptor = AlertDialogDescriptor(
+                    content = deleteMessageDialogContent(),
+                    positiveAction = { confirmMessageDeletion(messageId) },
+                    negativeAction = ::dismissMessageDialog,
+                    dismissAction = ::dismissMessageDialog,
+                ),
+            )
+        }
+    }
+
+    private fun confirmMessageDeletion(messageId: String) {
+        if (currentViewState.deletingMessageId != null) return
+        updateState { it.copy(alertDialogDescriptor = null, deletingMessageId = messageId) }
+        groupChatModel.deleteMessage.startOnSubscribe(messageId)
+    }
+
+    private fun dismissMessageDialog() {
+        updateState { it.copy(alertDialogDescriptor = null) }
+    }
 }
+
+internal fun deleteMessageDialogContent(): AlertDialogContent =
+    AlertDialogContent(
+        title = resPrintableText(StringRes.group_chat_delete_confirmation_title),
+        message = resPrintableText(StringRes.group_chat_delete_confirmation_description),
+        positiveButtonText = resPrintableText(StringRes.group_chat_delete_confirm),
+        negativeButtonText = resPrintableText(StringRes.common_cancel),
+    )

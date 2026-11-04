@@ -38,6 +38,7 @@ import com.security.chat.multiplatform.features.chat.domain.entity.ImageMessageD
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
+import com.security.chat.multiplatform.features.chat.domain.entity.error.MessageDeletionError
 import com.security.chat.multiplatform.features.chat.domain.entity.error.NotImageError
 import com.security.chat.multiplatform.features.chat.domain.entity.toFileSource
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
@@ -150,6 +151,14 @@ internal class ChatRepoImpl(
                 }
 
             messagesToUpload.forEach { message ->
+                if (chatStorage.isMessageDeleted(
+                        chatId = chatId,
+                        messageId = message.id,
+                        authorId = message.authorId,
+                    )
+                ) {
+                    return@forEach
+                }
                 val request = createSendMessageRequest(message)
                 networkManager.runPost<SendMessageRequest, Unit>(
                     relativePath = "/messages",
@@ -285,6 +294,14 @@ internal class ChatRepoImpl(
                     return@collect
                 }
                 val processed = when (event) {
+                    is ChatEventNM.MessageDeleted -> {
+                        chatDataHelper.deleteMessage(
+                            chatId = chatId,
+                            messageId = event.messageId,
+                            deletedByUserId = event.deletedByUserId,
+                        )
+                        true
+                    }
                     is ChatEventNM.MessageReceived -> {
                         chatStorage.markMessageReceived(
                             chatId = chatId,
@@ -303,7 +320,12 @@ internal class ChatRepoImpl(
                         )
                     }
                 }
-                if (processed) {
+                if (processed || chatStorage.isMessageDeleted(
+                        chatId = chatId,
+                        messageId = event.messageId,
+                        authorId = userId,
+                    )
+                ) {
                     chatNetworkManager.acknowledgeEvent(event)
                 } else {
                     Log.e(
@@ -394,6 +416,28 @@ internal class ChatRepoImpl(
                 totalMembersCount = chatInfo.participantIds.size + 1,
                 onlineCount = onlineParticipantIds.size + 1,
             )
+        }
+    }
+
+    override suspend fun deleteMessage(chatId: String, messageId: String) {
+        uploadMutex.withLock {
+            val userId = requireNotNull(userStorage.getUserId())
+            val message = chatStorage.getMessage(chatId = chatId, messageId = messageId) ?: return
+            if (message.authorId != userId) throw MessageDeletionError()
+            val enqueued = chatStorage.enqueueMessageDeletion(
+                chatId = chatId,
+                messageId = messageId,
+                authorId = userId,
+            )
+            if (!enqueued) return
+            chatNetworkManager.deleteMessage(chatId = chatId, messageId = messageId)
+            withContext(NonCancellable) {
+                chatDataHelper.deleteMessage(
+                    chatId = chatId,
+                    messageId = messageId,
+                    deletedByUserId = userId,
+                )
+            }
         }
     }
 

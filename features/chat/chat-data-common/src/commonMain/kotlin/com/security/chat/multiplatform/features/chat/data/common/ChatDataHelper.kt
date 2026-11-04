@@ -85,6 +85,8 @@ public interface ChatDataHelper {
     ): String
 
     public suspend fun getOneTimeEncryptionKey(): String
+
+    public suspend fun deleteMessage(chatId: String, messageId: String, deletedByUserId: String)
 }
 
 internal class ChatDataHelperImpl(
@@ -289,6 +291,22 @@ internal class ChatDataHelperImpl(
         }
     }
 
+    override suspend fun deleteMessage(
+        chatId: String,
+        messageId: String,
+        deletedByUserId: String,
+    ) {
+        /** Finish cache cleanup if the subscription is cancelled after the database commit. */
+        withContext(NonCancellable) {
+            val fileId = chatStorage.deleteMessage(
+                chatId = chatId,
+                messageId = messageId,
+                deletedByUserId = deletedByUserId,
+            ) ?: return@withContext
+            deleteImageFiles(fileId)
+        }
+    }
+
     private suspend fun saveAndConfirmReceivingOfMessages(
         messages: List<ChatMessageNM>,
         chatId: String,
@@ -311,6 +329,14 @@ internal class ChatDataHelperImpl(
         }
 
         val messagesToStore = messages.mapNotNull {
+            if (chatStorage.isMessageDeleted(
+                    chatId = chatId,
+                    messageId = it.id,
+                    authorId = it.authorId,
+                )
+            ) {
+                return@mapNotNull null
+            }
             it.toSMOrNull(
                 chatId = chatId,
                 privateKey = privateKey,
@@ -319,8 +345,20 @@ internal class ChatDataHelperImpl(
         }
 
         chatStorage.saveReceivedMessages(messages = messagesToStore, receivedByUserId = userId)
+        for (message in messagesToStore.filterIsInstance<MessageSM.Image>()) {
+            if (chatStorage.isMessageDeleted(
+                    chatId = chatId,
+                    messageId = message.id,
+                    authorId = message.authorId,
+                )
+            ) {
+                deleteImageFiles(message.fileId)
+            }
+        }
         chatEventsPublisher.start(chatId)
-        val messageIds = messagesToStore.map { it.id }
+        val messageIds = messagesToStore.map { it.id } + messages.filter {
+            chatStorage.isMessageDeleted(chatId = chatId, messageId = it.id, authorId = it.authorId)
+        }.map { it.id }
 
         confirmReceivingMessages(
             chatId = chatId,
@@ -452,6 +490,16 @@ internal class ChatDataHelperImpl(
                 Log.e(error, message)
                 null
             }
+    }
+
+    private suspend fun deleteImageFiles(fileId: String) {
+        withDownloadLock(fileId) {
+            val imagesDirectory = fileManager.getImagesDirectoryPath()
+            val encryptedDirectory =
+                fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
+            fileManager.deleteFile(path = "$imagesDirectory/$fileId")
+            fileManager.deleteFile(path = "$encryptedDirectory/$fileId")
+        }
     }
 
     private class DownloadLock {

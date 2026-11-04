@@ -1,0 +1,6 @@
+CREATE TABLE PendingMessageDeletions (
+  chatId TEXT NOT NULL,
+  messageId TEXT NOT NULL,
+  authorId TEXT NOT NULL,
+  PRIMARY KEY (chatId, messageId, authorId)
+);

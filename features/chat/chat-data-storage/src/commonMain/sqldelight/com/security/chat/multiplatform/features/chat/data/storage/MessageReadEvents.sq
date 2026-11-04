@@ -48,3 +48,6 @@ WHERE id = :id AND readByUserId = :readByUserId;
 
 removeAll:
 DELETE FROM MessageReadEvents;
+
+removeByMessageId:
+DELETE FROM MessageReadEvents WHERE messageId = :messageId AND chatId = :chatId;

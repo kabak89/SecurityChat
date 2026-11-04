@@ -172,11 +172,16 @@ project conventions:
 - **Class member order:** declare all properties (`val` / `var`), including overridden and delegated
   properties, at the top of the class body, before any methods. Do not interleave properties and
   methods.
+- **Function order:** declare non-private functions before private functions in each class,
+  interface, and file. Preserve the existing order within each group and append new functions
+  to the end of their group.
 - **Expression-bodied functions:** keep the expression on the same line as `=` only when the entire
   function fits on one line. If the function spans multiple lines, insert a line break immediately
   after `=` and indent the expression on the next line.
 - **Named arguments:** when calling a function with more than two arguments, specify the names of
   all arguments.
+- **Multiline `if`:** use curly braces around each branch when the `if` spans more than one line.
+  Braces may be omitted only when the entire `if`, including its body, fits on one line.
 
 ## Comments
 

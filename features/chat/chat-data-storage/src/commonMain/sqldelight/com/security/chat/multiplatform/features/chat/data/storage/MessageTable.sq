@@ -91,3 +91,13 @@ WHERE MessageTable.timestamp = ?;
 
 removeAll:
 DELETE FROM MessageTable;
+
+removeById:
+DELETE FROM MessageTable WHERE id = :messageId;
+
+getMessage:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+FROM MessageTable
+LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
+WHERE MessageTable.id = :messageId AND MessageTable.chatId = :chatId;

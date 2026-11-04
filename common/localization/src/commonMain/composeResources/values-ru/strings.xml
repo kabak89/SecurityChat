@@ -97,6 +97,12 @@
     <string name="create_chat_type_group">Групповой</string>
     <string name="create_chat_create_group_chat_button">Создать</string>
 
+    <string name="group_chat_delete_message">Удалить сообщение</string>
+    <string name="group_chat_delete_confirmation_title">Удалить сообщение?</string>
+    <string name="group_chat_delete_confirmation_description">Сообщение будет удалено у всех участников чата.</string>
+    <string name="group_chat_delete_confirm">Удалить</string>
+    <string name="group_chat_delete_error_title">Не удалось удалить сообщение</string>
+    <string name="group_chat_delete_error_description">Попробуйте удалить сообщение ещё раз.</string>
     <string name="group_chat_error_not_image_title">Невозможно отправить сообщение</string>
     <string name="group_chat_error_not_image_description">Возможна отправка только картинок</string>
 

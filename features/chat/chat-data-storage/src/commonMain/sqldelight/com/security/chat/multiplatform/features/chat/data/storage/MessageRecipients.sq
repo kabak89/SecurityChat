@@ -89,3 +89,6 @@ WHERE MessageTable.chatId = :chatId;
 
 removeAll:
 DELETE FROM MessageRecipients;
+
+removeById:
+DELETE FROM MessageRecipients WHERE messageId = :messageId;

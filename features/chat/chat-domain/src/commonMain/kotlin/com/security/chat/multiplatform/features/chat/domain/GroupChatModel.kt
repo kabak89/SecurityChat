@@ -28,6 +28,7 @@ public interface GroupChatModel : ScopedModel {
     public val sendImage: Task1<PickedImage, Unit>
     public val sendMessage: Task0<Unit>
     public val syncMessages: Task0<Unit>
+    public val deleteMessage: Task1<String, Unit>
     public val markMessagesReadUpTo: Task1<String, Unit>
 
     public fun setChatId(id: String)
@@ -82,6 +83,14 @@ internal class GroupChatModelImpl(
         task { ->
             val chatId = checkNotNull(stateFlow.value.chatId)
             chatRepo.fetchMessages(chatId = chatId)
+        }
+
+    override val deleteMessage: Task1<String, Unit> =
+        task { messageId ->
+            chatRepo.deleteMessage(
+                chatId = checkNotNull(stateFlow.value.chatId),
+                messageId = messageId,
+            )
         }
 
     override val markMessagesReadUpTo: Task1<String, Unit> =

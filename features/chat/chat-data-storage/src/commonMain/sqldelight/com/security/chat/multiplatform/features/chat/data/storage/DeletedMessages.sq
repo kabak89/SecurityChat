@@ -1,0 +1,17 @@
+CREATE TABLE DeletedMessages (
+  messageId TEXT NOT NULL,
+  chatId TEXT NOT NULL,
+  deletedByUserId TEXT NOT NULL,
+  PRIMARY KEY (messageId, chatId, deletedByUserId)
+);
+
+insert:
+INSERT OR IGNORE INTO DeletedMessages (messageId, chatId, deletedByUserId)
+VALUES (:messageId, :chatId, :deletedByUserId);
+
+isDeleted:
+SELECT count(*) FROM DeletedMessages
+WHERE messageId = :messageId AND chatId = :chatId AND deletedByUserId = :authorId;
+
+removeAll:
+DELETE FROM DeletedMessages;

@@ -6,6 +6,14 @@ public sealed interface ChatEventNM {
     public val messageId: String
     public val chatId: String
 
+    public data class MessageDeleted(
+        override val id: String,
+        override val connectionId: Long,
+        override val messageId: String,
+        override val chatId: String,
+        val deletedByUserId: String,
+    ) : ChatEventNM
+
     public data class MessageReceived(
         override val id: String,
         override val connectionId: Long,

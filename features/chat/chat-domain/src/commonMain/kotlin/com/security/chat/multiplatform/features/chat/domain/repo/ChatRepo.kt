@@ -41,4 +41,6 @@ public interface ChatRepo {
     ): ImageMessageDescriptor
 
     public fun getChatInfoFlow(chatId: String): Flow<ChatInfo?>
+
+    public suspend fun deleteMessage(chatId: String, messageId: String)
 }

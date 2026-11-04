@@ -13,4 +13,6 @@ internal data class GroupChatState(
     val alertDialogDescriptor: AlertDialogDescriptor?,
     val fullscreenImage: FullscreenImageUM?,
     val chatInfo: ChatInfoUM,
+    val messageMenuId: String?,
+    val deletingMessageId: String?,
 )

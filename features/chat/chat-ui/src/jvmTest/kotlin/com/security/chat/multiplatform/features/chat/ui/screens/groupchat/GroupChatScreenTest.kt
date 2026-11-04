@@ -11,4 +11,11 @@ class GroupChatScreenTest : ScreenshotTestBase() {
             GroupChatScreenPreview()
         }
     }
+
+    @Test
+    fun `delete message confirmation preview`() {
+        runScreenshotTest(screenshotName = "GroupChatDeleteConfirmationPreview") {
+            GroupChatDeleteConfirmationPreview()
+        }
+    }
 }

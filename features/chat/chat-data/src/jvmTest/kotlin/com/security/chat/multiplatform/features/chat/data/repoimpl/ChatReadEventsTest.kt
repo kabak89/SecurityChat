@@ -44,6 +44,7 @@ class ChatReadEventsTest {
             val repo = repo(
                 events = listOf(readEvent().copy(chatId = "other"), readEvent()),
                 storage = stub { name, _ ->
+                    if (name == "isMessageDeleted") return@stub false
                     assertEquals("markMessageRead", name)
                     writes++
                     false
@@ -88,6 +89,25 @@ class ChatReadEventsTest {
             )
             repo.markMessagesReadUpTo(chatId = "chat", messageId = "message")
             assertEquals(listOf("stored", "publisher"), actions)
+        }
+
+    @Test
+    fun `late read receipt for a deleted outgoing message is acknowledged`() =
+        runTest {
+            val actions = mutableListOf<String>()
+            val repo = repo(
+                events = listOf(readEvent()),
+                storage = stub { name, _ ->
+                    when (name) {
+                        "markMessageRead" -> false
+                        "isMessageDeleted" -> true
+                        else -> error("Unexpected call: $name")
+                    }
+                },
+                acknowledge = { actions += "ack" },
+            )
+            repo.subscribeToEvents("chat")
+            assertEquals(listOf("ack"), actions)
         }
 
     private fun TestScope.repo(

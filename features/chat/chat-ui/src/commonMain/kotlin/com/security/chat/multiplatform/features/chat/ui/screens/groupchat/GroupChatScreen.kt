@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -70,12 +71,14 @@ import com.security.chat.multiplatform.common.ui.kit.components.CenterContent
 import com.security.chat.multiplatform.common.ui.kit.components.SideContent
 import com.security.chat.multiplatform.common.ui.kit.components.ToolbarComponent
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogComponent
+import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.component.api.GroupChatComponent
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.FullscreenImageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.MessageActionsComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.StickToNewestMessageEffect
@@ -125,10 +128,25 @@ internal fun GroupChatScreen(
             onMoreClicked = component::onMoreClicked,
             onCallClicked = component::onCallClicked,
             onImageClicked = vm::onImageClicked,
+            onMessageClicked = vm::onMessageClicked,
+            onMessageMenuDismissed = vm::onMessageMenuDismissed,
+            onDeleteMessageClicked = vm::onDeleteMessageClicked,
             onFullscreenImageDismissed = vm::onFullscreenImageDismissed,
             onNewestVisibleMessageChanged = vm::onNewestVisibleMessageChanged,
         )
     }
+}
+
+@Preview
+@Composable
+internal fun GroupChatScreenPreview() {
+    GroupChatPreview(showDeleteConfirmation = false)
+}
+
+@Preview
+@Composable
+internal fun GroupChatDeleteConfirmationPreview() {
+    GroupChatPreview(showDeleteConfirmation = true)
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -147,6 +165,9 @@ private fun GroupChatContent(
     onCallClicked: () -> Unit,
     onImageClicked: (message: MessageUM) -> Unit,
     onFullscreenImageDismissed: () -> Unit,
+    onMessageClicked: (MessageUM.Outgoing) -> Unit = {},
+    onMessageMenuDismissed: () -> Unit = {},
+    onDeleteMessageClicked: () -> Unit = {},
     onNewestVisibleMessageChanged: (String?) -> Unit = {},
 ) {
     val photoPickerLauncher = rememberPhotoPickerLauncher(
@@ -167,6 +188,16 @@ private fun GroupChatContent(
         )
     }
     val fullscreenImage = state.fullscreenImage
+    val dismissFullscreenImage by rememberUpdatedState(onFullscreenImageDismissed)
+    LaunchedEffect(fullscreenImage?.messageId, messages) {
+        val messageId = fullscreenImage?.messageId ?: return@LaunchedEffect
+        snapshotFlow {
+            messages.loadState.refresh is LoadState.NotLoading &&
+                    messages.itemSnapshotList.items.none { it.id == messageId }
+        }.collect { deleted ->
+            if (deleted) dismissFullscreenImage()
+        }
+    }
     val onVisibleMessageChanged by rememberUpdatedState(onNewestVisibleMessageChanged)
     DisposableEffect(Unit) {
         onDispose { onVisibleMessageChanged(null) }
@@ -219,6 +250,11 @@ private fun GroupChatContent(
                 onImageClicked = onImageClicked,
                 sharedTransitionScope = this@SharedTransitionLayout,
                 fullscreenMessageId = fullscreenImage?.messageId,
+                messageMenuId = state.messageMenuId,
+                deletingMessageId = state.deletingMessageId,
+                onMessageClicked = onMessageClicked,
+                onMessageMenuDismissed = onMessageMenuDismissed,
+                onDeleteMessageClicked = onDeleteMessageClicked,
             )
             val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             Toolbar(
@@ -385,6 +421,11 @@ private fun MessagesComponent(
     onImageClicked: (message: MessageUM) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     fullscreenMessageId: String?,
+    messageMenuId: String?,
+    deletingMessageId: String?,
+    onMessageClicked: (MessageUM.Outgoing) -> Unit,
+    onMessageMenuDismissed: () -> Unit,
+    onDeleteMessageClicked: () -> Unit,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -438,18 +479,29 @@ private fun MessagesComponent(
                         }
                     }
 
-                    is MessageUM.Outgoing.Text -> OutgoingMessageComponent(
+                    is MessageUM.Outgoing -> MessageActionsComponent(
                         modifier = Modifier.fillMaxWidth(),
-                        message = message,
-                    )
+                        expanded = messageMenuId == message.id,
+                        enabled = deletingMessageId == null,
+                        onClicked = { onMessageClicked(message) },
+                        onDismiss = onMessageMenuDismissed,
+                        onDeleteClicked = onDeleteMessageClicked,
+                    ) {
+                        when (message) {
+                            is MessageUM.Outgoing.Text -> OutgoingMessageComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                message = message,
+                            )
 
-                    is MessageUM.Outgoing.Image -> OutgoingImageMessageComponent(
-                        modifier = Modifier.fillMaxWidth(),
-                        message = message,
-                        onClicked = { onImageClicked(message) },
-                        sharedTransitionScope = sharedTransitionScope,
-                        isFullscreenVisible = fullscreenMessageId == message.id,
-                    )
+                            is MessageUM.Outgoing.Image -> OutgoingImageMessageComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                message = message,
+                                onClicked = { onImageClicked(message) },
+                                sharedTransitionScope = sharedTransitionScope,
+                                isFullscreenVisible = fullscreenMessageId == message.id,
+                            )
+                        }
+                    }
 
                     is MessageUM.Nothing -> {
                         /**
@@ -536,9 +588,8 @@ private fun EditMessageComponent(
     }
 }
 
-@Preview
 @Composable
-internal fun GroupChatScreenPreview() {
+private fun GroupChatPreview(showDeleteConfirmation: Boolean) {
     val previewMessages = flowOf(
         PagingData.from(
             data = listOf(
@@ -579,8 +630,19 @@ internal fun GroupChatScreenPreview() {
             state = GroupChatState(
                 message = "",
                 syncState = UiLceState.NotStarted,
-                alertDialogDescriptor = null,
+                alertDialogDescriptor = if (showDeleteConfirmation) {
+                    AlertDialogDescriptor(
+                        content = deleteMessageDialogContent(),
+                        positiveAction = {},
+                        negativeAction = {},
+                        dismissAction = {},
+                    )
+                } else {
+                    null
+                },
                 fullscreenImage = null,
+                messageMenuId = null,
+                deletingMessageId = null,
                 chatInfo = ChatInfoUM(
                     text = rawPrintableText("online 1/12"),
                 ),

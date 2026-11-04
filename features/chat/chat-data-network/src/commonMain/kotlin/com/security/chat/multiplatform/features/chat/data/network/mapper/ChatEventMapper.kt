@@ -3,8 +3,10 @@ package com.security.chat.multiplatform.features.chat.data.network.mapper
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatEventEnvelope
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_DELETED_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_READ_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_RECEIVED_EVENT_TYPE
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageDeletedEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReadEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReceivedEventPayload
 import kotlinx.serialization.SerializationException
@@ -12,10 +14,31 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 
-internal fun JsonElement.toChatEventNM(connectionId: Long, json: Json): ChatEventNM? {
+internal fun JsonElement.toChatEventNM(
+    connectionId: Long,
+    json: Json,
+    chatId: String? = null,
+): ChatEventNM? {
     return try {
         val envelope = json.decodeFromJsonElement<ChatEventEnvelope>(this)
         when (envelope.type) {
+            MESSAGE_DELETED_EVENT_TYPE -> {
+                val id = envelope.id?.takeIf { it.isNotBlank() }
+                val payload = json.decodeFromString<MessageDeletedEventPayload>(envelope.payload)
+                if (id == null || chatId.isNullOrBlank() || payload.messageId.isBlank() ||
+                    payload.deletedByUserId.isBlank()
+                ) {
+                    Log.e("Skipped message.deleted event with invalid identifiers")
+                    return null
+                }
+                ChatEventNM.MessageDeleted(
+                    id = id,
+                    connectionId = connectionId,
+                    messageId = payload.messageId,
+                    chatId = chatId,
+                    deletedByUserId = payload.deletedByUserId,
+                )
+            }
             MESSAGE_RECEIVED_EVENT_TYPE -> {
                 val id = envelope.id?.takeIf { it.isNotBlank() }
                 if (id == null) {

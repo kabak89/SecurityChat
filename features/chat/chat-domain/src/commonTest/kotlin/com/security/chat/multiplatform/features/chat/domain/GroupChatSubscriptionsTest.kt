@@ -133,6 +133,7 @@ class GroupChatSubscriptionsTest {
         }
 
         override suspend fun setUserOnline(): Unit = awaitCancellation()
+
         override suspend fun saveTextMessage(message: String, chatId: String) = Unit
         override suspend fun saveImageMessage(
             chatId: String,
@@ -153,5 +154,7 @@ class GroupChatSubscriptionsTest {
             chatId: String,
         ): ImageMessageDescriptor =
             error("Unused")
+
+        override suspend fun deleteMessage(chatId: String, messageId: String) = Unit
     }
 }

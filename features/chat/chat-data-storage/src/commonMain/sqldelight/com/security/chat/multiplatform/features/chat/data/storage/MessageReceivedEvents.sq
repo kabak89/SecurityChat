@@ -37,3 +37,6 @@ WHERE id = :id AND receivedByUserId = :receivedByUserId;
 
 removeAll:
 DELETE FROM MessageReceivedEvents;
+
+removeByMessageId:
+DELETE FROM MessageReceivedEvents WHERE messageId = :messageId AND chatId = :chatId;

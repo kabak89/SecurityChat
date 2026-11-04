@@ -1,0 +1,22 @@
+CREATE TABLE PendingMessageDeletions (
+  chatId TEXT NOT NULL,
+  messageId TEXT NOT NULL,
+  authorId TEXT NOT NULL,
+  PRIMARY KEY (chatId, messageId, authorId)
+);
+
+enqueue:
+INSERT OR IGNORE INTO PendingMessageDeletions (chatId, messageId, authorId)
+SELECT chatId, id, authorId FROM MessageTable
+WHERE chatId = :chatId AND id = :messageId AND authorId = :authorId;
+
+isPending:
+SELECT count(*) FROM PendingMessageDeletions
+WHERE chatId = :chatId AND messageId = :messageId AND authorId = :authorId;
+
+remove:
+DELETE FROM PendingMessageDeletions
+WHERE chatId = :chatId AND messageId = :messageId AND authorId = :authorId;
+
+removeAll:
+DELETE FROM PendingMessageDeletions;

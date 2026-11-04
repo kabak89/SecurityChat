@@ -269,6 +269,8 @@ class ChatReadEventsPublisherTest {
 
             override suspend fun downloadFile(fileId: String, destinationPath: String): Unit =
                 error("Unused")
+
+            override suspend fun deleteMessage(chatId: String, messageId: String) = Unit
         }
 
         fun publisher(scope: CoroutineScope): ChatEventsPublisher =

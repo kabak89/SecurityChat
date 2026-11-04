@@ -1,0 +1,6 @@
+CREATE TABLE DeletedMessages (
+  messageId TEXT NOT NULL,
+  chatId TEXT NOT NULL,
+  deletedByUserId TEXT NOT NULL,
+  PRIMARY KEY (messageId, chatId, deletedByUserId)
+);

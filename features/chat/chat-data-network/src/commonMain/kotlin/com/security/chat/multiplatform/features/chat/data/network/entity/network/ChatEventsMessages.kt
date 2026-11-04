@@ -30,6 +30,12 @@ internal data class MessageReadEventPayload(
 )
 
 @Serializable
+internal data class MessageDeleteRequest(val chatId: String, val messageId: String)
+
+@Serializable
+internal data class MessageDeletedEventPayload(val messageId: String, val deletedByUserId: String)
+
+@Serializable
 internal data class ChatEventAcknowledgementRequest(
     val eventId: String,
     val eventType: String,
@@ -50,3 +56,4 @@ internal data class ChatEventError(val code: String, val message: String)
 
 internal const val MESSAGE_RECEIVED_EVENT_TYPE: String = "message.received"
 internal const val MESSAGE_READ_EVENT_TYPE: String = "message.read"
+internal const val MESSAGE_DELETED_EVENT_TYPE: String = "message.deleted"

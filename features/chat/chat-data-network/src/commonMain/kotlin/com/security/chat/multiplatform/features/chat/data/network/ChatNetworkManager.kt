@@ -16,8 +16,10 @@ import com.security.chat.multiplatform.features.chat.data.network.entity.network
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.GetMessagesResponse
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_DELETED_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_READ_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_RECEIVED_EVENT_TYPE
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageDeleteRequest
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReadEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReceivedEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessagesReceivedRequest
@@ -68,6 +70,8 @@ public interface ChatNetworkManager {
     )
 
     public suspend fun downloadFile(fileId: String, destinationPath: String)
+
+    public suspend fun deleteMessage(chatId: String, messageId: String)
 }
 
 internal class ChatNetworkManagerImpl(
@@ -129,6 +133,7 @@ internal class ChatNetworkManagerImpl(
                     is SocketEvent.Message -> event.value.toChatEventNM(
                         connectionId = event.connectionId,
                         json = json,
+                        chatId = chatId,
                     )
                 }
             }
@@ -136,6 +141,7 @@ internal class ChatNetworkManagerImpl(
 
     override suspend fun acknowledgeEvent(event: ChatEventNM) {
         val type = when (event) {
+            is ChatEventNM.MessageDeleted -> MESSAGE_DELETED_EVENT_TYPE
             is ChatEventNM.MessageReceived -> MESSAGE_RECEIVED_EVENT_TYPE
             is ChatEventNM.MessageRead -> MESSAGE_READ_EVENT_TYPE
         }
@@ -216,6 +222,23 @@ internal class ChatNetworkManagerImpl(
             relativePath = "/files/$fileId",
             destinationPath = destinationPath,
         )
+    }
+
+    override suspend fun deleteMessage(chatId: String, messageId: String) {
+        val response = withTimeoutOrNull(15.seconds) {
+            liveEventsManager.subscribe<ChatEventEnvelope, MessageDeleteRequest>(
+                subscribeMessage = MessageDeleteRequest(chatId = chatId, messageId = messageId),
+                type = "message.delete",
+            )
+                .onEach { envelope ->
+                    if (envelope.type == "events.error") {
+                        val eventError = json.decodeFromString<ChatEventError>(envelope.payload)
+                        error("Message deletion failed: ${eventError.code}: ${eventError.message}")
+                    }
+                }
+                .first { it.type == "events.published" }
+        }
+        checkNotNull(response) { "Timed out deleting message: id=$messageId" }
     }
 
     private suspend fun publishEvent(request: ChatEventPublishRequest) {
