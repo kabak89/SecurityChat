@@ -110,6 +110,51 @@ enforce layer boundaries. See [AGENTS.md](AGENTS.md) for repository conventions 
 Use the included Gradle wrapper. Dependency and SDK versions are defined in
 [gradle/libs.versions.toml](gradle/libs.versions.toml).
 
+### Android App Bundle in GitHub Actions
+
+#### Production build
+
+In the GitHub repository, open **Settings → Secrets and variables → Actions → Secrets → New
+repository secret**. Create `GOOGLE_SERVICES_JSON` and paste the full contents of
+`androidApp/google-services.json` for the production Firebase app.
+
+With only `GOOGLE_SERVICES_JSON`, the workflow creates an unsigned AAB. To produce a bundle for
+Google Play, add all four signing secrets using the keystore that holds the app's Play upload key.
+
+| Repository secret         | Value                                             |
+|---------------------------|---------------------------------------------------|
+| `RELEASE_KEYSTORE_BASE64` | Base64-encoded contents of `release.keystore`     |
+| `RELEASE_STORE_PASSWORD`  | Value of `storePassword` in `keystore.properties` |
+| `RELEASE_KEY_ALIAS`       | Value of `keyAlias` in `keystore.properties`      |
+| `RELEASE_KEY_PASSWORD`    | Value of `keyPassword` in `keystore.properties`   |
+
+On macOS, run this from the repository root to copy the encoded keystore to the clipboard, then
+paste it into `RELEASE_KEYSTORE_BASE64`.
+
+```bash
+base64 < release.keystore | tr -d '\n' | pbcopy
+```
+
+Once the workflow is on the default branch, open **Actions → Android App Bundle → Run workflow**.
+Select `prod` for `serverEnv` and leave `enableLogs` and `isDebug` unchecked. Download the `.aab`
+from **Artifacts** on the completed run.
+
+#### Development build
+
+To build with `serverEnv=dev`, add the `DEV_BASE_HOST` repository secret with the `devBaseHost`
+value from `local.properties` and set the `enableLogs` and `isDebug` flags for the run.
+
+#### Build Scan
+
+To publish a report after each Gradle build, review
+the [Gradle Terms of Use](https://gradle.com/terms-of-service)
+and set the repository variable `GRADLE_BUILD_SCAN_TERMS_ACCEPTED` to `yes` under **Settings →
+Secrets and variables → Actions → Variables**.
+
+Open the Build Scan link in the run's **Summary** to see task timings, cache usage, and dependency
+resolution. The report is hosted on `scans.gradle.com` and is accessible to anyone with the link.
+Build console logs stay in GitHub Actions.
+
 ## Tests
 
 ```bash

@@ -1,0 +1,100 @@
+name: Android App Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      serverEnv:
+        description: Server environment
+        type: choice
+        options:
+          - dev
+          - prod
+        default: prod
+      enableLogs:
+        description: Enable application logs
+        type: boolean
+        default: false
+      isDebug:
+        description: Enable application debug mode
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure Firebase
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          : "${GOOGLE_SERVICES_JSON:?Set the GOOGLE_SERVICES_JSON Actions secret}"
+          printf '%s\n' "$GOOGLE_SERVICES_JSON" > androidApp/google-services.json
+
+      - name: Configure development server
+        if: inputs.serverEnv == 'dev'
+        env:
+          DEV_BASE_HOST: ${{ secrets.DEV_BASE_HOST }}
+        run: |
+          : "${DEV_BASE_HOST:?Set the DEV_BASE_HOST Actions secret for dev builds}"
+          printf '\ndevBaseHost=%s\n' "$DEV_BASE_HOST" >> local.properties
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-jdk: false
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: external
+          build-scan-publish: ${{ vars.GRADLE_BUILD_SCAN_TERMS_ACCEPTED == 'yes' }}
+          build-scan-terms-of-use-url: https://gradle.com/terms-of-service
+          build-scan-terms-of-use-agree: ${{ vars.GRADLE_BUILD_SCAN_TERMS_ACCEPTED }}
+
+      - name: Build release bundle
+        shell: bash
+        env:
+          SERVER_ENV: ${{ inputs.serverEnv }}
+          ENABLE_LOGS: ${{ inputs.enableLogs }}
+          IS_DEBUG: ${{ inputs.isDebug }}
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          if [[ -n "$RELEASE_KEYSTORE_BASE64" ||
+                -n "$ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD" ||
+                -n "$ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS" ||
+                -n "$ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD" ]]; then
+            : "${RELEASE_KEYSTORE_BASE64:?Set the RELEASE_KEYSTORE_BASE64 Actions secret}"
+            : "${ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD:?Set the RELEASE_STORE_PASSWORD Actions secret}"
+            : "${ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS:?Set the RELEASE_KEY_ALIAS Actions secret}"
+            : "${ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD:?Set the RELEASE_KEY_PASSWORD Actions secret}"
+            export ORG_GRADLE_PROJECT_RELEASE_STORE_FILE="$RUNNER_TEMP/release.keystore"
+            trap 'rm -f "$ORG_GRADLE_PROJECT_RELEASE_STORE_FILE"' EXIT
+            printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$ORG_GRADLE_PROJECT_RELEASE_STORE_FILE"
+            unset RELEASE_KEYSTORE_BASE64
+          fi
+
+          ./gradlew :androidApp:bundleRelease \
+            -Dscan.capture-build-logging=false \
+            -Pkotlin.kmp.eagerUnresolvedDependenciesDiagnostic=false \
+            "-PserverEnv=$SERVER_ENV" \
+            "-PenableLogs=$ENABLE_LOGS" \
+            "-PisDebug=$IS_DEBUG"
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-release-${{ inputs.serverEnv }}-${{ github.run_number }}
+          path: androidApp/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

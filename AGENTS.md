@@ -196,7 +196,7 @@ written in English only.
 Build behavior is controlled by Gradle properties (defaults from
 [build-logic/src/main/kotlin/com/securitychat/gradle/ConventionBasePluginExtension.kt](build-logic/src/main/kotlin/com/securitychat/gradle/ConventionBasePluginExtension.kt)):
 
-- `-PserverEnv=dev|stage|prod` (default `dev`)
+- `-PserverEnv=dev|prod` (default `dev`)
 - `-PisDebug=true|false` (default `true`)
 - `-PenableLogs=true|false` (default `true`)
 
