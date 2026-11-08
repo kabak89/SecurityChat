@@ -8,7 +8,7 @@ buildLogicJavaVersion = "21"
 #java
 
 #android
-agp = "9.5.0"
+agp = "9.5.1"
 android-compileSdk = "37"
 android-minSdk = "26"
 android-targetSdk = "37"
