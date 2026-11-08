@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ internal fun IncomingMessageComponent(
     modifier: Modifier = Modifier,
     message: MessageUM.Incoming.Text,
     showSenderName: Boolean,
+    onQuoteClicked: (String) -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -68,6 +70,13 @@ internal fun IncomingMessageComponent(
                 )
             }
             Spacer(Modifier.height(8.dp))
+        }
+        message.quote?.let { quote ->
+            MessageQuoteComponent(
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp).widthIn(max = 260.dp),
+                quote = quote,
+                onClicked = { onQuoteClicked(quote.messageId) },
+            )
         }
         FlowRow(
             modifier = Modifier
@@ -108,6 +117,7 @@ internal fun IncomingMessageComponentPreview() {
                 senderName = "John",
             ),
             showSenderName = true,
+            onQuoteClicked = {},
         )
     }
 }
@@ -125,6 +135,7 @@ internal fun IncomingMessageComponentLongTextPreview() {
                 senderName = "John",
             ),
             showSenderName = true,
+            onQuoteClicked = {},
         )
     }
 }
@@ -142,6 +153,7 @@ internal fun IncomingMessageComponentNoSenderName() {
                 senderName = "John",
             ),
             showSenderName = false,
+            onQuoteClicked = {},
         )
     }
 }

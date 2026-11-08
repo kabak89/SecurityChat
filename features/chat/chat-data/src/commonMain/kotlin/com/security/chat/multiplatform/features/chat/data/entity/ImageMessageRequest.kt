@@ -10,4 +10,5 @@ internal data class ImageMessageRequest(
     @SerialName("timestamp") override val timestamp: Long,
     @SerialName("recipients") override val recipients: List<RecipientCiphertext>,
     @SerialName("fileId") val fileId: String,
+    @SerialName("replyToMessageId") override val replyToMessageId: String?,
 ) : BaseMessageRequest

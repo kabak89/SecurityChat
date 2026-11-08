@@ -117,6 +117,51 @@ class MessageDeliveryStatusTest {
             }
         }
 
+    @Test
+    fun `a reply stops waiting for excluded recipients and preserves early delivery receipts`() {
+        runTest {
+            withStorage { storage ->
+                storage.saveMessage(reply())
+                assertTrue(storage.receive())
+
+                storage.markMessageSent(
+                    id = "message",
+                    acceptedRecipientIds = listOf("me", "peer"),
+                )
+
+                val recipients = storage.getNewestMessages(chatId = "chat", limit = 1)
+                    .single().recipients.associate { it.userId to it.status }
+                assertEquals(
+                    mapOf("me" to Status.Sent, "peer" to Status.ReceivedByReceiver),
+                    recipients,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `a reply accepted for the sender alone does not restore excluded recipients on reconnect`() {
+        runTest {
+            withStorage { storage ->
+                storage.saveMessage(reply())
+                storage.markMessageSent(id = "message", acceptedRecipientIds = listOf("me"))
+
+                storage.restoreOutgoingMessageRecipients(
+                    chatId = "chat",
+                    authorId = "me",
+                    recipientUserIds = listOf("other", "peer"),
+                )
+
+                val recipients = storage.getNewestMessages(chatId = "chat", limit = 1)
+                    .single().recipients
+                assertEquals(
+                    listOf(MessageRecipientSM(userId = "me", status = Status.Sent)),
+                    recipients,
+                )
+            }
+        }
+    }
+
     private suspend fun TestScope.withStorage(block: suspend (ChatStorage) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {
@@ -143,7 +188,7 @@ class MessageDeliveryStatusTest {
         }
     }
 
-    private fun message(status: Status = Status.Sent): MessageSM =
+    private fun message(status: Status = Status.Sent): MessageSM.Text =
         MessageSM.Text(
             id = "message",
             chatId = "chat",
@@ -156,6 +201,11 @@ class MessageDeliveryStatusTest {
             timestamp = 1,
             text = "text",
         )
+
+    private fun reply(): MessageSM.Text {
+        val message = message(status = Status.Created)
+        return message.copy(replyToMessageId = "original")
+    }
 
     private suspend fun ChatStorage.receive(
         chatId: String = "chat",

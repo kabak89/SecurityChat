@@ -7,6 +7,7 @@ import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.FileDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.ImageMessageDescriptor
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageQuote
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import kotlinx.coroutines.CompletableDeferred
@@ -14,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -22,6 +24,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class GroupChatSubscriptionsTest {
@@ -82,6 +85,32 @@ class GroupChatSubscriptionsTest {
             assertEquals(0, repo.subscriptionCount)
         }
 
+    @Test
+    fun `cancel removes the quote and sending preserves a selected original in the outbox`() {
+        runTest {
+            val repo = FakeChatRepo()
+            val model = startModel(repo)
+            val quote = MessageQuote.Text(messageId = "original", text = "Hello")
+
+            model.setCurrentMessageText("First draft")
+            model.setReplyQuote(quote)
+            model.setReplyQuote(null)
+            assertEquals("First draft", model.getCurrentMessageFlow().first())
+            model.sendMessage.start().join()
+
+            model.setCurrentMessageText("Second draft")
+            model.setReplyQuote(quote)
+            model.sendMessage.start().join()
+
+            assertEquals(
+                listOf("First draft" to null, "Second draft" to "original"),
+                repo.savedTextMessages,
+            )
+            assertNull(model.getReplyQuoteFlow().first())
+            assertEquals("", model.getCurrentMessageFlow().first())
+        }
+    }
+
     private fun TestScope.startModel(repo: FakeChatRepo): GroupChatModel {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val model = GroupChatModelImpl(
@@ -102,6 +131,7 @@ class GroupChatSubscriptionsTest {
     private class FakeChatRepo : ChatRepo {
         val syncCompleted = CompletableDeferred<Unit>()
         val readMessageIds = mutableListOf<String>()
+        val savedTextMessages = mutableListOf<Pair<String, String?>>()
         var syncCount = 0
         var subscriptionCount = 0
         var messagesActive = false
@@ -134,19 +164,29 @@ class GroupChatSubscriptionsTest {
 
         override suspend fun setUserOnline(): Unit = awaitCancellation()
 
-        override suspend fun saveTextMessage(message: String, chatId: String) = Unit
+        override suspend fun saveTextMessage(
+            message: String,
+            chatId: String,
+            replyToMessageId: String?,
+        ) {
+            savedTextMessages += message to replyToMessageId
+        }
+
         override suspend fun saveImageMessage(
             chatId: String,
             message: ImageMessageDescriptor,
-        ) =
-            Unit
+            replyToMessageId: String?,
+        ) = Unit
 
         override suspend fun uploadMessages(chatId: String) = Unit
         override suspend fun markMessagesReadUpTo(chatId: String, messageId: String) {
             assertEquals("chat", chatId)
             readMessageIds += messageId
         }
-        override fun getMessagesPager(chatId: String): Flow<PagingData<Message>> = emptyFlow()
+        override fun getMessagesPager(
+            chatId: String,
+            initialMessageId: String?,
+        ): Flow<PagingData<Message>> = emptyFlow()
         override fun getChatInfoFlow(chatId: String): Flow<ChatInfo?> = emptyFlow()
         override suspend fun copyImageToCache(image: PickedImage): FileDescriptor = error("Unused")
         override suspend fun createEncryptedFile(

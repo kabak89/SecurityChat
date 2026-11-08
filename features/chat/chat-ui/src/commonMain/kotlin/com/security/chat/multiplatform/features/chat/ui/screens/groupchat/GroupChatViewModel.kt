@@ -26,6 +26,7 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.groupChatErrorMapper
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.isNotImageError
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.messageDeletionErrorMapper
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toReplyQuote
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.mapper.toUi
 import com.security.chat.multiplatform.features.push.domain.PushModel
 import kotlinx.coroutines.flow.Flow
@@ -54,8 +55,11 @@ internal class GroupChatViewModel(
 
     private val newestVisibleMessageId: MutableStateFlow<String?> = MutableStateFlow(null)
 
+    private val messageJump: MutableStateFlow<MessageJump?> = MutableStateFlow(null)
+
     internal val messages: Flow<PagingData<MessageUM>> =
-        groupChatModel.getMessagesPager()
+        messageJump
+            .flatMapLatest { groupChatModel.getMessagesPager(initialMessageId = it?.messageId) }
             .map { pagingData ->
                 pagingData
                     .map { it.toUi() }
@@ -72,6 +76,10 @@ internal class GroupChatViewModel(
             .onEach { currentMessage ->
                 updateState { it.copy(message = currentMessage) }
             }
+            .launchIn(viewModelScope)
+
+        groupChatModel.getReplyQuoteFlow()
+            .onEach { quote -> updateState { it.copy(replyQuote = quote?.toUi()) } }
             .launchIn(viewModelScope)
 
         groupChatModel.syncMessages.jobFlow.asLceState().map { it.toUiLceState() }
@@ -251,8 +259,8 @@ internal class GroupChatViewModel(
         updateState { it.copy(fullscreenImage = null) }
     }
 
-    fun onMessageClicked(message: MessageUM.Outgoing) {
-        if (currentViewState.deletingMessageId != null) return
+    fun onMessageClicked(message: MessageUM) {
+        if (message is MessageUM.Outgoing && currentViewState.deletingMessageId != null) return
         updateState { it.copy(messageMenuId = message.id) }
     }
 
@@ -276,6 +284,19 @@ internal class GroupChatViewModel(
         }
     }
 
+    fun onReplyClicked(message: MessageUM) {
+        updateState { it.copy(messageMenuId = null) }
+        groupChatModel.setReplyQuote(message.toReplyQuote())
+    }
+
+    fun onCancelReplyClicked() {
+        groupChatModel.setReplyQuote(null)
+    }
+
+    fun loadMessagesAround(messageId: String) {
+        messageJump.value = MessageJump(messageId)
+    }
+
     private fun confirmMessageDeletion(messageId: String) {
         if (currentViewState.deletingMessageId != null) return
         updateState { it.copy(alertDialogDescriptor = null, deletingMessageId = messageId) }
@@ -285,6 +306,8 @@ internal class GroupChatViewModel(
     private fun dismissMessageDialog() {
         updateState { it.copy(alertDialogDescriptor = null) }
     }
+
+    private class MessageJump(val messageId: String)
 }
 
 internal fun deleteMessageDialogContent(): AlertDialogContent =

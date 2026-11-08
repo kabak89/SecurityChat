@@ -13,11 +13,13 @@ public interface ChatRepo {
     public suspend fun saveTextMessage(
         message: String,
         chatId: String,
+        replyToMessageId: String? = null,
     )
 
     public suspend fun saveImageMessage(
         chatId: String,
         message: ImageMessageDescriptor,
+        replyToMessageId: String? = null,
     )
 
     public suspend fun uploadMessages(chatId: String)
@@ -27,7 +29,10 @@ public interface ChatRepo {
         chatId: String,
     )
 
-    public fun getMessagesPager(chatId: String): Flow<PagingData<Message>>
+    public fun getMessagesPager(
+        chatId: String,
+        initialMessageId: String? = null,
+    ): Flow<PagingData<Message>>
 
     public suspend fun subscribeToNewMessages(chatId: String)
     public suspend fun subscribeToEvents(chatId: String)

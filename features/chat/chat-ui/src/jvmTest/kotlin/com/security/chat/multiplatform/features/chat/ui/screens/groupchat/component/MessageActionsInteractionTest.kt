@@ -16,6 +16,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageQuoteUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import org.junit.jupiter.api.Test
@@ -35,6 +36,7 @@ class MessageActionsInteractionTest {
                         enabled = true,
                         onClicked = { menuClicks++ },
                         onDismiss = {},
+                        onReplyClicked = {},
                         onDeleteClicked = {},
                     ) {
                         OutgoingMessageComponent(
@@ -57,7 +59,7 @@ class MessageActionsInteractionTest {
 
 
     @Test
-    fun `image tap opens the photo and container tap opens only the delete menu`() =
+    fun `image tap opens the photo and container tap opens the message menu`() {
         runSkikoComposeUiTest(size = Size(width = 412f, height = 900f)) {
             var imageClicks = 0
             var menuClicks = 0
@@ -71,6 +73,7 @@ class MessageActionsInteractionTest {
                         enabled = true,
                         onClicked = { menuClicks++; expanded = true },
                         onDismiss = { expanded = false },
+                        onReplyClicked = {},
                         onDeleteClicked = { deleteClicks++; expanded = false },
                     ) {
                         OutgoingImageMessageComponent(
@@ -100,4 +103,53 @@ class MessageActionsInteractionTest {
                 assertEquals(1, deleteClicks)
             }
         }
+    }
+
+    @Test
+    fun `incoming message offers reply and tapping the quote jumps without opening the menu`() {
+        runSkikoComposeUiTest(size = Size(width = 412f, height = 900f)) {
+            var expanded by mutableStateOf(false)
+            var replyClicks = 0
+            var jumpedTo: String? = null
+            setContent {
+                AppTheme {
+                    MessageActionsComponent(
+                        modifier = Modifier.fillMaxWidth().testTag("message"),
+                        expanded = expanded,
+                        enabled = true,
+                        onClicked = { expanded = true },
+                        onDismiss = { expanded = false },
+                        onReplyClicked = {
+                            replyClicks++
+                            expanded = false
+                        },
+                    ) {
+                        IncomingMessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = MessageUM.Incoming.Text(
+                                id = "incoming",
+                                text = "An answer",
+                                datetimeText = "12:10",
+                                senderName = "John",
+                                quote = MessageQuoteUM.Text(
+                                    messageId = "original",
+                                    text = "Original message",
+                                ),
+                            ),
+                            showSenderName = false,
+                            onQuoteClicked = { jumpedTo = it },
+                        )
+                    }
+                }
+            }
+            onNodeWithText("Original message", useUnmergedTree = true).performTouchInput { click() }
+            onNodeWithTag(MESSAGE_REPLY_ACTION_TAG).assertDoesNotExist()
+            runOnIdle { assertEquals("original", jumpedTo) }
+
+            onNodeWithTag("message").performTouchInput { click(Offset(width - 4f, 4f)) }
+            onNodeWithTag(MESSAGE_DELETE_ACTION_TAG).assertDoesNotExist()
+            onNodeWithTag(MESSAGE_REPLY_ACTION_TAG).performClick()
+            runOnIdle { assertEquals(1, replyClicks) }
+        }
+    }
 }

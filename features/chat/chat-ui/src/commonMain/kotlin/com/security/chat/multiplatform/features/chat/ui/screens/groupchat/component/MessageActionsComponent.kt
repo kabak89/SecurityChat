@@ -21,9 +21,12 @@ import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import securitychat.common.localization.generated.resources.group_chat_delete_message
+import securitychat.common.localization.generated.resources.group_chat_reply
 
+internal const val MESSAGE_REPLY_ACTION_TAG: String = "message_reply_action"
 internal const val MESSAGE_DELETE_ACTION_TAG: String = "message_delete_action"
 
 @Composable
@@ -33,7 +36,8 @@ internal fun MessageActionsComponent(
     enabled: Boolean,
     onClicked: () -> Unit,
     onDismiss: () -> Unit,
-    onDeleteClicked: () -> Unit,
+    onReplyClicked: () -> Unit,
+    onDeleteClicked: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Box(
@@ -42,7 +46,12 @@ internal fun MessageActionsComponent(
             .clickable(enabled = enabled, onClick = onClicked),
     ) {
         content()
-        Box(modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp)) {
+        val menuAlignment = if (onDeleteClicked == null) {
+            Alignment.BottomStart
+        } else {
+            Alignment.BottomEnd
+        }
+        Box(modifier = Modifier.align(menuAlignment).padding(horizontal = 16.dp)) {
             DropdownMenu(
                 modifier = Modifier
                     .width(240.dp),
@@ -51,7 +60,18 @@ internal fun MessageActionsComponent(
                 shape = AppTheme.shapes.roundedRectangle8,
                 containerColor = AppTheme.colors.backgroundSecondary,
             ) {
-                MessageActionsMenuItem(onDeleteClicked)
+                MessageActionsMenuItem(
+                    label = StringRes.group_chat_reply,
+                    tag = MESSAGE_REPLY_ACTION_TAG,
+                    onClick = onReplyClicked,
+                )
+                if (onDeleteClicked != null) {
+                    MessageActionsMenuItem(
+                        label = StringRes.group_chat_delete_message,
+                        tag = MESSAGE_DELETE_ACTION_TAG,
+                        onClick = onDeleteClicked,
+                    )
+                }
             }
         }
     }
@@ -72,6 +92,7 @@ internal fun MessageActionsMenuPreview() {
                 enabled = true,
                 onClicked = {},
                 onDismiss = {},
+                onReplyClicked = {},
                 onDeleteClicked = {},
             ) {
                 OutgoingMessageComponent(
@@ -89,16 +110,16 @@ internal fun MessageActionsMenuPreview() {
 }
 
 @Composable
-private fun MessageActionsMenuItem(onDeleteClicked: () -> Unit) {
+private fun MessageActionsMenuItem(label: StringResource, tag: String, onClick: () -> Unit) {
     DropdownMenuItem(
-        modifier = Modifier.testTag(MESSAGE_DELETE_ACTION_TAG),
+        modifier = Modifier.testTag(tag),
         text = {
             Text(
-                text = stringResource(StringRes.group_chat_delete_message),
+                text = stringResource(label),
                 color = AppTheme.colors.textPrimary,
                 style = AppTheme.typography.body,
             )
         },
-        onClick = onDeleteClicked,
+        onClick = onClick,
     )
 }

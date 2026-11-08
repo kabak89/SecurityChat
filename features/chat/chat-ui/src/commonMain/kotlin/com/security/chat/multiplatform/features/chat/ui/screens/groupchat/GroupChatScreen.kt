@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -61,6 +62,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.core.ui.entity.rawPrintableText
@@ -79,12 +81,14 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compon
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.IncomingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.MessageActionsComponent
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.MessageQuoteComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingImageMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.OutgoingMessageComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.StickToNewestMessageEffect
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.SyncComponent
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component.rememberPhotoPickerLauncher
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageQuoteUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import dev.chrisbanes.haze.HazeStyle
@@ -94,14 +98,20 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.withTimeoutOrNull
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import securitychat.common.icons_kit.generated.resources.Res
 import securitychat.common.icons_kit.generated.resources.ic_attach
 import securitychat.common.icons_kit.generated.resources.ic_back
 import securitychat.common.icons_kit.generated.resources.ic_call
 import securitychat.common.icons_kit.generated.resources.ic_info
+import securitychat.common.icons_kit.generated.resources.ic_remove
 import securitychat.common.icons_kit.generated.resources.ic_send
+import securitychat.common.localization.generated.resources.group_chat_cancel_reply
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 internal fun GroupChatScreen(
@@ -131,6 +141,9 @@ internal fun GroupChatScreen(
             onMessageClicked = vm::onMessageClicked,
             onMessageMenuDismissed = vm::onMessageMenuDismissed,
             onDeleteMessageClicked = vm::onDeleteMessageClicked,
+            onReplyClicked = vm::onReplyClicked,
+            onCancelReplyClicked = vm::onCancelReplyClicked,
+            onLoadMessagesAround = vm::loadMessagesAround,
             onFullscreenImageDismissed = vm::onFullscreenImageDismissed,
             onNewestVisibleMessageChanged = vm::onNewestVisibleMessageChanged,
         )
@@ -149,9 +162,15 @@ internal fun GroupChatDeleteConfirmationPreview() {
     GroupChatPreview(showDeleteConfirmation = true)
 }
 
+@Preview
+@Composable
+internal fun GroupChatReplyPreview() {
+    GroupChatPreview(showDeleteConfirmation = false, showReply = true)
+}
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun GroupChatContent(
+internal fun GroupChatContent(
     modifier: Modifier,
     state: GroupChatState,
     messages: LazyPagingItems<MessageUM>,
@@ -165,9 +184,12 @@ private fun GroupChatContent(
     onCallClicked: () -> Unit,
     onImageClicked: (message: MessageUM) -> Unit,
     onFullscreenImageDismissed: () -> Unit,
-    onMessageClicked: (MessageUM.Outgoing) -> Unit = {},
+    onMessageClicked: (MessageUM) -> Unit = {},
     onMessageMenuDismissed: () -> Unit = {},
     onDeleteMessageClicked: () -> Unit = {},
+    onReplyClicked: (MessageUM) -> Unit = {},
+    onCancelReplyClicked: () -> Unit = {},
+    onLoadMessagesAround: (String) -> Unit = {},
     onNewestVisibleMessageChanged: (String?) -> Unit = {},
 ) {
     val photoPickerLauncher = rememberPhotoPickerLauncher(
@@ -221,6 +243,26 @@ private fun GroupChatContent(
             var editMessageComponentHeight by remember { mutableStateOf(0) }
             val localDensity = LocalDensity.current
             val lazyListState = rememberLazyListState()
+            var quoteJumpId by remember { mutableStateOf<String?>(null) }
+            val onQuoteClicked = { messageId: String -> quoteJumpId = messageId }
+
+            LaunchedEffect(quoteJumpId, messages) {
+                val messageId = quoteJumpId ?: return@LaunchedEffect
+                val loadedIndex = messages.itemSnapshotList.items
+                    .indexOfFirst { it.id == messageId }
+                if (loadedIndex >= 0) {
+                    lazyListState.animateScrollToItem(loadedIndex)
+                } else {
+                    onLoadMessagesAround(messageId)
+                    withTimeoutOrNull(5.seconds) {
+                        val index = snapshotFlow {
+                            messages.itemSnapshotList.items.indexOfFirst { it.id == messageId }
+                        }.first { it >= 0 }
+                        lazyListState.scrollToItem(index)
+                    }
+                }
+                quoteJumpId = null
+            }
 
             LaunchedEffect(lazyListState, messages) {
                 snapshotFlow {
@@ -236,6 +278,7 @@ private fun GroupChatContent(
             StickToNewestMessageEffect(
                 lazyListState = lazyListState,
                 messages = messages,
+                enabled = quoteJumpId == null,
             )
             MessagesComponent(
                 modifier = Modifier
@@ -255,6 +298,8 @@ private fun GroupChatContent(
                 onMessageClicked = onMessageClicked,
                 onMessageMenuDismissed = onMessageMenuDismissed,
                 onDeleteMessageClicked = onDeleteMessageClicked,
+                onReplyClicked = onReplyClicked,
+                onQuoteClicked = onQuoteClicked,
             )
             val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             Toolbar(
@@ -304,6 +349,9 @@ private fun GroupChatContent(
                         editMessageComponentHeight = it.size.height + bottomPaddingInPixels
                     },
                 message = state.message,
+                replyQuote = state.replyQuote,
+                onQuoteClicked = onQuoteClicked,
+                onCancelReplyClicked = onCancelReplyClicked,
                 onMessageEdited = onMessageEdited,
                 onAttachClicked = photoPickerLauncher::launch,
                 onSendMessageClicked = onSendMessageClicked,
@@ -423,9 +471,11 @@ private fun MessagesComponent(
     fullscreenMessageId: String?,
     messageMenuId: String?,
     deletingMessageId: String?,
-    onMessageClicked: (MessageUM.Outgoing) -> Unit,
+    onMessageClicked: (MessageUM) -> Unit,
     onMessageMenuDismissed: () -> Unit,
     onDeleteMessageClicked: () -> Unit,
+    onReplyClicked: (MessageUM) -> Unit,
+    onQuoteClicked: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -447,66 +497,61 @@ private fun MessagesComponent(
                 },
             ) { index ->
                 val message = messages[index] ?: return@items
-                when (message) {
-                    is MessageUM.Incoming -> {
-                        val previous = if (index + 1 < messages.itemCount) {
-                            messages.peek(index + 1)
-                        } else {
-                            null
-                        }
-                        val showSenderName =
-                            (previous as? MessageUM.Incoming)?.senderName != message.senderName
-
-                        when (message) {
-                            is MessageUM.Incoming.Text -> {
-                                IncomingMessageComponent(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    message = message,
-                                    showSenderName = showSenderName,
-                                )
-                            }
-
-                            is MessageUM.Incoming.Image -> {
-                                IncomingImageMessageComponent(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    message = message,
-                                    showSenderName = showSenderName,
-                                    onClicked = { onImageClicked(message) },
-                                    sharedTransitionScope = sharedTransitionScope,
-                                    isFullscreenVisible = fullscreenMessageId == message.id,
-                                )
-                            }
-                        }
+                if (message is MessageUM.Nothing) return@items
+                val showSenderName = if (message is MessageUM.Incoming) {
+                    val previous = if (index + 1 < messages.itemCount) {
+                        messages.peek(index + 1)
+                    } else {
+                        null
                     }
+                    (previous as? MessageUM.Incoming)?.senderName != message.senderName
+                } else {
+                    false
+                }
 
-                    is MessageUM.Outgoing -> MessageActionsComponent(
-                        modifier = Modifier.fillMaxWidth(),
-                        expanded = messageMenuId == message.id,
-                        enabled = deletingMessageId == null,
-                        onClicked = { onMessageClicked(message) },
-                        onDismiss = onMessageMenuDismissed,
-                        onDeleteClicked = onDeleteMessageClicked,
-                    ) {
-                        when (message) {
-                            is MessageUM.Outgoing.Text -> OutgoingMessageComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                message = message,
-                            )
+                MessageActionsComponent(
+                    modifier = Modifier.fillMaxWidth(),
+                    expanded = messageMenuId == message.id,
+                    enabled = deletingMessageId == null || message is MessageUM.Incoming,
+                    onClicked = { onMessageClicked(message) },
+                    onDismiss = onMessageMenuDismissed,
+                    onReplyClicked = { onReplyClicked(message) },
+                    onDeleteClicked = onDeleteMessageClicked.takeIf { message is MessageUM.Outgoing },
+                ) {
+                    when (message) {
+                        is MessageUM.Incoming.Text -> IncomingMessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = message,
+                            showSenderName = showSenderName,
+                            onQuoteClicked = onQuoteClicked,
+                        )
 
-                            is MessageUM.Outgoing.Image -> OutgoingImageMessageComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                message = message,
-                                onClicked = { onImageClicked(message) },
-                                sharedTransitionScope = sharedTransitionScope,
-                                isFullscreenVisible = fullscreenMessageId == message.id,
-                            )
-                        }
-                    }
+                        is MessageUM.Incoming.Image -> IncomingImageMessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = message,
+                            showSenderName = showSenderName,
+                            onClicked = { onImageClicked(message) },
+                            sharedTransitionScope = sharedTransitionScope,
+                            isFullscreenVisible = fullscreenMessageId == message.id,
+                            onQuoteClicked = onQuoteClicked,
+                        )
 
-                    is MessageUM.Nothing -> {
-                        /**
-                         * do not show such items
-                         */
+                        is MessageUM.Outgoing.Text -> OutgoingMessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = message,
+                            onQuoteClicked = onQuoteClicked,
+                        )
+
+                        is MessageUM.Outgoing.Image -> OutgoingImageMessageComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = message,
+                            onClicked = { onImageClicked(message) },
+                            sharedTransitionScope = sharedTransitionScope,
+                            isFullscreenVisible = fullscreenMessageId == message.id,
+                            onQuoteClicked = onQuoteClicked,
+                        )
+
+                        is MessageUM.Nothing -> Unit
                     }
                 }
             }
@@ -518,78 +563,101 @@ private fun MessagesComponent(
 private fun EditMessageComponent(
     modifier: Modifier = Modifier,
     message: String,
+    replyQuote: MessageQuoteUM?,
+    onQuoteClicked: (String) -> Unit,
+    onCancelReplyClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
     onAttachClicked: () -> Unit,
     onSendMessageClicked: () -> Unit,
 ) {
-    Row(
-        modifier = modifier,
-    ) {
-        val textSecondaryColor = AppTheme.colors.textSecondary
-        val placeholderColor = remember { textSecondaryColor.copy(alpha = 0.3f) }
-        TextField(
-            modifier = Modifier
-                .weight(1f),
-            value = message,
-            maxLines = 3,
-            onValueChange = onMessageEdited,
-            placeholder = {
-                Text("Message")
-            },
-            colors = TextFieldDefaults.colors().copy(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedTextColor = AppTheme.colors.textSecondary,
-                unfocusedTextColor = AppTheme.colors.textSecondary,
-                cursorColor = AppTheme.colors.element,
-                focusedPlaceholderColor = placeholderColor,
-                unfocusedPlaceholderColor = placeholderColor,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-            ),
-            shape = RectangleShape,
-            textStyle = AppTheme.typography.body,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Row(
-            modifier = Modifier
-                .align(alignment = Alignment.CenterVertically),
-        ) {
-            IconButton(
-                modifier = Modifier
-                    .size(48.dp),
-                onClick = onAttachClicked,
-                content = {
-                    Icon(
-                        modifier = Modifier
-                            .size(32.dp),
-                        imageVector = vectorResource(Res.drawable.ic_attach),
-                        tint = AppTheme.colors.element,
-                        contentDescription = null,
+    Column(modifier = modifier) {
+        if (replyQuote != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    MessageQuoteComponent(
+                        quote = replyQuote,
+                        onClicked = { onQuoteClicked(replyQuote.messageId) },
                     )
-                },
-            )
-            IconButton(
-                modifier = Modifier
-                    .size(48.dp),
-                onClick = onSendMessageClicked,
-                content = {
+                }
+                IconButton(onClick = onCancelReplyClicked) {
                     Icon(
-                        modifier = Modifier
-                            .size(32.dp),
-                        imageVector = vectorResource(Res.drawable.ic_send),
+                        imageVector = vectorResource(Res.drawable.ic_remove),
+                        contentDescription = stringResource(StringRes.group_chat_cancel_reply),
                         tint = AppTheme.colors.element,
-                        contentDescription = null,
                     )
-                },
-            )
+                }
+            }
         }
-        Spacer(modifier = Modifier.width(8.dp))
+        Row {
+            val textSecondaryColor = AppTheme.colors.textSecondary
+            val placeholderColor = remember { textSecondaryColor.copy(alpha = 0.3f) }
+            TextField(
+                modifier = Modifier
+                    .weight(1f),
+                value = message,
+                maxLines = 3,
+                onValueChange = onMessageEdited,
+                placeholder = {
+                    Text("Message")
+                },
+                colors = TextFieldDefaults.colors().copy(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = AppTheme.colors.textSecondary,
+                    unfocusedTextColor = AppTheme.colors.textSecondary,
+                    cursorColor = AppTheme.colors.element,
+                    focusedPlaceholderColor = placeholderColor,
+                    unfocusedPlaceholderColor = placeholderColor,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                shape = RectangleShape,
+                textStyle = AppTheme.typography.body,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Row(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterVertically),
+            ) {
+                IconButton(
+                    modifier = Modifier
+                        .size(48.dp),
+                    onClick = onAttachClicked,
+                    content = {
+                        Icon(
+                            modifier = Modifier
+                                .size(32.dp),
+                            imageVector = vectorResource(Res.drawable.ic_attach),
+                            tint = AppTheme.colors.element,
+                            contentDescription = null,
+                        )
+                    },
+                )
+                IconButton(
+                    modifier = Modifier
+                        .size(48.dp),
+                    onClick = onSendMessageClicked,
+                    content = {
+                        Icon(
+                            modifier = Modifier
+                                .size(32.dp),
+                            imageVector = vectorResource(Res.drawable.ic_send),
+                            tint = AppTheme.colors.element,
+                            contentDescription = null,
+                        )
+                    },
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
     }
 }
 
 @Composable
-private fun GroupChatPreview(showDeleteConfirmation: Boolean) {
+private fun GroupChatPreview(showDeleteConfirmation: Boolean, showReply: Boolean = false) {
     val previewMessages = flowOf(
         PagingData.from(
             data = listOf(
@@ -598,6 +666,8 @@ private fun GroupChatPreview(showDeleteConfirmation: Boolean) {
                     text = "some text",
                     datetimeText = "12:10",
                     status = MessageStatusUM.Sent,
+                    quote = MessageQuoteUM.Image(messageId = "4", filePath = "")
+                        .takeIf { showReply },
                 ),
                 MessageUM.Incoming.Text(
                     id = "2",
@@ -611,6 +681,8 @@ private fun GroupChatPreview(showDeleteConfirmation: Boolean) {
                     datetimeText = "12:11",
                     filePath = "",
                     status = MessageStatusUM.Sent,
+                    quote = MessageQuoteUM.Text(messageId = "2", text = "some text 2")
+                        .takeIf { showReply },
                 ),
                 MessageUM.Incoming.Image(
                     id = "4",
@@ -628,7 +700,11 @@ private fun GroupChatPreview(showDeleteConfirmation: Boolean) {
         GroupChatContent(
             modifier = Modifier.fillMaxSize(),
             state = GroupChatState(
-                message = "",
+                message = if (showReply) "A reply in progress" else "",
+                replyQuote = MessageQuoteUM.Text(
+                    messageId = "2",
+                    text = "A long message selected for the reply above the input field.",
+                ).takeIf { showReply },
                 syncState = UiLceState.NotStarted,
                 alertDialogDescriptor = if (showDeleteConfirmation) {
                     AlertDialogDescriptor(

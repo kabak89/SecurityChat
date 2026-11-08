@@ -175,11 +175,13 @@ project conventions:
 - **Function order:** declare non-private functions before private functions in each class,
   interface, and file. Preserve the existing order within each group and append new functions
   to the end of their group.
-- **Expression-bodied functions:** keep the expression on the same line as `=` only when the entire
-  function fits on one line. If the function spans multiple lines, insert a line break immediately
-  after `=` and indent the expression on the next line.
+- **Function bodies:** use an expression body only when the implementation fits on the same line
+  as `=`. For a multiline implementation, use a block body with curly braces and an explicit
+  `return` when the function returns a value.
 - **Named arguments:** when calling a function with more than two arguments, specify the names of
   all arguments.
+- **Request and response data classes:** do not set default values for constructor parameters.
+  Pass every argument explicitly, including `null` for nullable parameters.
 - **Multiline `if`:** use curly braces around each branch when the `if` spans more than one line.
   Braces may be omitted only when the entire `if`, including its body, fits on one line.
 

@@ -8,6 +8,7 @@ internal sealed interface BaseMessageRequest {
     val id: String
     val chatId: String
     val timestamp: Long
+    val replyToMessageId: String?
     val recipients: List<RecipientCiphertext>
 }
 

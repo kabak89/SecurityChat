@@ -97,6 +97,8 @@
     <string name="create_chat_type_group">Group</string>
     <string name="create_chat_create_group_chat_button">Create</string>
 
+    <string name="group_chat_reply">Reply</string>
+    <string name="group_chat_cancel_reply">Cancel reply</string>
     <string name="group_chat_delete_message">Delete message</string>
     <string name="group_chat_delete_confirmation_title">Delete message?</string>
     <string name="group_chat_delete_confirmation_description">The message will be deleted for everyone in this chat.</string>

@@ -34,6 +34,7 @@ private fun ImageMessageResponse.toNM(): ChatMessageNM.Image {
         key = this.key,
         authorId = this.authorId,
         timestamp = this.timestamp,
+        replyToMessageId = this.replyToMessageId,
         fileId = this.fileId,
     )
 }
@@ -44,6 +45,7 @@ private fun TextMessageResponse.toNM(): ChatMessageNM.Text {
         key = this.key,
         authorId = this.authorId,
         timestamp = this.timestamp,
+        replyToMessageId = this.replyToMessageId,
         text = this.text,
     )
 }

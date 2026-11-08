@@ -10,4 +10,5 @@ internal data class TextMessageRequest(
     @SerialName("timestamp") override val timestamp: Long,
     @SerialName("recipients") override val recipients: List<RecipientCiphertext>,
     @SerialName("message") val message: String,
+    @SerialName("replyToMessageId") override val replyToMessageId: String?,
 ) : BaseMessageRequest

@@ -22,12 +22,14 @@ import com.security.chat.multiplatform.features.chat.data.entity.FindUserRespons
 import com.security.chat.multiplatform.features.chat.data.entity.ImageMessageRequest
 import com.security.chat.multiplatform.features.chat.data.entity.RecipientCiphertext
 import com.security.chat.multiplatform.features.chat.data.entity.SendMessageRequest
+import com.security.chat.multiplatform.features.chat.data.entity.SendMessageResponse
 import com.security.chat.multiplatform.features.chat.data.entity.TextMessageRequest
 import com.security.chat.multiplatform.features.chat.data.mapper.toDomain
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
 import com.security.chat.multiplatform.features.chat.data.paging.MessagesPagingSource
+import com.security.chat.multiplatform.features.chat.data.paging.toPosition
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageRecipientSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageSM
@@ -47,11 +49,17 @@ import com.security.chat.multiplatform.features.chats.data.storage.ChatsStorage
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import com.security.chat.multiplatform.features.users.data.storage.UsersStorage
 import com.security.chat.multiplatform.features.users.data.storage.entity.UserSM
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -88,6 +96,7 @@ internal class ChatRepoImpl(
     override suspend fun saveTextMessage(
         message: String,
         chatId: String,
+        replyToMessageId: String?,
     ) {
         val chat = checkNotNull(chatsStorage.getChat(chatId))
         val userId = checkNotNull(userStorage.getUserId())
@@ -102,6 +111,7 @@ internal class ChatRepoImpl(
             text = message,
             authorId = userId,
             timestamp = timestamp,
+            replyToMessageId = replyToMessageId,
             recipients = recipients.map {
                 MessageRecipientSM(userId = it, status = Status.Created)
             },
@@ -114,6 +124,7 @@ internal class ChatRepoImpl(
     override suspend fun saveImageMessage(
         chatId: String,
         message: ImageMessageDescriptor,
+        replyToMessageId: String?,
     ) {
         val userId = checkNotNull(userStorage.getUserId())
         val timestamp = timeProvider.now().toEpochMilliseconds()
@@ -127,6 +138,7 @@ internal class ChatRepoImpl(
             },
             authorId = userId,
             timestamp = timestamp,
+            replyToMessageId = replyToMessageId,
             fileId = message.fileId,
             key = message.key,
             isDownloaded = true,
@@ -159,13 +171,12 @@ internal class ChatRepoImpl(
                 ) {
                     return@forEach
                 }
-                val request = createSendMessageRequest(message)
-                networkManager.runPost<SendMessageRequest, Unit>(
-                    relativePath = "/messages",
-                    request = request,
-                )
+                val acceptedRecipientIds = postMessage(message)
                 withContext(NonCancellable) {
-                    chatStorage.markMessageSent(id = message.id)
+                    chatStorage.markMessageSent(
+                        id = message.id,
+                        acceptedRecipientIds = acceptedRecipientIds,
+                    )
                 }
 
                 if (message is MessageSM.Image) {
@@ -193,58 +204,54 @@ internal class ChatRepoImpl(
         chatDataHelper.fetchAndSaveMessages(chatId = chatId)
     }
 
-    override fun getMessagesPager(chatId: String): Flow<PagingData<Message>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = MESSAGES_PAGE_SIZE,
-                initialLoadSize = MESSAGES_INITIAL_LOAD_SIZE,
-                prefetchDistance = MESSAGES_PREFETCH_DISTANCE,
-                enablePlaceholders = false,
-            ),
-            pagingSourceFactory = {
-                MessagesPagingSource(
-                    chatId = chatId,
-                    chatStorage = chatStorage,
-                    dispatcherProvider = dispatcherProvider,
-                )
-            },
-        ).flow
-            .onStart { chatDataHelper.migrateMessageStatuses() }
-            .map { pagingData ->
-                val userId = checkNotNull(userStorage.getUserId())
-                val imagesDirectoryPath = fileManager.getImagesDirectoryPath()
-                pagingData.map { message ->
-                    val author = usersStorage.getUser(message.authorId)?.let {
-                        MessageAuthor(
-                            id = it.id,
-                            name = it.name,
-                        )
-                    } ?: run {
-                        val userInfo = networkManager.runGet<FindUserResponse>(
-                            relativePath = "/users/info",
-                            request = mapOf("id" to message.authorId),
-                        )
-
-                        usersStorage.saveUser(
-                            user = UserSM(
-                                id = userInfo.userId,
-                                publicKey = userInfo.publicKey,
-                                name = userInfo.login,
-                            ),
-                        )
-                        MessageAuthor(
-                            id = userInfo.userId,
-                            name = userInfo.login,
-                        )
-                    }
-
-                    message.toDomain(
-                        appOwnerId = userId,
-                        author = author,
-                        imagesDirectoryPath = imagesDirectoryPath,
-                    )
-                }
+    override fun getMessagesPager(
+        chatId: String,
+        initialMessageId: String?,
+    ): Flow<PagingData<Message>> {
+        return flow {
+            chatDataHelper.migrateMessageStatuses()
+            val initialKey = initialMessageId?.let {
+                chatStorage.getMessage(chatId = chatId, messageId = it)?.toPosition()
             }
+            var activeSource: MessagesPagingSource? = null
+            val pager = Pager(
+                config = PagingConfig(
+                    pageSize = MESSAGES_PAGE_SIZE,
+                    initialLoadSize = MESSAGES_INITIAL_LOAD_SIZE,
+                    prefetchDistance = MESSAGES_PREFETCH_DISTANCE,
+                    enablePlaceholders = false,
+                ),
+                initialKey = initialKey,
+                pagingSourceFactory = {
+                    MessagesPagingSource(
+                        chatId = chatId,
+                        chatStorage = chatStorage,
+                        dispatcherProvider = dispatcherProvider,
+                        initialPosition = initialKey,
+                    ).also { activeSource = it }
+                },
+            )
+            try {
+                emitAll(pager.flow)
+            } finally {
+                activeSource?.invalidate()
+            }
+        }.map { pagingData ->
+            val userId = checkNotNull(userStorage.getUserId())
+            val imagesDirectoryPath = fileManager.getImagesDirectoryPath()
+            pagingData.map { (message, quotedMessage) ->
+                val author = usersStorage.getUser(message.authorId)?.let {
+                    MessageAuthor(id = it.id, name = it.name)
+                } ?: fetchMessageAuthor(message.authorId)
+
+                message.toDomain(
+                    appOwnerId = userId,
+                    author = author,
+                    imagesDirectoryPath = imagesDirectoryPath,
+                    quotedMessage = quotedMessage,
+                )
+            }
+        }
     }
 
     override suspend fun subscribeToNewMessages(chatId: String) {
@@ -460,36 +467,39 @@ internal class ChatRepoImpl(
     }
 
     private suspend fun buildRecipientCipherTexts(
-        recipients: List<String>,
+        recipientIds: List<String>,
         key: String,
+        ignoreMissingUsers: Boolean,
     ): List<RecipientCiphertext> {
-        return recipients.map { recipient ->
+        return recipientIds.mapNotNull { recipientId ->
+            val publicKey = try {
+                resolveRecipientPublicKey(recipientId)
+            } catch (e: NetworkError) {
+                if (ignoreMissingUsers && e.statusCode == HttpStatusCode.NotFound.value) {
+                    return@mapNotNull null
+                }
+                throw e
+            }
             RecipientCiphertext(
-                recipientId = recipient,
-                key = chatDataHelper.encryptKey(
-                    key = key,
-                    publicKeyString = resolveRecipientPublicKey(recipient),
-                ),
+                recipientId = recipientId,
+                key = chatDataHelper.encryptKey(key = key, publicKeyString = publicKey),
             )
         }
     }
 
-    private suspend fun createSendMessageRequest(message: MessageSM): SendMessageRequest {
+    private suspend fun createSendMessageRequest(
+        message: MessageSM,
+        key: String,
+        recipients: List<RecipientCiphertext>,
+    ): SendMessageRequest {
         return when (message) {
             is MessageSM.Text -> {
-                val key = chatDataHelper.getOneTimeEncryptionKey()
-                val encryptedText = chatDataHelper.encryptText(
-                    text = message.text,
-                    key = key,
-                )
-                val recipients = buildRecipientCipherTexts(
-                    recipients = message.recipients.map { it.userId },
-                    key = key,
-                )
+                val encryptedText = chatDataHelper.encryptText(text = message.text, key = key)
                 val textMessageRequest = TextMessageRequest(
                     id = message.id,
                     chatId = message.chatId,
                     timestamp = message.timestamp,
+                    replyToMessageId = message.replyToMessageId,
                     recipients = recipients,
                     message = encryptedText,
                 )
@@ -500,15 +510,11 @@ internal class ChatRepoImpl(
             }
 
             is MessageSM.Image -> {
-                uploadImageFile(fileId = message.fileId)
-                val recipients = buildRecipientCipherTexts(
-                    recipients = message.recipients.map { it.userId },
-                    key = message.key,
-                )
                 val imageMessageRequest = ImageMessageRequest(
                     id = message.id,
                     chatId = message.chatId,
                     timestamp = message.timestamp,
+                    replyToMessageId = message.replyToMessageId,
                     recipients = recipients,
                     fileId = message.fileId,
                 )
@@ -542,6 +548,57 @@ internal class ChatRepoImpl(
         val encryptedDirectory =
             fileManager.getDataDirectoryPath(FileManager.ENCRYPTED_IMAGES_FOLDER)
         fileManager.deleteFile(path = "$encryptedDirectory/$fileId")
+    }
+
+    private suspend fun fetchMessageAuthor(authorId: String): MessageAuthor {
+        val userInfo = networkManager.runGet<FindUserResponse>(
+            relativePath = "/users/info",
+            request = mapOf("id" to authorId),
+        )
+        usersStorage.saveUser(
+            user = UserSM(
+                id = userInfo.userId,
+                publicKey = userInfo.publicKey,
+                name = userInfo.login,
+            ),
+        )
+        return MessageAuthor(id = userInfo.userId, name = userInfo.login)
+    }
+
+    private suspend fun postMessage(message: MessageSM): List<String>? {
+        val isReply = message.replyToMessageId != null
+        val key = when (message) {
+            is MessageSM.Text -> chatDataHelper.getOneTimeEncryptionKey()
+            is MessageSM.Image -> message.key
+        }
+        val storedRecipientIds = message.recipients.map { it.userId }
+        val recipientIds = if (isReply) {
+            (storedRecipientIds + message.authorId).distinct()
+        } else {
+            storedRecipientIds
+        }
+        val recipients = buildRecipientCipherTexts(
+            recipientIds = recipientIds,
+            key = key,
+            ignoreMissingUsers = isReply,
+        )
+        val request =
+            createSendMessageRequest(message = message, key = key, recipients = recipients)
+
+        if (message is MessageSM.Image) {
+            uploadImageFile(fileId = message.fileId)
+        }
+        val response = networkManager.runPost<SendMessageRequest, HttpResponse>(
+            relativePath = "/messages",
+            request = request,
+        )
+        if (isReply && response.contentType()?.match(ContentType.Application.Json) == true) {
+            return response.body<SendMessageResponse>().acceptedRecipientIds
+        }
+
+        response.body<Unit>()
+        /** Older servers confirm with plain text. Only prune recipients skipped by this client. */
+        return if (isReply) recipients.map { it.recipientId } else null
     }
 }
 

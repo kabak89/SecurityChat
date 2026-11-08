@@ -8,6 +8,7 @@ public sealed interface Message {
     public val direction: MessageDirection
     public val recipients: List<MessageRecipient>
     public val status: MessageStatus
+    public val quote: MessageQuote?
 
     public data class Text(
         override val id: String,
@@ -17,6 +18,7 @@ public sealed interface Message {
         override val recipients: List<MessageRecipient>,
         override val status: MessageStatus,
         val text: String,
+        override val quote: MessageQuote? = null,
     ) : Message
 
     public data class Image(
@@ -27,5 +29,6 @@ public sealed interface Message {
         override val recipients: List<MessageRecipient>,
         override val status: MessageStatus,
         val filePath: String?,
+        override val quote: MessageQuote? = null,
     ) : Message
 }

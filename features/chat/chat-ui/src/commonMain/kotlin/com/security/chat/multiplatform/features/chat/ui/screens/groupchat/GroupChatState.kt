@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.common.core.ui.entity.UiLceState
 import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.FullscreenImageUM
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageQuoteUM
 
 @Immutable
 internal data class GroupChatState(
@@ -15,4 +16,5 @@ internal data class GroupChatState(
     val chatInfo: ChatInfoUM,
     val messageMenuId: String?,
     val deletingMessageId: String?,
+    val replyQuote: MessageQuoteUM? = null,
 )

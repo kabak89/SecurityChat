@@ -3,7 +3,8 @@ CREATE TABLE MessageTable (
   chatId TEXT NOT NULL,
   authorId TEXT NOT NULL,
   timestamp INTEGER NOT NULL,
-  type TEXT NOT NULL
+  type TEXT NOT NULL,
+  replyToMessageId TEXT
 );
 
 -- Covers keyset pagination: WHERE chatId = ? ORDER BY timestamp, id (both ASC and DESC scans).
@@ -32,7 +33,7 @@ GROUP BY MessageTable.chatId;
 -- add its detail table as another LEFT JOIN and its payload columns here.
 
 getPaged:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
@@ -42,7 +43,7 @@ LIMIT :limit
 OFFSET :offset;
 
 getNewest:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
@@ -51,7 +52,7 @@ ORDER BY MessageTable.timestamp DESC, MessageTable.id DESC
 LIMIT :limit;
 
 getUnread:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 JOIN MessageRecipients ON MessageRecipients.messageId = MessageTable.id
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
@@ -62,28 +63,28 @@ WHERE MessageTable.chatId = :chatId
   AND MessageRecipients.status = 'ReceivedByReceiver'
 ORDER BY MessageTable.timestamp ASC, MessageTable.id ASC;
 
-getOlderThan:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+getAtOrBefore:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
 WHERE MessageTable.chatId = :chatId
-  AND MessageTable.timestamp < :beforeTimestamp
+  AND (MessageTable.timestamp, MessageTable.id) <= (:beforeTimestamp, :beforeId)
 ORDER BY MessageTable.timestamp DESC, MessageTable.id DESC
 LIMIT :limit;
 
 getClosestNewerThan:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
 WHERE MessageTable.chatId = :chatId
-  AND MessageTable.timestamp > :afterTimestamp
+  AND (MessageTable.timestamp, MessageTable.id) > (:afterTimestamp, :afterId)
 ORDER BY MessageTable.timestamp ASC, MessageTable.id ASC
 LIMIT :limit;
 
 getByTimestamp:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
@@ -96,8 +97,15 @@ removeById:
 DELETE FROM MessageTable WHERE id = :messageId;
 
 getMessage:
-SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
 FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
 WHERE MessageTable.id = :messageId AND MessageTable.chatId = :chatId;
+
+getMessagesByIds:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
+FROM MessageTable
+LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
+WHERE MessageTable.chatId = :chatId AND MessageTable.id IN :messageIds;

@@ -10,4 +10,5 @@ internal data class ImageMessageResponse(
     @SerialName("authorId") override val authorId: String,
     @SerialName("timestamp") override val timestamp: Long,
     @SerialName("fileId") val fileId: String,
+    @SerialName("replyToMessageId") override val replyToMessageId: String?,
 ) : BaseMessage

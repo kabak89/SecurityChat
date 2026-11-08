@@ -5,8 +5,10 @@ import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageQuote
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageStatus
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.ChatInfoUM
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageQuoteUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 import kotlinx.datetime.LocalDateTime
@@ -54,6 +56,7 @@ internal fun Message.toUi(): MessageUM {
                 text = text,
                 datetimeText = datetimeText,
                 senderName = author.name,
+                quote = quote?.toUi(),
             )
 
             MessageDirection.Outgoing -> MessageUM.Outgoing.Text(
@@ -61,6 +64,7 @@ internal fun Message.toUi(): MessageUM {
                 text = text,
                 datetimeText = datetimeText,
                 status = status.toUi(),
+                quote = quote?.toUi(),
             )
         }
 
@@ -82,6 +86,7 @@ internal fun Message.toUi(): MessageUM {
                     datetimeText = datetimeText,
                     filePath = localFilePath,
                     senderName = author.name,
+                    quote = quote?.toUi(),
                 )
             }
 
@@ -102,18 +107,10 @@ internal fun Message.toUi(): MessageUM {
                     datetimeText = datetimeText,
                     filePath = localFilePath,
                     status = status.toUi(),
+                    quote = quote?.toUi(),
                 )
             }
         }
-    }
-}
-
-private fun MessageStatus.toUi(): MessageStatusUM {
-    return when (this) {
-        MessageStatus.Created -> MessageStatusUM.Created
-        MessageStatus.Sent -> MessageStatusUM.Sent
-        MessageStatus.ReceivedByReceiver -> MessageStatusUM.Received
-        MessageStatus.Read -> MessageStatusUM.Read
     }
 }
 
@@ -125,4 +122,31 @@ internal fun ChatInfo.toUi(): ChatInfoUM {
             this.totalMembersCount,
         ),
     )
+}
+
+internal fun MessageQuote.toUi(): MessageQuoteUM {
+    return when (this) {
+        is MessageQuote.Text -> MessageQuoteUM.Text(messageId = messageId, text = text)
+        is MessageQuote.Image -> MessageQuoteUM.Image(messageId = messageId, filePath = filePath)
+    }
+}
+
+internal fun MessageUM.toReplyQuote(): MessageQuote? {
+    return when (this) {
+        is MessageUM.Incoming.Text, is MessageUM.Outgoing.Text ->
+            MessageQuote.Text(messageId = id, text = text)
+
+        is MessageUM.Incoming.Image -> MessageQuote.Image(messageId = id, filePath = filePath)
+        is MessageUM.Outgoing.Image -> MessageQuote.Image(messageId = id, filePath = filePath)
+        is MessageUM.Nothing -> null
+    }
+}
+
+private fun MessageStatus.toUi(): MessageStatusUM {
+    return when (this) {
+        MessageStatus.Created -> MessageStatusUM.Created
+        MessageStatus.Sent -> MessageStatusUM.Sent
+        MessageStatus.ReceivedByReceiver -> MessageStatusUM.Received
+        MessageStatus.Read -> MessageStatusUM.Read
+    }
 }

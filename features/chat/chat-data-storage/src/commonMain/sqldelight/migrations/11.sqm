@@ -1,0 +1,1 @@
+ALTER TABLE MessageTable ADD COLUMN replyToMessageId TEXT;

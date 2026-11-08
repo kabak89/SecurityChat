@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.paging.compose.LazyPagingItems
@@ -15,7 +16,9 @@ import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity
 internal fun StickToNewestMessageEffect(
     lazyListState: LazyListState,
     messages: LazyPagingItems<out ItemWithId>,
+    enabled: Boolean,
 ) {
+    val isEnabled by rememberUpdatedState(enabled)
     var stickToBottom by remember { mutableStateOf(true) }
 
     LaunchedEffect(lazyListState) {
@@ -31,7 +34,7 @@ internal fun StickToNewestMessageEffect(
     LaunchedEffect(lazyListState, messages) {
         snapshotFlow { messages.itemSnapshotList.items.firstOrNull()?.id }
             .collect { newestId ->
-                if (newestId != null && stickToBottom) {
+                if (newestId != null && stickToBottom && isEnabled) {
                     lazyListState.animateScrollToItem(0)
                 }
             }

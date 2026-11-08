@@ -7,6 +7,7 @@ internal sealed interface MessageUM : ItemWithId {
     override val id: String
     val text: String
     val datetimeText: String
+    val quote: MessageQuoteUM? get() = null
 
     sealed interface Outgoing : MessageUM {
         override val id: String
@@ -17,6 +18,7 @@ internal sealed interface MessageUM : ItemWithId {
             override val text: String,
             override val datetimeText: String,
             val status: MessageStatusUM,
+            override val quote: MessageQuoteUM? = null,
         ) : Outgoing
 
         @Immutable
@@ -26,6 +28,7 @@ internal sealed interface MessageUM : ItemWithId {
             override val datetimeText: String,
             val filePath: String,
             val status: MessageStatusUM,
+            override val quote: MessageQuoteUM? = null,
         ) : Outgoing
     }
 
@@ -39,6 +42,7 @@ internal sealed interface MessageUM : ItemWithId {
             override val text: String,
             override val datetimeText: String,
             override val senderName: String,
+            override val quote: MessageQuoteUM? = null,
         ) : Incoming
 
         @Immutable
@@ -48,6 +52,7 @@ internal sealed interface MessageUM : ItemWithId {
             override val datetimeText: String,
             override val senderName: String,
             val filePath: String,
+            override val quote: MessageQuoteUM? = null,
         ) : Incoming
     }
 

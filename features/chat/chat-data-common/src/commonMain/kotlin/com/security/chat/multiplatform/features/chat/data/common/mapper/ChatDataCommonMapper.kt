@@ -18,6 +18,7 @@ internal suspend fun ChatMessageNM.toSM(
                 text = decryptMessage(text, key),
                 authorId = authorId,
                 timestamp = timestamp,
+                replyToMessageId = replyToMessageId,
                 recipients = recipients,
             )
         }
@@ -28,6 +29,7 @@ internal suspend fun ChatMessageNM.toSM(
                 chatId = chatId,
                 authorId = authorId,
                 timestamp = timestamp,
+                replyToMessageId = replyToMessageId,
                 recipients = recipients,
                 fileId = fileId,
                 key = decryptKey(key),

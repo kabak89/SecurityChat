@@ -10,4 +10,5 @@ internal data class TextMessageResponse(
     @SerialName("authorId") override val authorId: String,
     @SerialName("timestamp") override val timestamp: Long,
     @SerialName("text") val text: String,
+    @SerialName("replyToMessageId") override val replyToMessageId: String?,
 ) : BaseMessage

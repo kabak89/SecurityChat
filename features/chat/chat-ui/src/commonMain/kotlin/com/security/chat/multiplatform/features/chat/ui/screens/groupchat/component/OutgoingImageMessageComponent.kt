@@ -40,12 +40,20 @@ internal fun OutgoingImageMessageComponent(
     onClicked: () -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
     isFullscreenVisible: Boolean = false,
+    onQuoteClicked: (String) -> Unit = {},
 ) {
     Column(
         modifier = modifier
             .padding(all = 16.dp),
         horizontalAlignment = Alignment.End,
     ) {
+        message.quote?.let { quote ->
+            MessageQuoteComponent(
+                modifier = Modifier.padding(bottom = 4.dp).widthIn(max = 260.dp),
+                quote = quote,
+                onClicked = { onQuoteClicked(quote.messageId) },
+            )
+        }
         if (sharedTransitionScope != null) {
             var imageSize by remember { mutableStateOf<IntSize?>(null) }
             val density = LocalDensity.current

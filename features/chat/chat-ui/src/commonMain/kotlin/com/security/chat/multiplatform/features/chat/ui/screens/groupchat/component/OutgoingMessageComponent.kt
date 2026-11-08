@@ -2,9 +2,11 @@ package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.compo
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,12 +24,25 @@ import sh.calvin.autolinktext.rememberAutoLinkText
 internal fun OutgoingMessageComponent(
     modifier: Modifier = Modifier,
     message: MessageUM.Outgoing.Text,
+    onQuoteClicked: (String) -> Unit = {},
 ) {
     FlowRow(
         modifier = modifier
             .padding(all = 16.dp),
         horizontalArrangement = Arrangement.End,
     ) {
+        message.quote?.let { quote ->
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                MessageQuoteComponent(
+                    modifier = Modifier.widthIn(max = 260.dp),
+                    quote = quote,
+                    onClicked = { onQuoteClicked(quote.messageId) },
+                )
+            }
+        }
         SelectionContainer {
             Text(
                 modifier = Modifier

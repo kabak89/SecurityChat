@@ -232,6 +232,61 @@ class MessageDeletionTest {
             }
         }
 
+    @Test
+    fun `reply id survives arrival and deletion of the original and lookup stays in the chat`() {
+        runTest {
+            withStorage { storage, _ ->
+                val reply = incoming().copy(id = "reply", replyToMessageId = "message")
+                storage.saveMessage(reply)
+                storage.saveMessage(incoming().copy(id = "foreign", chatId = "other"))
+                val targetIds = setOf("message", "foreign")
+
+                assertTrue(
+                    storage.getMessagesByIds(chatId = "chat", messageIds = targetIds).isEmpty(),
+                )
+                storage.saveMessage(incoming())
+                assertEquals(
+                    listOf("message"),
+                    storage.getMessagesByIds(chatId = "chat", messageIds = targetIds).map { it.id },
+                )
+
+                storage.delete()
+                assertTrue(
+                    storage.getMessagesByIds(chatId = "chat", messageIds = targetIds).isEmpty(),
+                )
+                assertEquals(
+                    "message",
+                    storage.getMessage(chatId = "chat", messageId = "reply")?.replyToMessageId,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `history cursors include messages with the same timestamp on both sides of a quote`() {
+        runTest {
+            withStorage { storage, _ ->
+                storage.saveMessages(listOf("a", "b", "c").map { incoming().copy(id = it) })
+                val timestamp = incoming().timestamp
+
+                val older = storage.getMessagesAtOrBefore(
+                    chatId = "chat",
+                    beforeTimestamp = timestamp,
+                    beforeId = "b",
+                    limit = 10,
+                )
+                val newer = storage.getClosestNewerMessages(
+                    chatId = "chat",
+                    afterTimestamp = timestamp,
+                    afterId = "b",
+                    limit = 10,
+                )
+                assertEquals(listOf("b", "a"), older.map { it.id })
+                assertEquals(listOf("c"), newer.map { it.id })
+            }
+        }
+    }
+
     private suspend fun ChatStorage.delete(deletedByUserId: String = "peer"): String? =
         deleteMessage(chatId = "chat", messageId = "message", deletedByUserId = deletedByUserId)
 

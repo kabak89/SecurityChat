@@ -5,6 +5,7 @@ import com.security.chat.multiplatform.features.chat.data.storage.entity.Status
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageAuthor
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageDirection
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageQuote
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageRecipient
 import com.security.chat.multiplatform.features.chat.domain.entity.MessageStatus
 
@@ -12,6 +13,7 @@ internal fun MessageSM.toDomain(
     appOwnerId: String,
     author: MessageAuthor,
     imagesDirectoryPath: String,
+    quotedMessage: MessageSM? = null,
 ): Message {
     val direction = if (authorId == appOwnerId) {
         MessageDirection.Outgoing
@@ -33,6 +35,7 @@ internal fun MessageSM.toDomain(
         MessageRecipient(userId = it.userId, status = it.status.toDomain())
     }
 
+    val quote = quotedMessage?.toQuote(imagesDirectoryPath)
     return when (this) {
         is MessageSM.Text -> Message.Text(
             id = id,
@@ -41,6 +44,7 @@ internal fun MessageSM.toDomain(
             direction = direction,
             recipients = domainRecipients,
             status = status.toDomain(),
+            quote = quote,
             text = text,
         )
 
@@ -51,8 +55,20 @@ internal fun MessageSM.toDomain(
             direction = direction,
             recipients = domainRecipients,
             status = status.toDomain(),
+            quote = quote,
             filePath = if (isDownloaded) "$imagesDirectoryPath/$fileId" else null,
         )
+    }
+}
+
+private fun MessageSM.toQuote(imagesDirectoryPath: String): MessageQuote? {
+    return when (this) {
+        is MessageSM.Text -> MessageQuote.Text(messageId = id, text = text)
+        is MessageSM.Image -> if (isDownloaded) {
+            MessageQuote.Image(messageId = id, filePath = "$imagesDirectoryPath/$fileId")
+        } else {
+            null
+        }
     }
 }
 

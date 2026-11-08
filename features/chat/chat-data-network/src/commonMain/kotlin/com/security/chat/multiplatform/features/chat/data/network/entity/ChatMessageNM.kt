@@ -6,6 +6,7 @@ public sealed interface ChatMessageNM {
     public val key: String
     public val authorId: String
     public val timestamp: Long
+    public val replyToMessageId: String?
 
     public data class Text(
         override val id: String,
@@ -13,6 +14,7 @@ public sealed interface ChatMessageNM {
         override val authorId: String,
         override val timestamp: Long,
         val text: String,
+        override val replyToMessageId: String? = null,
     ) : ChatMessageNM
 
     public data class Image(
@@ -21,5 +23,6 @@ public sealed interface ChatMessageNM {
         override val authorId: String,
         override val timestamp: Long,
         val fileId: String,
+        override val replyToMessageId: String? = null,
     ) : ChatMessageNM
 }

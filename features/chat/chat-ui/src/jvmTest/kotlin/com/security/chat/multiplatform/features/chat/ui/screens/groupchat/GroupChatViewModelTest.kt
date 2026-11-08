@@ -7,6 +7,7 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.features.chat.domain.GroupChatModel
 import com.security.chat.multiplatform.features.chat.domain.entity.ChatInfo
 import com.security.chat.multiplatform.features.chat.domain.entity.Message
+import com.security.chat.multiplatform.features.chat.domain.entity.MessageQuote
 import com.security.chat.multiplatform.features.chat.domain.entity.PickedImage
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageStatusUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
@@ -124,7 +125,13 @@ class GroupChatViewModelTest {
         override fun setChatId(id: String) = Unit
         override fun setCurrentMessageText(text: String) = Unit
         override fun getCurrentMessageFlow(): Flow<String> = emptyFlow()
-        override fun getMessagesPager(): Flow<PagingData<Message>> = emptyFlow()
+        override fun getMessagesPager(initialMessageId: String?): Flow<PagingData<Message>> {
+            return emptyFlow()
+        }
+
+        override fun setReplyQuote(quote: MessageQuote?) = Unit
+
+        override fun getReplyQuoteFlow(): Flow<MessageQuote?> = emptyFlow()
         override fun onViewActive() = Unit
         override fun onViewInactive() = Unit
         override fun getChatInfoFlow(): Flow<ChatInfo?> = emptyFlow()

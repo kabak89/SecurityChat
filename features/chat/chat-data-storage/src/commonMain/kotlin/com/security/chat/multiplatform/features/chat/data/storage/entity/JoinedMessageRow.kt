@@ -10,4 +10,5 @@ internal data class JoinedMessageRow(
     val fileId: String?,
     val key: String?,
     val isDownloaded: Boolean?,
+    val replyToMessageId: String?,
 )

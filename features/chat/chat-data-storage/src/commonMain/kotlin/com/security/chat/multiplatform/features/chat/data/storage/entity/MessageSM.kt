@@ -7,6 +7,7 @@ public sealed interface MessageSM {
     public val recipients: List<MessageRecipientSM>
     public val authorId: String
     public val timestamp: Long
+    public val replyToMessageId: String?
 
     public data class Text(
         override val id: String,
@@ -15,6 +16,7 @@ public sealed interface MessageSM {
         override val authorId: String,
         override val timestamp: Long,
         val text: String,
+        override val replyToMessageId: String? = null,
     ) : MessageSM
 
     public data class Image(
@@ -26,6 +28,7 @@ public sealed interface MessageSM {
         val fileId: String,
         val key: String,
         val isDownloaded: Boolean,
+        override val replyToMessageId: String? = null,
     ) : MessageSM
 }
 

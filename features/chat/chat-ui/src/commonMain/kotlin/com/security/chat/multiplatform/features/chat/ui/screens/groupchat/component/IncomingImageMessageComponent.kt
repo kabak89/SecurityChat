@@ -1,6 +1,5 @@
 package com.security.chat.multiplatform.features.chat.ui.screens.groupchat.component
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,9 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
+import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageQuoteUM
 import com.security.chat.multiplatform.features.chat.ui.screens.groupchat.entity.MessageUM
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun IncomingImageMessageComponent(
     modifier: Modifier = Modifier,
@@ -44,6 +43,7 @@ internal fun IncomingImageMessageComponent(
     onClicked: () -> Unit,
     sharedTransitionScope: SharedTransitionScope?,
     isFullscreenVisible: Boolean,
+    onQuoteClicked: (String) -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -83,6 +83,13 @@ internal fun IncomingImageMessageComponent(
                 )
             }
             Spacer(modifier.height(8.dp))
+        }
+        message.quote?.let { quote ->
+            MessageQuoteComponent(
+                modifier = Modifier.padding(bottom = 4.dp).widthIn(max = 260.dp),
+                quote = quote,
+                onClicked = { onQuoteClicked(quote.messageId) },
+            )
         }
         if (sharedTransitionScope != null) {
             var imageSize by remember { mutableStateOf<IntSize?>(null) }
@@ -150,6 +157,35 @@ internal fun IncomingImageMessageComponent(
 @Preview
 @Composable
 internal fun IncomingImageMessageComponentPreview() {
+    IncomingImageMessagePreview(showSenderName = true)
+}
+
+@Preview
+@Composable
+internal fun IncomingImageMessageWithTextQuotePreview() {
+    IncomingImageMessagePreview(
+        showSenderName = true,
+        quote = MessageQuoteUM.Text(
+            messageId = "original-text",
+            text = "This is a long quoted message that should fit on a single line.",
+        ),
+    )
+}
+
+@Preview
+@Composable
+internal fun IncomingImageMessageWithPhotoQuotePreview() {
+    IncomingImageMessagePreview(
+        showSenderName = false,
+        quote = MessageQuoteUM.Image(messageId = "original-photo", filePath = ""),
+    )
+}
+
+@Composable
+private fun IncomingImageMessagePreview(
+    showSenderName: Boolean,
+    quote: MessageQuoteUM? = null,
+) {
     AppTheme {
         IncomingImageMessageComponent(
             modifier = Modifier
@@ -161,8 +197,9 @@ internal fun IncomingImageMessageComponentPreview() {
                 datetimeText = "12:10",
                 filePath = "",
                 senderName = "John",
+                quote = quote,
             ),
-            showSenderName = true,
+            showSenderName = showSenderName,
             onClicked = {},
             sharedTransitionScope = null,
             isFullscreenVisible = false,

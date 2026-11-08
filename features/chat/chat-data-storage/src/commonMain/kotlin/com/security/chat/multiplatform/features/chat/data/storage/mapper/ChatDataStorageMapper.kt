@@ -16,6 +16,7 @@ internal fun MessageSM.toMessageTable(): MessageTable {
         authorId = authorId,
         timestamp = timestamp,
         type = mapTypeToString(message = this),
+        replyToMessageId = replyToMessageId,
     )
 }
 
@@ -43,6 +44,7 @@ internal fun JoinedMessageRow.toSM(recipients: List<MessageRecipientSM>): Messag
             text = text ?: return logMissingColumn(column = "text"),
             authorId = authorId,
             timestamp = timestamp,
+            replyToMessageId = replyToMessageId,
             recipients = recipients,
         )
 
@@ -54,6 +56,7 @@ internal fun JoinedMessageRow.toSM(recipients: List<MessageRecipientSM>): Messag
             isDownloaded = isDownloaded ?: return logMissingColumn(column = "isDownloaded"),
             authorId = authorId,
             timestamp = timestamp,
+            replyToMessageId = replyToMessageId,
             recipients = recipients,
         )
 

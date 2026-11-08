@@ -8,4 +8,5 @@ internal sealed interface BaseMessage {
     val key: String
     val authorId: String
     val timestamp: Long
+    val replyToMessageId: String?
 }

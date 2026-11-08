@@ -13,6 +13,13 @@ class GroupChatScreenTest : ScreenshotTestBase() {
     }
 
     @Test
+    fun `reply panel and quoted messages preview`() {
+        runScreenshotTest(screenshotName = "GroupChatReplyPreview") {
+            GroupChatReplyPreview()
+        }
+    }
+
+    @Test
     fun `delete message confirmation preview`() {
         runScreenshotTest(screenshotName = "GroupChatDeleteConfirmationPreview") {
             GroupChatDeleteConfirmationPreview()

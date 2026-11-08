@@ -42,28 +42,30 @@ public interface ChatStorage {
     public suspend fun getMessages(chatId: String, limit: Long, offset: Long): List<MessageSM>
     public suspend fun getNewestMessages(chatId: String, limit: Long): List<MessageSM>
     public suspend fun getUnreadMessages(chatId: String, userId: String): List<MessageSM>
-    public suspend fun getOlderMessages(
+    public suspend fun getMessagesAtOrBefore(
         chatId: String,
         beforeTimestamp: Long,
+        beforeId: String,
         limit: Long,
     ): List<MessageSM>
 
     /**
-     * Returns up to [limit] messages with `timestamp > afterTimestamp`, ordered by `timestamp ASC`
-     * (closest-newer first). Use this for contiguous pagination toward newer messages: it never
-     * leaves a gap between [afterTimestamp] and the returned items.
+     * Returns up to [limit] messages after the ([afterTimestamp], [afterId]) cursor, nearest first.
      */
     public suspend fun getClosestNewerMessages(
         chatId: String,
         afterTimestamp: Long,
+        afterId: String,
         limit: Long,
     ): List<MessageSM>
+
+    public suspend fun getMessagesByIds(chatId: String, messageIds: Set<String>): List<MessageSM>
 
     public fun observeMessagesChanges(chatId: String): Flow<Unit>
     public fun observeLastMessageTimestamps(): Flow<Map<String, Long>>
     public fun observeUnreadCounts(userId: String): Flow<Map<String, Long>>
     public suspend fun updateMessage(message: MessageSM)
-    public suspend fun markMessageSent(id: String)
+    public suspend fun markMessageSent(id: String, acceptedRecipientIds: List<String>? = null)
     public suspend fun restoreOutgoingMessageRecipients(
         chatId: String,
         authorId: String,
@@ -123,7 +125,7 @@ internal class ChatStorageImpl(
                     driver = driverFactory.createDriver(
                         databaseName = "chat.db",
                         sqlSchema = ChatDb.Schema,
-                        version = 11,
+                        version = ChatDb.Schema.version.toInt(),
                     ),
                 )
             },
@@ -300,18 +302,20 @@ internal class ChatStorageImpl(
         }
     }
 
-    override suspend fun getOlderMessages(
+    override suspend fun getMessagesAtOrBefore(
         chatId: String,
         beforeTimestamp: Long,
+        beforeId: String,
         limit: Long,
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
             val db = dbCreator.getDb()
             db.attachRecipients(
                 db.messageTableQueries
-                    .getOlderThan(
+                    .getAtOrBefore(
                         chatId = chatId,
                         beforeTimestamp = beforeTimestamp,
+                        beforeId = beforeId,
                         limit = limit,
                         mapper = ::JoinedMessageRow,
                     )
@@ -323,6 +327,7 @@ internal class ChatStorageImpl(
     override suspend fun getClosestNewerMessages(
         chatId: String,
         afterTimestamp: Long,
+        afterId: String,
         limit: Long,
     ): List<MessageSM> {
         return withContext(dispatcherProvider.IO) {
@@ -331,6 +336,7 @@ internal class ChatStorageImpl(
                 .getClosestNewerThan(
                     chatId = chatId,
                     afterTimestamp = afterTimestamp,
+                    afterId = afterId,
                     limit = limit,
                     mapper = ::JoinedMessageRow,
                 )
@@ -370,6 +376,23 @@ internal class ChatStorageImpl(
             .flowOn(dispatcherProvider.IO)
     }
 
+    override suspend fun getMessagesByIds(
+        chatId: String,
+        messageIds: Set<String>,
+    ): List<MessageSM> {
+        return withContext(dispatcherProvider.IO) {
+            if (messageIds.isEmpty()) return@withContext emptyList()
+            dbCreator.getDb().messageTableQueries
+                .getMessagesByIds(
+                    chatId = chatId,
+                    messageIds = messageIds,
+                    mapper = ::JoinedMessageRow,
+                )
+                .executeAsList()
+                .mapNotNull { it.toSM(recipients = emptyList()) }
+        }
+    }
+
     override fun observeMessagesChanges(chatId: String): Flow<Unit> {
         return dbCreator.dbFlow
             .flatMapLatest { db ->
@@ -405,9 +428,18 @@ internal class ChatStorageImpl(
         }
     }
 
-    override suspend fun markMessageSent(id: String) {
+    override suspend fun markMessageSent(id: String, acceptedRecipientIds: List<String>?) {
         withContext(dispatcherProvider.IO) {
-            dbCreator.getDb().messageRecipientsQueries.markSent(messageId = id)
+            val db = dbCreator.getDb()
+            db.transaction {
+                if (acceptedRecipientIds != null) {
+                    db.messageRecipientsQueries.removeUnaccepted(
+                        messageId = id,
+                        acceptedRecipientIds = acceptedRecipientIds,
+                    )
+                }
+                db.messageRecipientsQueries.markSent(messageId = id)
+            }
         }
     }
 
