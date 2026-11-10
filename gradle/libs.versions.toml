@@ -39,6 +39,7 @@ kotlinx-collections-immutable = "0.5.1"
 androidxlifecycle = "2.11.0"
 koin = "4.2.2"
 coroutines = "1.11.0"
+kable = "0.45.0"
 material3 = "1.9.0"
 remo = "1.3.0"
 sha2 = "0.8.0"
@@ -99,6 +100,7 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kable-core = { module = "com.juul.kable:kable-core", version.ref = "kable" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 
 kode-remo = { module = "ru.kode.android:remo", version.ref = "remo" }

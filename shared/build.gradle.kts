@@ -124,6 +124,14 @@ compose.desktop {
     application {
         mainClass = "com.security.chat.multiplatform.MainKt"
         nativeDistributions {
+            macOS {
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>NSBluetoothAlwaysUsageDescription</key>
+                        <string>Security Chat uses Bluetooth to exchange mesh data with nearby devices.</string>
+                    """.trimIndent()
+                }
+            }
             /**
              * Explicit module list instead of `includeAllModules`: JDKs built with JEP 493 ship no
              * `jmods` folder and jlink refuses to put `jdk.jlink` into the produced image.

@@ -36,6 +36,9 @@ kotlin {
             implementation(projects.common.coreTime)
             implementation(projects.common.log)
         }
+        jvmMain.dependencies {
+            implementation(libs.kable.core)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
