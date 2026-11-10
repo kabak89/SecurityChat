@@ -5,7 +5,8 @@ import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.entity.PrintableText
 import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
 import securitychat.common.localization.generated.resources.settings_main_log_out
-import securitychat.common.localization.generated.resources.settings_main_notifications
+import securitychat.common.localization.generated.resources.settings_main_logs
+import securitychat.common.localization.generated.resources.settings_main_permissions
 import securitychat.common.localization.generated.resources.settings_main_profile
 import securitychat.common.localization.generated.resources.settings_main_theme
 
@@ -31,6 +32,21 @@ internal sealed interface SettingItem {
 
     data object Notifications : SettingItem {
         override val title: PrintableText
-            get() = resPrintableText(StringRes.settings_main_notifications)
+            get() = resPrintableText(StringRes.settings_main_permissions)
+    }
+
+    data object Logs : SettingItem {
+        override val title: PrintableText
+            get() = resPrintableText(StringRes.settings_main_logs)
+    }
+}
+
+internal fun settingsMainItems(showLogs: Boolean): List<SettingItem> {
+    return buildList {
+        add(SettingItem.Profile)
+        add(SettingItem.Theme)
+        add(SettingItem.Notifications)
+        if (showLogs) add(SettingItem.Logs)
+        add(SettingItem.Logout)
     }
 }

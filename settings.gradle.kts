@@ -153,3 +153,9 @@ include(
     ":features:call:call-component-api",
     ":features:call:call-component",
 )
+include(
+    ":features:mesh:mesh-domain",
+    ":features:mesh:mesh-data",
+    ":features:mesh:mesh-data-storage",
+    ":features:mesh:mesh-ui",
+)

@@ -5,6 +5,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.security.chat.multiplatform.features.mesh.ui.screens.logs.LogsScreen
 import com.security.chat.multiplatform.features.profile.ui.screens.root.ProfileRootScreen
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.SettingsMainScreen
@@ -47,6 +48,8 @@ public fun SettingsRootScreen(
                         component = child.component,
                     )
                 }
+
+                SettingsComponent.Child.Logs -> LogsScreen(onBackClicked = component::onBackClicked)
             }
         },
     )

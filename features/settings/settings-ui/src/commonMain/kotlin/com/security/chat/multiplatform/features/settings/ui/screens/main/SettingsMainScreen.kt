@@ -27,6 +27,7 @@ import com.security.chat.multiplatform.common.ui.kit.theme.AppTheme
 import com.security.chat.multiplatform.features.settings.component.api.SettingsMainComponent
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.DialogData
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
+import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.settingsMainItems
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +55,7 @@ internal fun SettingsMainScreen(
             onOnGoToThemeClicked = component::onGoToThemeClicked,
             onGoToNotificationsClicked = component::onGoToNotificationsClicked,
             onOnGoToProfileClicked = component::onGoToProfileClicked,
+            onGoToLogsClicked = component::onGoToLogsClicked,
         )
     }
 }
@@ -70,6 +72,7 @@ private fun SettingsMainScreenContent(
     onOnGoToThemeClicked: () -> Unit,
     onGoToNotificationsClicked: () -> Unit,
     onOnGoToProfileClicked: () -> Unit,
+    onGoToLogsClicked: () -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
@@ -78,6 +81,7 @@ private fun SettingsMainScreenContent(
                 SettingsMainEvent.GoToTheme -> onOnGoToThemeClicked()
                 SettingsMainEvent.GoToNotifications -> onGoToNotificationsClicked()
                 SettingsMainEvent.GoToProfile -> onOnGoToProfileClicked()
+                SettingsMainEvent.GoToLogs -> onGoToLogsClicked()
             }
         },
     )
@@ -157,29 +161,7 @@ private fun ItemComponent(
 @Preview
 @Composable
 internal fun SettingsMainScreenPreview() {
-    AppTheme {
-        SettingsMainScreenContent(
-            modifier = Modifier.fillMaxSize(),
-            state = SettingsMainState(
-                items = listOf(
-                    SettingItem.Profile,
-                    SettingItem.Theme,
-                    SettingItem.Notifications,
-                    SettingItem.Logout,
-                ),
-                dialogData = null,
-                requestInProgress = false,
-            ),
-            events = emptyFlow(),
-            onBackClicked = {},
-            onItemClicked = {},
-            onDismissDialog = {},
-            onDialogActionClicked = {},
-            onOnGoToThemeClicked = {},
-            onGoToNotificationsClicked = {},
-            onOnGoToProfileClicked = {},
-        )
-    }
+    SettingsMainListPreview(showLogs = false)
 }
 
 @Preview
@@ -210,6 +192,36 @@ internal fun SettingsMainScreenPreviewWithDialog() {
             onOnGoToThemeClicked = {},
             onGoToNotificationsClicked = {},
             onOnGoToProfileClicked = {},
+            onGoToLogsClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun SettingsMainScreenDebugPreview() {
+    SettingsMainListPreview(showLogs = true)
+}
+
+@Composable
+private fun SettingsMainListPreview(showLogs: Boolean) {
+    AppTheme {
+        SettingsMainScreenContent(
+            modifier = Modifier.fillMaxSize(),
+            state = SettingsMainState(
+                items = settingsMainItems(showLogs),
+                dialogData = null,
+                requestInProgress = false,
+            ),
+            events = emptyFlow(),
+            onBackClicked = {},
+            onItemClicked = {},
+            onDismissDialog = {},
+            onDialogActionClicked = {},
+            onOnGoToThemeClicked = {},
+            onGoToNotificationsClicked = {},
+            onOnGoToProfileClicked = {},
+            onGoToLogsClicked = {},
         )
     }
 }

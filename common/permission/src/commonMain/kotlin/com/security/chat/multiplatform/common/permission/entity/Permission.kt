@@ -7,4 +7,6 @@ public enum class Permission {
     Notifications,
     RecordAudio,
     LocalNetwork,
+    Bluetooth,
+    BluetoothBackgroundLocation,
 }

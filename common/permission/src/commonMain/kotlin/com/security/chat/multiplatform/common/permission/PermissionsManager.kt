@@ -13,6 +13,8 @@ public interface PermissionsManager {
         isPermissionAllowed(permission)
 
     public fun openAppSettings()
+
+    public fun bluetoothScanRequiresBackgroundLocation(): Boolean = false
 }
 
 @Composable
@@ -20,3 +22,5 @@ public expect fun createLauncher(
     permission: Permission,
     onResult: (allowanceResult: AllowanceResult) -> Unit,
 ): RequestPermissionLauncher
+
+public expect fun bluetoothScanRequiresLocation(): Boolean

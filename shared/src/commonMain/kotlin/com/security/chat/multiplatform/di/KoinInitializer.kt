@@ -4,6 +4,7 @@ import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.crash.report.initCrashReporting
 import com.security.chat.multiplatform.common.log.Log
+import com.security.chat.multiplatform.features.mesh.domain.MeshModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -13,6 +14,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatform
 
 public fun initDI(appDeclaration: KoinAppDeclaration = {}) {
     initCrashReporting()
@@ -43,3 +45,8 @@ public fun initDI(appDeclaration: KoinAppDeclaration = {}) {
 }
 
 internal expect fun initKoin(appDeclaration: KoinAppDeclaration = {})
+
+internal fun startMeshModel() {
+    val koin = KoinPlatform.getKoin()
+    koin.get<MeshModel>().start(parentScope = koin.get(named(SCOPE_ID_APP)))
+}

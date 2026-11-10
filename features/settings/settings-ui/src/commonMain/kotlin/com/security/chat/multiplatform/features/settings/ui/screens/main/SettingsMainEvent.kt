@@ -4,4 +4,5 @@ internal sealed interface SettingsMainEvent {
     data object GoToTheme : SettingsMainEvent
     data object GoToNotifications : SettingsMainEvent
     data object GoToProfile : SettingsMainEvent
+    data object GoToLogs : SettingsMainEvent
 }

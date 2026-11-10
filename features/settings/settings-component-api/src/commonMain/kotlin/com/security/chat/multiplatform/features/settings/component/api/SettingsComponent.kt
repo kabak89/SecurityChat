@@ -18,5 +18,6 @@ public interface SettingsComponent : BaseComponent, DiScopeHolder, BackHandlerOw
         public class Theme(public val component: ThemeComponent) : Child
         public class Notifications(public val component: NotificationsComponent) : Child
         public class Profile(public val component: ProfileComponent) : Child
+        public data object Logs : Child
     }
 }

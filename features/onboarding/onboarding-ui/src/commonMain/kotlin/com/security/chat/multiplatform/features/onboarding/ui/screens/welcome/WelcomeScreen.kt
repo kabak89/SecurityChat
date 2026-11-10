@@ -64,7 +64,7 @@ internal fun WelcomeScreen(
     ) { _: WelcomeState, vm: WelcomeViewModel ->
         SingleEventEffect(vm.viewEvent) { event ->
             when (event) {
-                WelcomeEvent.RequestNotificationPermission -> component.onContinue()
+                WelcomeEvent.RequestPermissions -> component.onContinue()
                 WelcomeEvent.Finished -> component.onFinish()
             }
         }

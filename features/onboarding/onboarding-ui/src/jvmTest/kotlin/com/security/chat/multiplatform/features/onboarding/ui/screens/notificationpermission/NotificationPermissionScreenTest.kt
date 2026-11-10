@@ -11,4 +11,25 @@ class NotificationPermissionScreenTest : ScreenshotTestBase() {
             NotificationPermissionScreenPreview()
         }
     }
+
+    @Test
+    fun `Bluetooth permission screen preview`() {
+        runScreenshotTest(screenshotName = "BluetoothPermissionScreenPreview") {
+            BluetoothPermissionScreenPreview()
+        }
+    }
+
+    @Test
+    fun `Bluetooth location permission onboarding preview`() {
+        runScreenshotTest(screenshotName = "BluetoothLocationPermissionScreenPreview") {
+            BluetoothLocationPermissionScreenPreview()
+        }
+    }
+
+    @Test
+    fun `Bluetooth background permission onboarding preview`() {
+        runScreenshotTest(screenshotName = "BluetoothBackgroundPermissionScreenPreview") {
+            BluetoothBackgroundPermissionScreenPreview()
+        }
+    }
 }

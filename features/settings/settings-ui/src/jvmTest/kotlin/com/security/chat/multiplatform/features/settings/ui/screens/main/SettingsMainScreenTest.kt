@@ -18,4 +18,11 @@ class SettingsMainScreenTest : ScreenshotTestBase() {
             SettingsMainScreenPreviewWithDialog()
         }
     }
+
+    @Test
+    fun `debug settings show the Logs entry`() {
+        runScreenshotTest(screenshotName = "SettingsMainScreenDebugPreview") {
+            SettingsMainScreenDebugPreview()
+        }
+    }
 }

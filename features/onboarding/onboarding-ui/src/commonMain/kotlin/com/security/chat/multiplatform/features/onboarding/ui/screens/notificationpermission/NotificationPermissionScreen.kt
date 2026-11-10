@@ -26,7 +26,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.Screen
 import com.security.chat.multiplatform.common.core.ui.SingleEventEffect
-import com.security.chat.multiplatform.common.log.Log
+import com.security.chat.multiplatform.common.permission.bluetoothScanRequiresLocation
 import com.security.chat.multiplatform.common.permission.createLauncher
 import com.security.chat.multiplatform.common.permission.entity.AllowanceResult
 import com.security.chat.multiplatform.common.permission.entity.Permission
@@ -41,6 +41,14 @@ import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_background_description
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_background_do_not_grant
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_background_grant
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_description
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_do_not_grant
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_grant
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_location_description
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_location_grant
 import securitychat.common.localization.generated.resources.notification_permission_description
 import securitychat.common.localization.generated.resources.notification_permission_do_not_grant
 import securitychat.common.localization.generated.resources.notification_permission_grant
@@ -59,10 +67,10 @@ internal fun NotificationPermissionScreen(
                 .fillMaxSize()
                 .imePadding(),
             state = state,
+            locationRequiredForBluetoothScan = bluetoothScanRequiresLocation(),
             events = vm.viewEvent,
             close = component::onFinish,
-            showPermissionRestrictDialog = vm::showPermissionRestrictDialog,
-            onFinishOnboardingClicked = vm::onFinishOnboardingClicked,
+            onPermissionResult = vm::onPermissionResult,
         )
     }
     NavigationBackHandler(
@@ -72,14 +80,41 @@ internal fun NotificationPermissionScreen(
     )
 }
 
+@Preview
+@Composable
+internal fun NotificationPermissionScreenPreview() {
+    PermissionScreenPreview(permission = Permission.Notifications)
+}
+
+@Preview
+@Composable
+internal fun BluetoothPermissionScreenPreview() {
+    PermissionScreenPreview(permission = Permission.Bluetooth)
+}
+
+@Preview
+@Composable
+internal fun BluetoothLocationPermissionScreenPreview() {
+    PermissionScreenPreview(
+        permission = Permission.Bluetooth,
+        locationRequiredForBluetoothScan = true,
+    )
+}
+
+@Preview
+@Composable
+internal fun BluetoothBackgroundPermissionScreenPreview() {
+    PermissionScreenPreview(permission = Permission.BluetoothBackgroundLocation)
+}
+
 @Composable
 private fun NotificationPermissionScreenContent(
     modifier: Modifier,
     state: NotificationPermissionState,
+    locationRequiredForBluetoothScan: Boolean,
     events: Flow<NotificationPermissionEvent>,
     close: () -> Unit,
-    showPermissionRestrictDialog: () -> Unit,
-    onFinishOnboardingClicked: () -> Unit,
+    onPermissionResult: (Permission, AllowanceResult) -> Unit,
 ) {
     SingleEventEffect(
         sideEffectFlow = events,
@@ -104,33 +139,44 @@ private fun NotificationPermissionScreenContent(
                 .align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
         ) {
+            val permission = state.permission ?: return@Column
+            val isBluetooth = permission == Permission.Bluetooth
+            val isBackgroundLocation = permission == Permission.BluetoothBackgroundLocation
+            val requestsLocation = isBluetooth && locationRequiredForBluetoothScan
             Spacer(Modifier.height(24.dp))
             Text(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 16.dp),
-                text = stringResource(StringRes.notification_permission_description),
+                text = stringResource(
+                    when {
+                        isBackgroundLocation -> StringRes.notification_permission_bluetooth_background_description
+                        requestsLocation -> StringRes.notification_permission_bluetooth_location_description
+                        isBluetooth -> StringRes.notification_permission_bluetooth_description
+                        else -> StringRes.notification_permission_description
+                    },
+                ),
                 color = AppTheme.colors.textPrimary,
                 style = AppTheme.typography.body,
             )
             Spacer(Modifier.height(24.dp))
             val permissionLauncher = createLauncher(
-                permission = Permission.Notifications,
-                onResult = { allowance ->
-                    Log.d { "$allowance" }
-
-                    when (allowance) {
-                        is AllowanceResult.Allowed -> onFinishOnboardingClicked()
-                        is AllowanceResult.Restricted -> showPermissionRestrictDialog()
-                    }
-                },
+                permission = permission,
+                onResult = { allowance -> onPermissionResult(permission, allowance) },
             )
             ButtonPrimary(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 content = ButtonContent.Text(
-                    text = stringResource(StringRes.notification_permission_grant),
+                    text = stringResource(
+                        when {
+                            isBackgroundLocation -> StringRes.notification_permission_bluetooth_background_grant
+                            requestsLocation -> StringRes.notification_permission_bluetooth_location_grant
+                            isBluetooth -> StringRes.notification_permission_bluetooth_grant
+                            else -> StringRes.notification_permission_grant
+                        },
+                    ),
                 ),
                 onClicked = { permissionLauncher.request() },
             )
@@ -140,9 +186,15 @@ private fun NotificationPermissionScreenContent(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 content = ButtonContent.Text(
-                    text = stringResource(StringRes.notification_permission_do_not_grant),
+                    text = stringResource(
+                        when {
+                            isBackgroundLocation -> StringRes.notification_permission_bluetooth_background_do_not_grant
+                            isBluetooth -> StringRes.notification_permission_bluetooth_do_not_grant
+                            else -> StringRes.notification_permission_do_not_grant
+                        },
+                    ),
                 ),
-                onClicked = showPermissionRestrictDialog,
+                onClicked = { onPermissionResult(permission, AllowanceResult.Restricted) },
             )
             Spacer(Modifier.height(16.dp))
         }
@@ -159,19 +211,22 @@ private fun NotificationPermissionScreenContent(
     }
 }
 
-@Preview
 @Composable
-internal fun NotificationPermissionScreenPreview() {
+private fun PermissionScreenPreview(
+    permission: Permission,
+    locationRequiredForBluetoothScan: Boolean = false,
+) {
     AppTheme {
         NotificationPermissionScreenContent(
             modifier = Modifier.fillMaxSize(),
             state = NotificationPermissionState(
+                permission = permission,
                 alertDialogDescriptor = null,
             ),
+            locationRequiredForBluetoothScan = locationRequiredForBluetoothScan,
             events = emptyFlow(),
             close = {},
-            showPermissionRestrictDialog = {},
-            onFinishOnboardingClicked = {},
+            onPermissionResult = { _, _ -> },
         )
     }
 }

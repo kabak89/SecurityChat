@@ -15,10 +15,14 @@
 
     <string name="settings_main_profile">Профиль</string>
     <string name="settings_main_theme">Тема</string>
-    <string name="settings_main_notifications">Уведомления</string>
+    <string name="settings_main_permissions">Разрешения</string>
+    <string name="settings_main_logs">Логи</string>
     <string name="settings_main_log_out">Выйти</string>
 
-    <string name="notifications_title">Уведомления</string>
+    <string name="logs_title">Логи</string>
+
+    <string name="notifications_title">Разрешения</string>
+    <string name="notifications_section_title">Уведомления</string>
     <string name="notifications_description">Уведомления помогают сразу узнавать о новых сообщениях и вовремя отвечать на них, даже когда приложение закрыто.</string>
     <string name="notifications_allowed">Показ уведомлений разрешён.</string>
     <string name="notifications_not_allowed">Показ уведомлений не разрешён.</string>
@@ -26,6 +30,24 @@
     <string name="notifications_restricted_title">Показ уведомлений не разрешён</string>
     <string name="notifications_restricted_message">Вы можете разрешить показ уведомлений в настройках приложения.</string>
     <string name="notifications_open_settings">Открыть настройки</string>
+    <string name="notifications_bluetooth_title">Bluetooth</string>
+    <string name="notifications_bluetooth_description">Bluetooth позволяет Paranoya обмениваться данными с устройствами поблизости без интернета.</string>
+    <string name="notifications_bluetooth_allowed">Доступ к Bluetooth разрешён.</string>
+    <string name="notifications_bluetooth_not_allowed">Доступ к Bluetooth не разрешён.</string>
+    <string name="notifications_bluetooth_grant">Разрешить Bluetooth</string>
+    <string name="notifications_bluetooth_restricted_title">Доступ к Bluetooth не разрешён</string>
+    <string name="notifications_bluetooth_restricted_message">Вы можете разрешить доступ к Bluetooth в настройках приложения.</string>
+    <string name="notifications_bluetooth_location_description">На этой версии Android Paranoya нужен доступ к местоположению для поиска устройств поблизости по Bluetooth.</string>
+    <string name="notifications_bluetooth_location_allowed">Доступ к местоположению разрешён.</string>
+    <string name="notifications_bluetooth_location_not_allowed">Доступ к местоположению не разрешён.</string>
+    <string name="notifications_bluetooth_location_grant">Разрешить геолокацию</string>
+    <string name="notifications_bluetooth_location_restricted_title">Доступ к местоположению не разрешён</string>
+    <string name="notifications_bluetooth_location_restricted_message">Разрешите доступ к местоположению в настройках приложения, чтобы искать устройства поблизости по Bluetooth.</string>
+    <string name="notifications_bluetooth_background_title">Фоновый поиск по Bluetooth</string>
+    <string name="notifications_bluetooth_background_description">Для поиска устройств поблизости, когда Paranoya работает в фоне, Android требует доступ к местоположению. Выберите «Разрешать всегда» в системном диалоге или в разделе «Разрешения → Местоположение» в настройках приложения.</string>
+    <string name="notifications_bluetooth_background_allowed">Фоновый поиск разрешён.</string>
+    <string name="notifications_bluetooth_background_not_allowed">Фоновый поиск не разрешён.</string>
+    <string name="notifications_bluetooth_background_grant">Разрешить фоновый поиск</string>
 
     <string name="chat_list_title">Чаты</string>
     <string name="chat_list_title_not_connected">Нет соединения</string>
@@ -74,6 +96,14 @@
     <string name="notification_permission_do_not_grant">Использовать приложение без уведомлений</string>
     <string name="notification_permission_restricted_permission_dialog_title">Показ уведомлений запрещен</string>
     <string name="notification_permission_restricted_permission_dialog_message">Вы можете изменить это в настройках</string>
+    <string name="notification_permission_bluetooth_description">Bluetooth позволяет Paranoya находить устройства поблизости и обмениваться с ними данными без интернета.\n\nРазрешение можно изменить в настройках в любой момент.</string>
+    <string name="notification_permission_bluetooth_grant">Разрешить Bluetooth</string>
+    <string name="notification_permission_bluetooth_do_not_grant">Продолжить без Bluetooth</string>
+    <string name="notification_permission_bluetooth_location_description">Bluetooth позволяет Paranoya обмениваться данными с устройствами поблизости без интернета. На этой версии Android для поиска устройств нужен доступ к местоположению.\n\nРазрешение можно изменить в настройках в любой момент.</string>
+    <string name="notification_permission_bluetooth_location_grant">Разрешить геолокацию</string>
+    <string name="notification_permission_bluetooth_background_description">Для поиска устройств по Bluetooth, когда Paranoya работает в фоне, Android требует доступ к местоположению. Выберите «Разрешать всегда» в системном диалоге или в разделе «Разрешения → Местоположение» в настройках приложения. Этот шаг можно пропустить.</string>
+    <string name="notification_permission_bluetooth_background_grant">Разрешить фоновый поиск</string>
+    <string name="notification_permission_bluetooth_background_do_not_grant">Продолжить без фонового поиска</string>
 
     <string name="sign_up_username_already_exists_error_title">Имя занято</string>
     <string name="sign_up_username_already_exists_error_description">Это имя уже используется другим пользователем. Придумайте другое</string>

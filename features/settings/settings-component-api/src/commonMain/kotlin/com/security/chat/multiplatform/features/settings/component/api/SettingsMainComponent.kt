@@ -8,4 +8,5 @@ public interface SettingsMainComponent : BaseComponent, DiScopeHolder {
     public fun onGoToThemeClicked()
     public fun onGoToNotificationsClicked()
     public fun onGoToProfileClicked()
+    public fun onGoToLogsClicked()
 }

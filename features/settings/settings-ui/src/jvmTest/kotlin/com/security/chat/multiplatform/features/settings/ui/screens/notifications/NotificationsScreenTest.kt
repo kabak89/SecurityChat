@@ -25,4 +25,18 @@ class NotificationsScreenTest : ScreenshotTestBase() {
             NotificationsScreenRestrictedPreview()
         }
     }
+
+    @Test
+    fun `Bluetooth location permission settings preview`() {
+        runScreenshotTest(screenshotName = "NotificationsScreenBluetoothLocationPreview") {
+            NotificationsScreenBluetoothLocationPreview()
+        }
+    }
+
+    @Test
+    fun `Bluetooth background permission settings preview`() {
+        runScreenshotTest(screenshotName = "NotificationsScreenBluetoothBackgroundPreview") {
+            NotificationsScreenBluetoothBackgroundPreview()
+        }
+    }
 }

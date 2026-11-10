@@ -15,6 +15,7 @@ kotlin {
             implementation(projects.features.onboarding.onboardingUi)
             implementation(projects.features.onboarding.onboardingDomain)
             implementation(projects.features.onboarding.onboardingData)
+            implementation(projects.features.mesh.meshData)
         }
     }
 }

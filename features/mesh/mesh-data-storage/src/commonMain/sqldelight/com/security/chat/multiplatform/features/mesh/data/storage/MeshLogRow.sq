@@ -1,0 +1,13 @@
+CREATE TABLE MeshLogRow (
+  id INTEGER NOT NULL PRIMARY KEY,
+  recordedAtMillis INTEGER NOT NULL,
+  message TEXT NOT NULL
+);
+
+insertLog:
+INSERT INTO MeshLogRow (recordedAtMillis, message)
+VALUES (?, ?);
+
+getLogs:
+SELECT * FROM MeshLogRow
+ORDER BY id DESC;

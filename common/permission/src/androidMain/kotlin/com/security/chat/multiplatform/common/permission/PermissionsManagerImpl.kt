@@ -21,10 +21,7 @@ internal actual class PermissionsManagerImpl : PermissionsManager, KoinComponent
 
     override fun openAppSettings() {
         val activity = getKoin().getOrNull<Activity>()
-        val intent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", context.packageName, null),
-        )
+        val intent = context.appSettingsIntent()
         if (activity == null) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
@@ -47,18 +44,26 @@ internal actual class PermissionsManagerImpl : PermissionsManager, KoinComponent
             return AllowanceResult.Allowed
         }
 
-        val permissionString = permission.toAndroid()
-        val resultInt = ContextCompat.checkSelfPermission(context, permissionString)
-
-        return when (resultInt) {
-            PackageManager.PERMISSION_GRANTED -> AllowanceResult.Allowed
-            PackageManager.PERMISSION_DENIED -> AllowanceResult.Restricted
-
-            else -> {
-                error("Unknown permission result: $resultInt")
-            }
+        val allowed = permission.toAndroid().all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
+        return if (allowed) {
+            AllowanceResult.Allowed
+        } else {
+            AllowanceResult.Restricted
+        }
+    }
+
+    override fun bluetoothScanRequiresBackgroundLocation(): Boolean {
+        return Permission.BluetoothBackgroundLocation.toAndroid().isNotEmpty()
     }
 }
 
 private const val LOCAL_NETWORK_PERMISSION_MIN_SDK: Int = 37
+
+internal fun Context.appSettingsIntent(): Intent {
+    return Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", packageName, null),
+    )
+}

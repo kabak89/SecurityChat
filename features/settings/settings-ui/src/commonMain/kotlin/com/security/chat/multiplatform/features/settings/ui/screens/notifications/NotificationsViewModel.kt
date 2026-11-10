@@ -1,95 +1,103 @@
 package com.security.chat.multiplatform.features.settings.ui.screens.notifications
 
 import androidx.lifecycle.viewModelScope
-import com.security.chat.multiplatform.common.core.localization.StringRes
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
-import com.security.chat.multiplatform.common.core.ui.entity.resPrintableText
+import com.security.chat.multiplatform.common.device.info.DeviceInfoManager
+import com.security.chat.multiplatform.common.device.info.entity.Platform
 import com.security.chat.multiplatform.common.permission.PermissionsManager
 import com.security.chat.multiplatform.common.permission.entity.AllowanceResult
 import com.security.chat.multiplatform.common.permission.entity.Permission
-import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogContent
-import com.security.chat.multiplatform.common.ui.kit.components.alertdialog.AlertDialogDescriptor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import securitychat.common.localization.generated.resources.common_cancel
-import securitychat.common.localization.generated.resources.notifications_open_settings
-import securitychat.common.localization.generated.resources.notifications_restricted_message
-import securitychat.common.localization.generated.resources.notifications_restricted_title
 
 internal class NotificationsViewModel(
     private val permissionsManager: PermissionsManager,
+    deviceInfoManager: DeviceInfoManager,
 ) : BaseViewModel<NotificationsState, NotificationsEvent>() {
 
+    private val permissions = buildList {
+        add(Permission.Notifications)
+        if (deviceInfoManager.getPlatform() != Platform.Desktop) {
+            add(Permission.Bluetooth)
+            if (permissionsManager.bluetoothScanRequiresBackgroundLocation()) {
+                add(Permission.BluetoothBackgroundLocation)
+            }
+        }
+    }
     private var permissionCheckJob: Job? = null
 
-    override fun createInitialState(): NotificationsState =
-        NotificationsState(
-            isPermissionAllowed = null,
-            permissionRequestInProgress = false,
-            alertDialogDescriptor = null,
+    override fun createInitialState(): NotificationsState {
+        return NotificationsState(
+            permissions = permissions,
+            allowedPermissions = emptyMap(),
+            permissionRequestInProgress = null,
+            restrictedPermission = null,
         )
+    }
 
     override fun onViewActive() {
         super.onViewActive()
 
         permissionCheckJob?.cancel()
         permissionCheckJob = viewModelScope.launch {
-            val isAllowed = permissionsManager.checkPermission(Permission.Notifications) ==
-                    AllowanceResult.Allowed
+            val allowed = permissions.associateWith { permission ->
+                permissionsManager.checkPermission(permission) == AllowanceResult.Allowed
+            }
+            val bluetoothJustAllowed = allowed.any { (permission, isAllowed) ->
+                permission.affectsBluetooth() && isAllowed &&
+                        currentViewState.allowedPermissions[permission] != true
+            }
             updateState {
                 it.copy(
-                    isPermissionAllowed = isAllowed,
-                    alertDialogDescriptor = if (isAllowed) null else it.alertDialogDescriptor,
+                    allowedPermissions = allowed,
+                    restrictedPermission = it.restrictedPermission?.takeUnless { allowed[it] == true },
                 )
             }
+            if (bluetoothJustAllowed) sendEvent(NotificationsEvent.BluetoothAllowed)
         }
     }
 
-    fun onAllowClicked() {
-        if (currentViewState.isPermissionAllowed != false ||
-            currentViewState.permissionRequestInProgress
+    fun onAllowClicked(permission: Permission) {
+        if (currentViewState.allowedPermissions[permission] != false ||
+            currentViewState.permissionRequestInProgress != null
         ) return
+        if (permission == Permission.BluetoothBackgroundLocation &&
+            currentViewState.allowedPermissions[Permission.Bluetooth] != true
+        ) {
+            return
+        }
 
-        updateState { it.copy(permissionRequestInProgress = true) }
-        sendEvent(NotificationsEvent.RequestPermission)
+        updateState { it.copy(permissionRequestInProgress = permission) }
+        sendEvent(NotificationsEvent.RequestPermission(permission))
     }
 
-    fun onPermissionResult(allowance: AllowanceResult) {
-        if (!currentViewState.permissionRequestInProgress) return
+    fun onPermissionResult(permission: Permission, allowance: AllowanceResult) {
+        if (currentViewState.permissionRequestInProgress != permission) return
 
         permissionCheckJob?.cancel()
         val isAllowed = allowance == AllowanceResult.Allowed
+        val bluetoothJustAllowed = permission.affectsBluetooth() && isAllowed &&
+                currentViewState.allowedPermissions[permission] != true
         updateState {
             it.copy(
-                isPermissionAllowed = isAllowed,
-                permissionRequestInProgress = false,
-                alertDialogDescriptor = null,
+                allowedPermissions = it.allowedPermissions + (permission to isAllowed),
+                permissionRequestInProgress = null,
+                restrictedPermission = if (isAllowed) null else permission,
             )
         }
-        if (!isAllowed) {
-            showPermissionRestrictedDialog()
-        }
+        if (bluetoothJustAllowed) sendEvent(NotificationsEvent.BluetoothAllowed)
     }
 
-    private fun showPermissionRestrictedDialog() {
-        val descriptor = AlertDialogDescriptor(
-            content = AlertDialogContent(
-                title = resPrintableText(StringRes.notifications_restricted_title),
-                message = resPrintableText(StringRes.notifications_restricted_message),
-                positiveButtonText = resPrintableText(StringRes.notifications_open_settings),
-                negativeButtonText = resPrintableText(StringRes.common_cancel),
-            ),
-            dismissAction = ::dismissDialog,
-            positiveAction = {
-                dismissDialog()
-                permissionsManager.openAppSettings()
-            },
-            negativeAction = ::dismissDialog,
-        )
-        updateState { it.copy(alertDialogDescriptor = descriptor) }
+    fun onOpenSettingsClicked() {
+        onDismissDialog()
+        permissionsManager.openAppSettings()
     }
 
-    private fun dismissDialog() {
-        updateState { it.copy(alertDialogDescriptor = null) }
+    fun onDismissDialog() {
+        updateState { it.copy(restrictedPermission = null) }
     }
+}
+
+private fun Permission.affectsBluetooth(): Boolean {
+    return this == Permission.Bluetooth || this == Permission.BluetoothBackgroundLocation
 }

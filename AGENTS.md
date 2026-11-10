@@ -184,6 +184,9 @@ project conventions:
   Pass every argument explicitly, including `null` for nullable parameters.
 - **Multiline `if`:** use curly braces around each branch when the `if` spans more than one line.
   Braces may be omitted only when the entire `if`, including its body, fits on one line.
+- **Long-lived Flow subscriptions.** Use `onEach { ... }.launchIn(scope)` when starting a
+  long-lived subscription in a coroutine scope. This keeps subsequent code from waiting for
+  `collect` to complete inside the subscription coroutine.
 
 ## Comments
 

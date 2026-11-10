@@ -15,14 +15,18 @@ import com.security.chat.multiplatform.testutil.pauseForVideo
 import com.security.chat.multiplatform.testutil.runAppUiTest
 import com.security.chat.multiplatform.testutil.signIn
 import dev.mokkery.answering.returns
-import dev.mokkery.every
+import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import org.jetbrains.compose.resources.getString
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.koin.dsl.module
 import securitychat.common.localization.generated.resources.common_next
+import securitychat.common.localization.generated.resources.common_ok
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_do_not_grant
+import securitychat.common.localization.generated.resources.notification_permission_bluetooth_grant
 import securitychat.common.localization.generated.resources.notification_permission_description
+import securitychat.common.localization.generated.resources.notification_permission_do_not_grant
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalTestApi::class)
@@ -30,12 +34,15 @@ import kotlin.time.Duration.Companion.seconds
 class OnboardingTest {
 
     @Test
-    fun `scrolling onboarding and continuing opens notification permission screen`() {
+    fun `skipping notifications opens the optional Bluetooth permission step`() {
         val permissionModule = module {
             single<PermissionsManager> {
                 mock {
-                    every {
-                        isPermissionAllowed(Permission.Notifications)
+                    everySuspend {
+                        checkPermission(Permission.Notifications)
+                    } returns AllowanceResult.Restricted
+                    everySuspend {
+                        checkPermission(Permission.Bluetooth)
                     } returns AllowanceResult.Restricted
                 }
             }
@@ -63,6 +70,17 @@ class OnboardingTest {
                 onAllNodesWithText(permissionDescription).fetchSemanticsNodes().isNotEmpty()
             }
             onNodeWithText(permissionDescription).assertIsDisplayed()
+
+            onNodeWithText(getString(StringRes.notification_permission_do_not_grant)).performClick()
+            onNodeWithText(getString(StringRes.common_ok)).performClick()
+
+            val bluetoothGrant = getString(StringRes.notification_permission_bluetooth_grant)
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(bluetoothGrant).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText(bluetoothGrant).assertIsDisplayed()
+            onNodeWithText(getString(StringRes.notification_permission_bluetooth_do_not_grant))
+                .assertIsDisplayed()
         }
     }
 }

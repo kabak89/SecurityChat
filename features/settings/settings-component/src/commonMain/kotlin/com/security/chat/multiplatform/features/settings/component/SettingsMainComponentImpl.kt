@@ -11,6 +11,7 @@ internal class SettingsMainComponentImpl(
     private val onGoToTheme: () -> Unit,
     private val onGoToNotifications: () -> Unit,
     private val onGoToProfile: () -> Unit,
+    private val onGoToLogs: () -> Unit,
     componentContext: ComponentContext,
 ) : SettingsMainComponent,
     BaseComponentImpl(
@@ -39,6 +40,10 @@ internal class SettingsMainComponentImpl(
 
     override fun onGoToNotificationsClicked() {
         onGoToNotifications()
+    }
+
+    override fun onGoToLogsClicked() {
+        onGoToLogs()
     }
 
 }

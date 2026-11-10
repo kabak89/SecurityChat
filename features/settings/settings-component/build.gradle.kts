@@ -16,6 +16,7 @@ kotlin {
             implementation(projects.features.settings.settingsDomain)
             implementation(projects.features.settings.settingsDataStorage)
             implementation(projects.features.chat.chatDataStorage)
+            implementation(projects.features.mesh.meshData)
             implementation(projects.features.profile.profileComponent)
         }
     }

@@ -84,6 +84,9 @@ kotlin {
             implementation(projects.features.chat.chatDataStorage)
             implementation(projects.features.chat.chatDataNetwork)
 
+            implementation(projects.features.mesh.meshDomain)
+            implementation(projects.features.mesh.meshData)
+
             implementation(projects.features.push.pushDomain)
             implementation(projects.features.push.pushData)
             implementation(projects.features.push.pushNavigationImpl)
@@ -93,6 +96,7 @@ kotlin {
             implementation(projects.features.settings.settingsData)
         }
         androidMain.dependencies {
+            implementation(libs.androidx.work.runtime)
             implementation(libs.koin.android)
         }
         iosMain.dependencies {

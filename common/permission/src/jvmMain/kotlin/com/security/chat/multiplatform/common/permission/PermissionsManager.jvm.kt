@@ -16,3 +16,5 @@ public actual fun createLauncher(
         }
     }
 }
+
+public actual fun bluetoothScanRequiresLocation(): Boolean = false

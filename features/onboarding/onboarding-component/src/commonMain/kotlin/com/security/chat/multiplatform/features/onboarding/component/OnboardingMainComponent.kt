@@ -2,6 +2,7 @@ package com.security.chat.multiplatform.features.onboarding.component
 
 import com.arkivanov.decompose.ComponentContext
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
+import com.security.chat.multiplatform.features.mesh.data.startMeshBluetooth
 import com.security.chat.multiplatform.features.onboarding.component.api.OnboardingMainComponent
 
 internal class OnboardingMainComponentImpl(
@@ -14,6 +15,7 @@ internal class OnboardingMainComponentImpl(
     ) {
 
     override fun onFinish() {
+        startMeshBluetooth()
         onOnboardingFinished()
     }
 

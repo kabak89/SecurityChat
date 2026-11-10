@@ -6,4 +6,6 @@ import com.security.chat.multiplatform.common.core.component.DiScopeHolder
 public interface NotificationsComponent : BaseComponent, DiScopeHolder {
 
     public fun onBackClicked()
+
+    public fun onBluetoothAllowed()
 }

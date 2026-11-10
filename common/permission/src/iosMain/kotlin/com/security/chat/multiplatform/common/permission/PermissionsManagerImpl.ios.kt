@@ -57,7 +57,10 @@ internal actual class PermissionsManagerImpl : PermissionsManager {
     }
 
     override fun isPermissionAllowed(permission: Permission): AllowanceResult {
-        //TODO add actual realization
-        return AllowanceResult.Allowed
+        return if (permission == Permission.Bluetooth) {
+            getBluetoothAuthorization() ?: AllowanceResult.Restricted
+        } else {
+            AllowanceResult.Allowed
+        }
     }
 }

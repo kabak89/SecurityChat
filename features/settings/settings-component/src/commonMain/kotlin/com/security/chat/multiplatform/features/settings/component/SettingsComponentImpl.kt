@@ -6,11 +6,13 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.security.chat.multiplatform.common.core.component.BaseComponentImpl
 import com.security.chat.multiplatform.features.profile.component.ProfileComponentImpl
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent
+import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Logs
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Notifications
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.Profile
 import com.security.chat.multiplatform.features.settings.component.api.SettingsComponent.Child.SettingsMain
@@ -67,6 +69,7 @@ public class SettingsComponentImpl(
                         onGoToTheme = { navigation.push(Params.Theme) },
                         onGoToNotifications = { navigation.push(Params.Notifications) },
                         onGoToProfile = { navigation.push(Params.Profile) },
+                        onGoToLogs = { navigation.pushNew(Params.Logs) },
                     ),
                 )
             }
@@ -97,6 +100,8 @@ public class SettingsComponentImpl(
                     ),
                 )
             }
+
+            Params.Logs -> Logs
         }
     }
 
@@ -113,6 +118,9 @@ public class SettingsComponentImpl(
 
         @Serializable
         data object Profile : Params()
+
+        @Serializable
+        data object Logs : Params()
     }
 }
 

@@ -5,8 +5,10 @@ import com.security.chat.multiplatform.common.core.domain.asLceState
 import com.security.chat.multiplatform.common.core.domain.startOnSubscribe
 import com.security.chat.multiplatform.common.core.ui.BaseViewModel
 import com.security.chat.multiplatform.features.settings.domain.SettingsModel
+import com.security.chat.multiplatform.features.settings.ui.BuildKonfig
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.DialogData
 import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.SettingItem
+import com.security.chat.multiplatform.features.settings.ui.screens.main.entity.settingsMainItems
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -27,12 +29,7 @@ internal class SettingsMainViewModel(
 
     override fun createInitialState(): SettingsMainState {
         return SettingsMainState(
-            items = listOf(
-                SettingItem.Profile,
-                SettingItem.Theme,
-                SettingItem.Notifications,
-                SettingItem.Logout,
-            ),
+            items = settingsMainItems(showLogs = BuildKonfig.IS_DEBUG),
             dialogData = null,
             requestInProgress = false,
         )
@@ -58,6 +55,7 @@ internal class SettingsMainViewModel(
             is SettingItem.Theme -> sendEvent(SettingsMainEvent.GoToTheme)
             is SettingItem.Notifications -> sendEvent(SettingsMainEvent.GoToNotifications)
             is SettingItem.Profile -> sendEvent(SettingsMainEvent.GoToProfile)
+            is SettingItem.Logs -> sendEvent(SettingsMainEvent.GoToLogs)
         }
     }
 
