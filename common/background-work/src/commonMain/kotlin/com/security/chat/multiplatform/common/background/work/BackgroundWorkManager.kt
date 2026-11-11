@@ -1,5 +1,6 @@
 package com.security.chat.multiplatform.common.background.work
 
+import kotlinx.coroutines.Deferred
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -79,6 +80,20 @@ public interface BackgroundWorkManager {
 
     /** Cancels pending work and requests cancellation of the active run for [key]. */
     public suspend fun cancel(key: String)
+
+    /**
+     * Starts enqueueing work for a key reserved for one-shot work. On Android the request is
+     * submitted to WorkManager before returning. [Deferred] reports the enqueue result.
+     */
+    public fun enqueueOneShot(
+        key: String,
+        worker: KClass<out BackgroundWorker>,
+        requiresInternet: Boolean,
+        type: Type,
+        policy: BackgroundWorkPolicy,
+        priority: BackgroundWorkPriority,
+        input: Map<String, String> = emptyMap(),
+    ): Deferred<Unit>
 }
 
 internal fun validateWorkRequest(

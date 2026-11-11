@@ -15,6 +15,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Operation
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
@@ -22,11 +23,16 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.await
 import com.security.chat.multiplatform.common.background.work.BackgroundWorkManager.Type
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.mp.KoinPlatform
 import java.util.concurrent.TimeUnit
@@ -35,12 +41,17 @@ import kotlin.reflect.KClass
 internal actual fun Scope.createBackgroundWorkManager(
     registry: BackgroundWorkerRegistry,
 ): BackgroundWorkManager {
-    return AndroidBackgroundWorkManager(WorkManager.getInstance(get<Context>()), registry)
+    return AndroidBackgroundWorkManager(
+        workManager = WorkManager.getInstance(get<Context>()),
+        registry = registry,
+        scope = get(named(SCOPE_ID_APP)),
+    )
 }
 
 private class AndroidBackgroundWorkManager(
     private val workManager: WorkManager,
     private val registry: BackgroundWorkerRegistry,
+    private val scope: CoroutineScope,
 ) : BackgroundWorkManager {
 
     private val mutex = Mutex()
@@ -60,60 +71,29 @@ private class AndroidBackgroundWorkManager(
             policy = policy,
             priority = priority,
         )
-        val workerId = registry.get(worker).id
         val name = "$WORK_NAME_PREFIX$key"
-        val networkType = if (conditions.requiresInternet) {
-            NetworkType.CONNECTED
-        } else {
-            NetworkType.NOT_REQUIRED
-        }
-        val constraints = Constraints.Builder().setRequiredNetworkType(networkType).build()
-        val notificationText = when (type) {
-            Type.Silent -> null
-            is Type.Foreground -> type.notificationText
-        }
-        val legacyNotificationText = when (priority) {
-            BackgroundWorkPriority.Normal -> null
-            is BackgroundWorkPriority.Expedited -> {
-                (priority.legacyForeground as? Type.Foreground)?.notificationText
-            }
-        }
-        val workData = Data.Builder()
-            .putString(KEY_WORKER_ID, workerId)
-            .putString(KEY_NOTIFICATION_TEXT, notificationText)
-            .apply {
-                legacyNotificationText?.let { putString(KEY_LEGACY_NOTIFICATION_TEXT, it) }
-            }
-            .putAll(input.mapKeys { (key, _) -> "$INPUT_KEY_PREFIX$key" })
-            .build()
+        val workerId = registry.get(worker).id
+        val workInput = input.toMap()
         mutex.withLock {
             when (val schedule = conditions.schedule) {
                 BackgroundWorkSchedule.OneShot -> {
-                    val existingPolicy = when (policy) {
-                        BackgroundWorkPolicy.KEEP -> ExistingWorkPolicy.KEEP
-                        BackgroundWorkPolicy.APPEND_OR_REPLACE -> {
-                            val existing = workManager.getWorkInfosForUniqueWorkFlow(name).first()
-                            val hasActivePeriodicWork = existing.any {
-                                it.periodicityInfo != null && !it.state.isFinished
-                            }
-                            require(!hasActivePeriodicWork) {
-                                "Cannot append to repeating background work: $key"
-                            }
-                            ExistingWorkPolicy.APPEND_OR_REPLACE
+                    if (policy == BackgroundWorkPolicy.APPEND_OR_REPLACE) {
+                        val existing = workManager.getWorkInfosForUniqueWorkFlow(name).first()
+                        val hasActivePeriodicWork = existing.any {
+                            it.periodicityInfo != null && !it.state.isFinished
+                        }
+                        require(!hasActivePeriodicWork) {
+                            "Cannot append to repeating background work: $key"
                         }
                     }
-                    val builder = OneTimeWorkRequestBuilder<AndroidBackgroundWorker>()
-                        .setConstraints(constraints)
-                        .setInputData(workData)
-                    val canExpedite = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ||
-                            legacyNotificationText != null
-                    if (priority is BackgroundWorkPriority.Expedited && canExpedite) {
-                        builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                    }
-                    workManager.enqueueUniqueWork(
-                        uniqueWorkName = name,
-                        existingWorkPolicy = existingPolicy,
-                        request = builder.build(),
+                    submitOneShot(
+                        name = name,
+                        workerId = workerId,
+                        requiresInternet = conditions.requiresInternet,
+                        type = type,
+                        policy = policy,
+                        priority = priority,
+                        input = workInput,
                     ).await()
                 }
 
@@ -122,10 +102,18 @@ private class AndroidBackgroundWorkManager(
                     require(repeatMillis >= PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS) {
                         "Android repeating work requires an interval of at least 15 minutes"
                     }
+                    val workData = createWorkData(
+                        workerId = workerId,
+                        type = type,
+                        legacyNotificationText = null,
+                        input = workInput,
+                    )
                     val request = PeriodicWorkRequestBuilder<AndroidBackgroundWorker>(
                         repeatInterval = repeatMillis,
                         repeatIntervalTimeUnit = TimeUnit.MILLISECONDS,
-                    ).setConstraints(constraints).setInputData(workData).build()
+                    ).setConstraints(createConstraints(conditions.requiresInternet))
+                        .setInputData(workData)
+                        .build()
                     workManager.enqueueUniquePeriodicWork(
                         uniqueWorkName = name,
                         existingPeriodicWorkPolicy = ExistingPeriodicWorkPolicy.KEEP,
@@ -138,6 +126,97 @@ private class AndroidBackgroundWorkManager(
 
     override suspend fun cancel(key: String) {
         mutex.withLock { workManager.cancelUniqueWork("$WORK_NAME_PREFIX$key").await() }
+    }
+
+    override fun enqueueOneShot(
+        key: String,
+        worker: KClass<out BackgroundWorker>,
+        requiresInternet: Boolean,
+        type: Type,
+        policy: BackgroundWorkPolicy,
+        priority: BackgroundWorkPriority,
+        input: Map<String, String>,
+    ): Deferred<Unit> {
+        validateWorkRequest(
+            key = key,
+            schedule = BackgroundWorkSchedule.OneShot,
+            policy = policy,
+            priority = priority,
+        )
+        val operation = submitOneShot(
+            name = "$WORK_NAME_PREFIX$key",
+            workerId = registry.get(worker).id,
+            requiresInternet = requiresInternet,
+            type = type,
+            policy = policy,
+            priority = priority,
+            input = input,
+        )
+        return scope.async {
+            operation.await()
+            Unit
+        }
+    }
+
+    private fun submitOneShot(
+        name: String,
+        workerId: String,
+        requiresInternet: Boolean,
+        type: Type,
+        policy: BackgroundWorkPolicy,
+        priority: BackgroundWorkPriority,
+        input: Map<String, String>,
+    ): Operation {
+        val legacyNotificationText = when (priority) {
+            BackgroundWorkPriority.Normal -> null
+            is BackgroundWorkPriority.Expedited -> {
+                (priority.legacyForeground as? Type.Foreground)?.notificationText
+            }
+        }
+        val workData = createWorkData(
+            workerId = workerId,
+            type = type,
+            legacyNotificationText = legacyNotificationText,
+            input = input,
+        )
+        val builder = OneTimeWorkRequestBuilder<AndroidBackgroundWorker>()
+            .setConstraints(createConstraints(requiresInternet))
+            .setInputData(workData)
+        val canExpedite = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ||
+                legacyNotificationText != null
+        if (priority is BackgroundWorkPriority.Expedited && canExpedite) {
+            builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+        }
+        val existingPolicy = when (policy) {
+            BackgroundWorkPolicy.KEEP -> ExistingWorkPolicy.KEEP
+            BackgroundWorkPolicy.APPEND_OR_REPLACE -> ExistingWorkPolicy.APPEND_OR_REPLACE
+        }
+        return workManager.enqueueUniqueWork(
+            uniqueWorkName = name,
+            existingWorkPolicy = existingPolicy,
+            request = builder.build(),
+        )
+    }
+
+    private fun createWorkData(
+        workerId: String,
+        type: Type,
+        legacyNotificationText: String?,
+        input: Map<String, String>,
+    ): Data {
+        return Data.Builder()
+            .putString(KEY_WORKER_ID, workerId)
+            .putString(KEY_NOTIFICATION_TEXT, (type as? Type.Foreground)?.notificationText)
+            .apply {
+                legacyNotificationText?.let { putString(KEY_LEGACY_NOTIFICATION_TEXT, it) }
+            }
+            .putAll(input.mapKeys { (key, _) -> "$INPUT_KEY_PREFIX$key" })
+            .build()
+    }
+
+    private fun createConstraints(requiresInternet: Boolean): Constraints {
+        val networkType = if (requiresInternet) NetworkType.CONNECTED else NetworkType.NOT_REQUIRED
+        return Constraints.Builder().setRequiredNetworkType(networkType).build()
     }
 }
 
@@ -190,7 +269,18 @@ internal class AndroidBackgroundWorker(
         return foregroundInfo(checkNotNull(text) { "Foreground work requires notification text" })
     }
 
-    private fun foregroundInfo(text: String): ForegroundInfo {
+    private suspend fun foregroundInfo(text: String): ForegroundInfo {
+        val customNotification = inputData.getString(KEY_WORKER_ID)?.let { workerId ->
+            KoinPlatform.getKoin().getOrNull<ForegroundNotificationFactory>(named(workerId))
+        }?.create(text)
+        if (customNotification != null) {
+            return ForegroundInfo(
+                /* notificationId = */ customNotification.id,
+                /* notification = */ customNotification.notification,
+                /* foregroundServiceType = */ customNotification.serviceType,
+            )
+        }
+
         val context = applicationContext
         val appName = context.applicationInfo.loadLabel(context.packageManager)
         val manager = context.getSystemService(NotificationManager::class.java)

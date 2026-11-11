@@ -31,8 +31,9 @@ kotlin {
         androidMain.dependencies {
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)
-            implementation(libs.androidx.work.runtime)
+            implementation(libs.androidx.core)
 
+            implementation(projects.common.backgroundWork)
             implementation(projects.common.coreComponent)
         }
     }

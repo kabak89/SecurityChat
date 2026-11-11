@@ -161,41 +161,39 @@ class BackgroundWorkManagerTest {
                 if (message == "first") firstMayFinish.await()
             }
         }
-        val conditions = BackgroundWorkConditions(
-            schedule = BackgroundWorkSchedule.OneShot,
-            requiresInternet = false,
-        )
         val priority = BackgroundWorkPriority.Expedited(legacyForeground = Type.Silent)
 
-        manager.enqueue(
+        val first = manager.enqueueOneShot(
             key = "chat-1",
             worker = TestWorker::class,
-            conditions = conditions,
+            requiresInternet = false,
             type = Type.Silent,
             policy = BackgroundWorkPolicy.APPEND_OR_REPLACE,
             priority = priority,
             input = mapOf("message" to "first"),
         )
-        runCurrent()
-        manager.enqueue(
+        val second = manager.enqueueOneShot(
             key = "chat-1",
             worker = TestWorker::class,
-            conditions = conditions,
+            requiresInternet = false,
             type = Type.Silent,
             policy = BackgroundWorkPolicy.APPEND_OR_REPLACE,
             priority = priority,
             input = mapOf("message" to "second"),
         )
-        manager.enqueue(
+        val other = manager.enqueueOneShot(
             key = "chat-2",
             worker = TestWorker::class,
-            conditions = conditions,
+            requiresInternet = false,
             type = Type.Silent,
             policy = BackgroundWorkPolicy.APPEND_OR_REPLACE,
             priority = priority,
             input = mapOf("message" to "other chat"),
         )
         runCurrent()
+        first.await()
+        second.await()
+        other.await()
         assertEquals(listOf("first", "other chat"), started)
 
         firstMayFinish.complete(Unit)

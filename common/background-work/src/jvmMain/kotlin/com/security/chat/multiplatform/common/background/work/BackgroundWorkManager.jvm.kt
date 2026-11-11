@@ -5,10 +5,12 @@ import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -93,6 +95,31 @@ internal class JvmBackgroundWorkManager(
     override suspend fun cancel(key: String) {
         val job = mutex.withLock { queues[key]?.job?.also { it.cancel() } }
         job?.join()
+    }
+
+    override fun enqueueOneShot(
+        key: String,
+        worker: KClass<out BackgroundWorker>,
+        requiresInternet: Boolean,
+        type: Type,
+        policy: BackgroundWorkPolicy,
+        priority: BackgroundWorkPriority,
+        input: Map<String, String>,
+    ): Deferred<Unit> {
+        return scope.async(start = CoroutineStart.UNDISPATCHED) {
+            enqueue(
+                key = key,
+                worker = worker,
+                conditions = BackgroundWorkConditions(
+                    schedule = BackgroundWorkSchedule.OneShot,
+                    requiresInternet = requiresInternet,
+                ),
+                type = type,
+                policy = policy,
+                priority = priority,
+                input = input,
+            )
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)

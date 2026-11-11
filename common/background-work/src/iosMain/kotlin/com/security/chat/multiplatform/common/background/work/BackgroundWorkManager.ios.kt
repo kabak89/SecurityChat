@@ -13,6 +13,7 @@ import kotlinx.cinterop.value
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -53,7 +54,7 @@ public fun registerIosBackgroundWork() {
 internal actual fun Scope.createBackgroundWorkManager(
     registry: BackgroundWorkerRegistry,
 ): BackgroundWorkManager {
-    return IosBackgroundWorkManager(get(named(SCOPE_ID_APP)), registry)
+    return IosBackgroundWorkManager(scope = get(named(SCOPE_ID_APP)), registry = registry)
 }
 
 private class IosBackgroundWorkManager(
@@ -105,6 +106,7 @@ private class IosBackgroundWorkManager(
             priority = priority,
         )
         val workerId = registry.get(worker).id
+        val workInput = input.toMap()
         mutex.withLock {
             val previous = scheduled[key].orEmpty()
             val head = previous.firstOrNull()
@@ -125,7 +127,7 @@ private class IosBackgroundWorkManager(
                 },
                 requiresInternet = conditions.requiresInternet,
                 dueAt = nowMillis(),
-                input = input.toMap(),
+                input = workInput,
             )
             scheduled[key] = previous + work
             saveWork()
@@ -152,6 +154,31 @@ private class IosBackgroundWorkManager(
             running[key]?.also { it.cancel() }
         }
         job?.join()
+    }
+
+    override fun enqueueOneShot(
+        key: String,
+        worker: KClass<out BackgroundWorker>,
+        requiresInternet: Boolean,
+        type: Type,
+        policy: BackgroundWorkPolicy,
+        priority: BackgroundWorkPriority,
+        input: Map<String, String>,
+    ): Deferred<Unit> {
+        return scope.async(start = CoroutineStart.UNDISPATCHED) {
+            enqueue(
+                key = key,
+                worker = worker,
+                conditions = BackgroundWorkConditions(
+                    schedule = BackgroundWorkSchedule.OneShot,
+                    requiresInternet = requiresInternet,
+                ),
+                type = type,
+                policy = policy,
+                priority = priority,
+                input = input,
+            )
+        }
     }
 
     private fun launch(task: BGTask, requiresInternet: Boolean) {

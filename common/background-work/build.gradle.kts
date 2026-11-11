@@ -13,7 +13,7 @@ kotlin {
             implementation(projects.common.coreComponent)
             implementation(projects.common.log)
             implementation(libs.koin.core)
-            implementation(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.coroutines.core)
         }
         androidMain.dependencies {
             implementation(libs.androidx.work.runtime)
