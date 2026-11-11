@@ -1,6 +1,7 @@
 package com.security.chat.multiplatform.di
 
 import com.security.chat.multiplatform.common.analytics.di.analyticsModule
+import com.security.chat.multiplatform.common.background.work.backgroundWorkModule
 import com.security.chat.multiplatform.common.core.db.di.coreDbModule
 import com.security.chat.multiplatform.common.core.files.di.coreFilesModule
 import com.security.chat.multiplatform.common.core.network.di.coreNetworkModule
@@ -44,6 +45,7 @@ internal val commonAppDiModules: List<Module> =
         settingsModule,
         coreNetworkModule,
         networkEngineModule,
+        backgroundWorkModule,
         deviceInfoModule,
         permissionModule,
 

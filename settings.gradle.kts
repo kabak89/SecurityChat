@@ -39,6 +39,7 @@ include(
     ":common:icons-kit",
     ":common:ui-kit",
     ":common:app-lifecycle",
+    ":common:background-work",
     ":common:log",
     ":common:crash-report",
     ":common:analytics",

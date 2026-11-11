@@ -65,6 +65,7 @@ kotlin {
             implementation(projects.common.iconsKit)
             implementation(projects.common.uiKit)
             implementation(projects.common.appLifecycle)
+            implementation(projects.common.backgroundWork)
             implementation(projects.common.deviceInfo)
             implementation(projects.common.permission)
             implementation(projects.common.platformSpecific)
