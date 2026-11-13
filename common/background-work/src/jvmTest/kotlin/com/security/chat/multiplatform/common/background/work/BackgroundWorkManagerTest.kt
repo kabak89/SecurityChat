@@ -243,6 +243,78 @@ class BackgroundWorkManagerTest {
         assertEquals(listOf("first", "new"), started)
     }
 
+    @Test
+    fun `keep pending combines offline requests into one run`() = runTest {
+        var online = false
+        val started = mutableListOf<String>()
+        val manager = manager(isOnline = { online }) {
+            TestWorker { started += it.getValue("message") }
+        }
+
+        manager.enqueueKeepingPending(message = "first", requiresInternet = true)
+        runCurrent()
+        repeat(10) {
+            manager.enqueueKeepingPending(message = "extra", requiresInternet = true)
+        }
+        runCurrent()
+        assertEquals(emptyList(), started)
+
+        online = true
+        advanceTimeBy(5.seconds)
+        runCurrent()
+
+        assertEquals(listOf("first"), started)
+    }
+
+    @Test
+    fun `keep pending adds just one successor per active run`() = runTest {
+        val firstMayFinish = CompletableDeferred<Unit>()
+        val secondMayFinish = CompletableDeferred<Unit>()
+        val started = mutableListOf<String>()
+        val manager = manager {
+            TestWorker {
+                val message = it.getValue("message")
+                started += message
+                when (message) {
+                    "first" -> firstMayFinish.await()
+                    "second" -> secondMayFinish.await()
+                }
+            }
+        }
+
+        manager.enqueueKeepingPending(message = "first")
+        runCurrent()
+        manager.enqueueKeepingPending(message = "second")
+        repeat(10) { manager.enqueueKeepingPending(message = "extra") }
+        runCurrent()
+        assertEquals(listOf("first"), started)
+
+        firstMayFinish.complete(Unit)
+        runCurrent()
+        assertEquals(listOf("first", "second"), started)
+
+        manager.enqueueKeepingPending(message = "third")
+        repeat(10) { manager.enqueueKeepingPending(message = "extra") }
+        secondMayFinish.complete(Unit)
+        runCurrent()
+        assertEquals(listOf("first", "second", "third"), started)
+    }
+
+    private suspend fun BackgroundWorkManager.enqueueKeepingPending(
+        message: String,
+        requiresInternet: Boolean = false,
+    ) {
+        enqueueOneShot(
+            key = "chat",
+            worker = TestWorker::class,
+            requiresInternet = requiresInternet,
+            type = Type.Silent,
+            policy = BackgroundWorkPolicy.KEEP_PENDING,
+            priority = BackgroundWorkPriority.Normal,
+            input = mapOf("message" to message),
+        ).await()
+    }
+
     private fun TestScope.manager(
         isOnline: suspend () -> Boolean = { true },
         create: () -> TestWorker,

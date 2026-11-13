@@ -4,6 +4,7 @@ package com.security.chat.multiplatform.common.background.work
 
 import com.security.chat.multiplatform.common.background.work.BackgroundWorkManager.Type
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
+import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
@@ -14,12 +15,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
@@ -40,9 +47,13 @@ import platform.BackgroundTasks.BGTask
 import platform.BackgroundTasks.BGTaskScheduler
 import platform.Foundation.NSDate
 import platform.Foundation.NSError
+import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.Foundation.timeIntervalSince1970
+import platform.UIKit.UIApplication
+import platform.UIKit.UIApplicationDidBecomeActiveNotification
+import platform.UIKit.UIApplicationState
 import kotlin.reflect.KClass
 
 /** Call from the application's launch delegate after loading its Koin modules. */
@@ -54,12 +65,17 @@ public fun registerIosBackgroundWork() {
 internal actual fun Scope.createBackgroundWorkManager(
     registry: BackgroundWorkerRegistry,
 ): BackgroundWorkManager {
-    return IosBackgroundWorkManager(scope = get(named(SCOPE_ID_APP)), registry = registry)
+    return IosBackgroundWorkManager(
+        scope = get(named(SCOPE_ID_APP)),
+        registry = registry,
+        connectivityObserver = get(),
+    )
 }
 
 private class IosBackgroundWorkManager(
     private val scope: CoroutineScope,
     private val registry: BackgroundWorkerRegistry,
+    private val connectivityObserver: ConnectivityObserver,
 ) : BackgroundWorkManager {
 
     private val scheduler = BGTaskScheduler.sharedScheduler
@@ -68,8 +84,10 @@ private class IosBackgroundWorkManager(
     /** Older queue entries omit the input field. */
     private val queueJson = Json { explicitNulls = false }
     private val mutex = Mutex()
+    private val executionMutex = Mutex()
+    private val foregroundWakeups = Channel<Unit>(Channel.CONFLATED)
     private val scheduled = loadWork()
-    private val running = mutableMapOf<String, Job>()
+    private val running = mutableMapOf<String, RunningWork>()
     private val activeBatches = mutableSetOf<Boolean>()
 
     fun register() {
@@ -82,6 +100,20 @@ private class IosBackgroundWorkManager(
             )
             check(registered) { "Missing iOS background task identifier $identifier in Info.plist" }
         }
+        NSNotificationCenter.defaultCenter.addObserverForName(
+            name = UIApplicationDidBecomeActiveNotification,
+            `object` = null,
+            queue = null,
+        ) {
+            foregroundWakeups.trySend(Unit)
+        }
+        foregroundWakeups.receiveAsFlow()
+            .onEach { runForegroundWork() }
+            .launchIn(scope)
+        connectivityObserver.isOnline
+            .filter { it }
+            .onEach { foregroundWakeups.trySend(Unit) }
+            .launchIn(scope)
         scope.launch {
             mutex.withLock {
                 reschedule(false)
@@ -111,12 +143,17 @@ private class IosBackgroundWorkManager(
             val previous = scheduled[key].orEmpty()
             val head = previous.firstOrNull()
             if (head != null) {
-                if (policy == BackgroundWorkPolicy.KEEP) {
-                    submit(head.requiresInternet)
-                    return
+                if (policy != BackgroundWorkPolicy.KEEP) {
+                    require(head.repeatMillis == null) {
+                        "Cannot append to repeating background work: $key"
+                    }
                 }
-                require(head.repeatMillis == null) {
-                    "Cannot append to repeating background work: $key"
+                val runningCount = if (running[key]?.work === head) 1 else 0
+                val keepPending =
+                    policy == BackgroundWorkPolicy.KEEP_PENDING && previous.size > runningCount
+                if (policy == BackgroundWorkPolicy.KEEP || keepPending) {
+                    reschedule(head.requiresInternet)
+                    return@withLock
                 }
             }
             val work = ScheduledWork(
@@ -131,17 +168,10 @@ private class IosBackgroundWorkManager(
             )
             scheduled[key] = previous + work
             saveWork()
-            try {
-                submit((head ?: work).requiresInternet)
-            } catch (error: IllegalStateException) {
-                if (previous.isEmpty()) {
-                    scheduled.remove(key)
-                } else {
-                    scheduled[key] = previous
-                }
-                saveWork()
-                throw error
-            }
+            reschedule((head ?: work).requiresInternet)
+        }
+        if (conditions.schedule == BackgroundWorkSchedule.OneShot) {
+            foregroundWakeups.trySend(Unit)
         }
     }
 
@@ -151,7 +181,7 @@ private class IosBackgroundWorkManager(
                 saveWork()
                 reschedule(queue.first().requiresInternet)
             }
-            running[key]?.also { it.cancel() }
+            running[key]?.job?.also { it.cancel() }
         }
         job?.join()
     }
@@ -181,10 +211,24 @@ private class IosBackgroundWorkManager(
         }
     }
 
+    private suspend fun runForegroundWork() {
+        executionMutex.withLock {
+            val isActive = withContext(Dispatchers.Main) {
+                UIApplication.sharedApplication.applicationState ==
+                        UIApplicationState.UIApplicationStateActive
+            }
+            if (!isActive) return
+            runDueWork(requiresInternet = false, oneShotOnly = true)
+            if (connectivityObserver.isOnline.value) {
+                runDueWork(requiresInternet = true, oneShotOnly = true)
+            }
+        }
+    }
+
     private fun launch(task: BGTask, requiresInternet: Boolean) {
         var succeeded = false
         val job = scope.launch(start = CoroutineStart.LAZY) {
-            succeeded = runBatch(requiresInternet)
+            succeeded = executionMutex.withLock { runBatch(requiresInternet) }
         }
         task.expirationHandler = { job.cancel() }
         job.invokeOnCompletion { error ->
@@ -195,23 +239,12 @@ private class IosBackgroundWorkManager(
     }
 
     private suspend fun runBatch(requiresInternet: Boolean): Boolean {
-        val due = mutex.withLock {
+        mutex.withLock {
             if (!activeBatches.add(requiresInternet)) return true
-            val now = nowMillis()
             reschedule(requiresInternet)
-            scheduled.filterValues { queue ->
-                val head = queue.first()
-                head.requiresInternet == requiresInternet && head.dueAt <= now
-            }
         }
         try {
-            return supervisorScope {
-                due.map { (key, queue) ->
-                    async {
-                        runQueue(key = key, queue = queue, requiresInternet = requiresInternet)
-                    }
-                }.awaitAll().all { it }
-            }
+            return runDueWork(requiresInternet = requiresInternet, oneShotOnly = false)
         } finally {
             withContext(NonCancellable) {
                 mutex.withLock {
@@ -222,13 +255,39 @@ private class IosBackgroundWorkManager(
         }
     }
 
+    private suspend fun runDueWork(requiresInternet: Boolean, oneShotOnly: Boolean): Boolean {
+        val due = mutex.withLock {
+            val now = nowMillis()
+            scheduled.filterValues { queue ->
+                val head = queue.first()
+                head.requiresInternet == requiresInternet &&
+                        head.dueAt <= now &&
+                        (!oneShotOnly || head.repeatMillis == null)
+            }
+        }
+        return supervisorScope {
+            due.map { (key, queue) ->
+                async {
+                    runQueue(
+                        key = key,
+                        queue = queue,
+                        requiresInternet = requiresInternet,
+                        foreground = oneShotOnly,
+                    )
+                }
+            }.awaitAll().all { it }
+        }
+    }
+
     private suspend fun runQueue(
         key: String,
         queue: List<ScheduledWork>,
         requiresInternet: Boolean,
+        foreground: Boolean,
     ): Boolean {
         for (work in queue) {
             if (work.requiresInternet != requiresInternet || work.dueAt > nowMillis()) break
+            if (foreground && requiresInternet && !connectivityObserver.isOnline.value) break
             if (!runWorker(key, work)) return false
         }
         return true
@@ -246,7 +305,7 @@ private class IosBackgroundWorkManager(
                     } else {
                         worker.run(work.input.orEmpty())
                     }
-                }.also { running[key] = it }
+                }.also { running[key] = RunningWork(work, it) }
             }
 
             var result: Boolean? = null
@@ -267,6 +326,9 @@ private class IosBackgroundWorkManager(
                             return@withLock
                         }
                         finishWork(key = key, queue = current, succeeded = succeeded)
+                        if (work.requiresInternet !in activeBatches) {
+                            reschedule(work.requiresInternet)
+                        }
                     }
                 }
             }
@@ -293,6 +355,7 @@ private class IosBackgroundWorkManager(
         saveWork()
         if (next != null && next.requiresInternet != work.requiresInternet) {
             reschedule(next.requiresInternet)
+            foregroundWakeups.trySend(Unit)
         }
     }
 
@@ -355,6 +418,8 @@ private class IosBackgroundWorkManager(
     private fun saveWork() {
         preferences.setObject(queueJson.encodeToString(scheduled), forKey = WORK_QUEUE_KEY)
     }
+
+    private class RunningWork(val work: ScheduledWork, val job: Job)
 }
 
 @Serializable

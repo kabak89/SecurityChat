@@ -32,7 +32,13 @@ public val coreNetworkModule: Module =
             }
         } bind Json::class
 
-        singleOf(::HttpClientFactoryImpl) bind HttpClientFactory::class
+        single<HttpClientFactory> {
+            HttpClientFactoryImpl(
+                json = get(),
+                engine = get(),
+                tokenManager = lazy { get<TokenManagerImpl>() },
+            )
+        }
 
         singleOf(::NetworkManagerFactoryImpl) bind NetworkManagerFactory::class
 

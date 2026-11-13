@@ -1,6 +1,5 @@
 plugins {
     id("securitychat.convention.base")
-    alias(libs.plugins.kotlinxSerialization)
 }
 
 conventionBasePlugin {
@@ -10,12 +9,10 @@ conventionBasePlugin {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.serialization)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.paging.common)
 
-            implementation(projects.common.coreNetwork)
             implementation(projects.common.error)
             implementation(projects.common.coreTime)
             implementation(projects.common.coreThreading)

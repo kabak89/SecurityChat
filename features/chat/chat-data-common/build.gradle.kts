@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.koin.core)
+            implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization)
             implementation(libs.cryptography.core)
@@ -19,6 +20,8 @@ kotlin {
             implementation(libs.paging.common)
             implementation(libs.compose.resources)
 
+            implementation(projects.common.backgroundWork)
+            implementation(projects.common.error)
             implementation(projects.common.localization)
 
             implementation(projects.common.coreTime)

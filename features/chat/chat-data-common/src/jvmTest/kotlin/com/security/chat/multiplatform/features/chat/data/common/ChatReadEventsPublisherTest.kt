@@ -3,6 +3,7 @@ package com.security.chat.multiplatform.features.chat.data.common
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.BaseMessageRequest
 import com.security.chat.multiplatform.features.chat.data.storage.ChatStorage
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReadEventSM
 import com.security.chat.multiplatform.features.chat.data.storage.entity.MessageReceivedEventSM
@@ -271,6 +272,10 @@ class ChatReadEventsPublisherTest {
                 error("Unused")
 
             override suspend fun deleteMessage(chatId: String, messageId: String) = Unit
+            override suspend fun uploadFile(fileId: String, path: String) = error("Unused")
+
+            override suspend fun sendMessage(message: BaseMessageRequest): List<String>? =
+                error("Unused")
         }
 
         fun publisher(scope: CoroutineScope): ChatEventsPublisher =

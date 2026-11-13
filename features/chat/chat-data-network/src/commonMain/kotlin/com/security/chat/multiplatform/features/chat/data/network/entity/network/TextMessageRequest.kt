@@ -1,14 +1,14 @@
-package com.security.chat.multiplatform.features.chat.data.entity
+package com.security.chat.multiplatform.features.chat.data.network.entity.network
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class ImageMessageRequest(
+public data class TextMessageRequest(
     @SerialName("id") override val id: String,
     @SerialName("chatId") override val chatId: String,
     @SerialName("timestamp") override val timestamp: Long,
     @SerialName("recipients") override val recipients: List<RecipientCiphertext>,
-    @SerialName("fileId") val fileId: String,
+    @SerialName("message") val message: String,
     @SerialName("replyToMessageId") override val replyToMessageId: String?,
 ) : BaseMessageRequest

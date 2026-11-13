@@ -1,6 +1,5 @@
 package com.security.chat.multiplatform.features.chat.data.repoimpl
 
-import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.features.chat.data.network.ChatNetworkManager
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
@@ -9,10 +8,10 @@ import com.security.chat.multiplatform.features.chat.domain.entity.error.Message
 import com.security.chat.multiplatform.features.chat.domain.repo.ChatRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import java.lang.reflect.Proxy
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -135,7 +134,7 @@ class ChatDeleteEventsTest {
     ): ChatRepo {
         val dispatcher = StandardTestDispatcher(testScheduler)
         return ChatRepoImpl(
-            networkManagerFactory = unused(),
+            usersNetworkManager = unused(),
             userStorage = stub { name, _ ->
                 assertEquals("getUserId", name)
                 "me"
@@ -154,7 +153,6 @@ class ChatDeleteEventsTest {
                 }
             },
             timeProvider = unused(),
-            networkConfig = NetworkConfig(host = "localhost", port = 0),
             dispatcherProvider = object : DispatcherProviderInterface {
                 override val Default = dispatcher
                 override val IO = dispatcher
@@ -182,9 +180,12 @@ class ChatDeleteEventsTest {
                 }
             },
             fileManager = unused(),
-            json = Json,
             chatsDataHelper = unused(),
             chatPresenceHelper = unused(),
+            outgoingMessageScheduler = stub { name, _ ->
+                assertEquals("getSendDeleteMutex", name)
+                Mutex()
+            },
             chatEventsPublisher = stub { _, _ -> Unit },
         )
     }

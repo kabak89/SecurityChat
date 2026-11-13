@@ -31,6 +31,7 @@ public data class BackgroundWorkConditions(
 public enum class BackgroundWorkPolicy {
     KEEP,
     APPEND_OR_REPLACE,
+    KEEP_PENDING,
 }
 
 public sealed interface BackgroundWorkPriority {
@@ -60,8 +61,11 @@ public interface BackgroundWorkManager {
      * [key] identifies a schedule or queue. [worker] identifies the class that runs this request.
      * [BackgroundWorkPolicy.KEEP] keeps existing work for the key. For one-shot work,
      * [BackgroundWorkPolicy.APPEND_OR_REPLACE] appends to a one-shot queue or starts a new one.
-     * If a run fails, its queued successors are discarded. A repeating schedule uses KEEP
-     * and [BackgroundWorkPriority.Normal]. iOS and JVM ignore [priority] when scheduling.
+     * [BackgroundWorkPolicy.KEEP_PENDING] reuses a waiting one-shot run, including its input,
+     * or queues one successor when a run is already executing. Use it for equivalent requests
+     * with the same key. If a run fails, its queued successors are discarded.
+     * A repeating schedule uses KEEP and [BackgroundWorkPriority.Normal].
+     * iOS and JVM ignore [priority] when scheduling.
      * The system can delay runs. Android requires an interval of at least 15 minutes for repeating
      * work. Internet is a prerequisite when requested.
      * [Type.Foreground] enables foreground work on Android. iOS and JVM ignore [type].
@@ -82,8 +86,9 @@ public interface BackgroundWorkManager {
     public suspend fun cancel(key: String)
 
     /**
-     * Starts enqueueing work for a key reserved for one-shot work. On Android the request is
-     * submitted to WorkManager before returning. [Deferred] reports the enqueue result.
+     * Starts enqueueing work for a key reserved for one-shot work. On Android, policies other
+     * than [BackgroundWorkPolicy.KEEP_PENDING] submit to WorkManager before returning.
+     * [Deferred] reports the enqueue result.
      */
     public fun enqueueOneShot(
         key: String,

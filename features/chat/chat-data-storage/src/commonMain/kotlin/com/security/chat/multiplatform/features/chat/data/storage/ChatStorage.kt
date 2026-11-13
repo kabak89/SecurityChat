@@ -110,6 +110,14 @@ public interface ChatStorage {
         messageId: String,
         authorId: String,
     ): Boolean
+
+    public suspend fun getUnsentMessages(userId: String): List<MessageSM>
+
+    public suspend fun isMessageDeletionPending(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+    ): Boolean
 }
 
 internal class ChatStorageImpl(
@@ -675,6 +683,31 @@ internal class ChatStorageImpl(
                 queries.isPending(chatId = chatId, messageId = messageId, authorId = authorId)
                     .executeAsOne() > 0L
             }
+        }
+    }
+
+    override suspend fun getUnsentMessages(userId: String): List<MessageSM> {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                db.messageTableQueries
+                    .getUnsent(userId = userId, mapper = ::JoinedMessageRow)
+                    .executeAsList()
+                    .chunked(500)
+                    .flatMap { db.attachRecipients(it) }
+            }
+        }
+    }
+
+    override suspend fun isMessageDeletionPending(
+        chatId: String,
+        messageId: String,
+        authorId: String,
+    ): Boolean {
+        return withContext(dispatcherProvider.IO) {
+            dbCreator.getDb().pendingMessageDeletionsQueries
+                .isPending(chatId = chatId, messageId = messageId, authorId = authorId)
+                .executeAsOne() > 0L
         }
     }
 

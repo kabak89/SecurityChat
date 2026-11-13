@@ -16,6 +16,7 @@ internal actual fun initKoin(appDeclaration: KoinAppDeclaration) {
 public fun doInitKoin() {
     initDI()
     registerIosBackgroundWork()
+    startOutgoingMessages()
     startMeshModel()
     startMeshBluetooth()
 }

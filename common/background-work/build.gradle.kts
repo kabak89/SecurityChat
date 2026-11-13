@@ -19,6 +19,7 @@ kotlin {
             implementation(libs.androidx.work.runtime)
         }
         iosMain.dependencies {
+            implementation(projects.common.coreNetwork)
             implementation(libs.kotlinx.serialization)
         }
         jvmMain.dependencies {

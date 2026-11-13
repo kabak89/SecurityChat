@@ -12,6 +12,7 @@ import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.NonCancellable
@@ -32,6 +33,8 @@ public interface TokenManager {
     public suspend fun refreshTokens(): Tokens?
     public suspend fun clearTokens()
 }
+
+internal data class SessionAccessToken(val generation: Long, val token: AccessToken)
 
 internal class TokenManagerImpl(
     private val encryptedSettings: EncryptedSettings,
@@ -63,23 +66,48 @@ internal class TokenManagerImpl(
         }
     }
 
-    override suspend fun getTokens(): Tokens? =
-        withContext(dispatcherProviderInterface.IO) {
+    override suspend fun getTokens(): Tokens? {
+        return withContext(dispatcherProviderInterface.IO) {
+            stateMutex.withLock { readTokensOrReportLogout() }
+        }
+    }
+
+    override suspend fun refreshTokens(): Tokens? = refreshTokensForRequest(requestToken = null)
+
+    override suspend fun clearTokens() {
+        withContext(NonCancellable + dispatcherProviderInterface.IO) {
             stateMutex.withLock {
-                readTokens().also { tokens ->
-                    if (tokens == null) {
-                        Log.e("No tokens in storage")
-                        logoutErrorAlerter.logout()
-                    }
+                encryptedSettings.putString(KEY_TOKENS, null)
+                encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
+                encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
+                encryptedSettings.putString(KEY_PENDING_REFRESH, null)
+                generation++
+                refresh = null
+            }
+        }
+    }
+
+    internal suspend fun getSessionAccessToken(): SessionAccessToken? {
+        return withContext(dispatcherProviderInterface.IO) {
+            stateMutex.withLock {
+                readTokensOrReportLogout()?.let {
+                    SessionAccessToken(generation = generation, token = it.accessToken)
                 }
             }
         }
+    }
 
-    override suspend fun refreshTokens(): Tokens? {
+    internal suspend fun refreshTokensForRequest(requestToken: SessionAccessToken?): Tokens? {
         val operation = withContext(dispatcherProviderInterface.IO) {
             stateMutex.withLock {
+                if (requestToken != null && requestToken.generation != generation) {
+                    return@withLock null
+                }
+                val tokens = readTokens() ?: return@withLock null
+                if (requestToken != null && requestToken.token != tokens.accessToken) {
+                    return@withLock CompletableDeferred(tokens)
+                }
                 refresh?.takeUnless { it.isCompleted } ?: run {
-                    val tokens = readTokens() ?: return@withLock null
                     val request = encryptedSettings.getString(KEY_PENDING_REFRESH)
                         ?.let { json.decodeFromString<RefreshRequest>(it) }
                         ?.takeIf { it.refreshToken == tokens.refreshToken.value }
@@ -93,18 +121,13 @@ internal class TokenManagerImpl(
                 }
             }
         } ?: return null
-        return operation.await()
-    }
+        val tokens = operation.await() ?: return null
+        if (requestToken == null) return tokens
 
-    override suspend fun clearTokens() {
-        withContext(NonCancellable + dispatcherProviderInterface.IO) {
+        return withContext(dispatcherProviderInterface.IO) {
             stateMutex.withLock {
-                encryptedSettings.putString(KEY_TOKENS, null)
-                encryptedSettings.putString(KEY_ACCESS_TOKEN, null)
-                encryptedSettings.putString(KEY_REFRESH_TOKEN, null)
-                encryptedSettings.putString(KEY_PENDING_REFRESH, null)
-                generation++
-                refresh = null
+                if (requestToken.generation != generation) return@withLock null
+                readTokens()
             }
         }
     }
@@ -163,6 +186,15 @@ internal class TokenManagerImpl(
 
     private fun isCurrentLocked(request: RefreshRequest, requestGeneration: Long): Boolean =
         generation == requestGeneration && readTokens()?.refreshToken?.value == request.refreshToken
+
+    private fun readTokensOrReportLogout(): Tokens? {
+        return readTokens().also { tokens ->
+            if (tokens == null) {
+                Log.e("No tokens in storage")
+                logoutErrorAlerter.logout()
+            }
+        }
+    }
 
     private fun readTokens(): Tokens? {
         val stored = encryptedSettings.getString(KEY_TOKENS)

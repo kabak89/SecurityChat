@@ -8,7 +8,6 @@ import com.security.chat.multiplatform.common.core.network.entity.SocketSendMess
 import com.security.chat.multiplatform.common.core.network.entity.SocketSubscribeMessage
 import com.security.chat.multiplatform.common.log.Log
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.auth.clearAuthTokens
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.http.URLProtocol
@@ -195,7 +194,6 @@ public class LiveEventsManager(
     }
 
     private suspend fun runWebSocketSession() {
-        httpClient.clearAuthTokens()
         httpClient.webSocket(
             host = socketConfig.host,
             port = socketConfig.port,

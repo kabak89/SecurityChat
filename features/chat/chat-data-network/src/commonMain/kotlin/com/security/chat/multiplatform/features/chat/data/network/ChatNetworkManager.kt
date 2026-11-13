@@ -7,6 +7,7 @@ import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
 import com.security.chat.multiplatform.common.core.network.entity.SocketEvent
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.entity.ChatMessageNM
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.BaseMessageRequest
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatEventAcknowledgement
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatEventAcknowledgementRequest
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatEventEnvelope
@@ -16,6 +17,7 @@ import com.security.chat.multiplatform.features.chat.data.network.entity.network
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatMessage
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.ChatSubscribeMessage
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.GetMessagesResponse
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.ImageMessageRequest
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_DELETED_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_READ_EVENT_TYPE
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MESSAGE_RECEIVED_EVENT_TYPE
@@ -23,8 +25,15 @@ import com.security.chat.multiplatform.features.chat.data.network.entity.network
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReadEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessageReceivedEventPayload
 import com.security.chat.multiplatform.features.chat.data.network.entity.network.MessagesReceivedRequest
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.SendMessageRequest
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.SendMessageResponse
+import com.security.chat.multiplatform.features.chat.data.network.entity.network.TextMessageRequest
 import com.security.chat.multiplatform.features.chat.data.network.mapper.toChatEventNM
 import com.security.chat.multiplatform.features.chat.data.network.mapper.toNM
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -72,6 +81,10 @@ public interface ChatNetworkManager {
     public suspend fun downloadFile(fileId: String, destinationPath: String)
 
     public suspend fun deleteMessage(chatId: String, messageId: String)
+
+    public suspend fun uploadFile(fileId: String, path: String)
+
+    public suspend fun sendMessage(message: BaseMessageRequest): List<String>?
 }
 
 internal class ChatNetworkManagerImpl(
@@ -239,6 +252,36 @@ internal class ChatNetworkManagerImpl(
                 .first { it.type == "events.published" }
         }
         checkNotNull(response) { "Timed out deleting message: id=$messageId" }
+    }
+
+    override suspend fun uploadFile(fileId: String, path: String) {
+        networkManager.runPostFile(relativePath = "/files/$fileId", filePath = path)
+    }
+
+    override suspend fun sendMessage(message: BaseMessageRequest): List<String>? {
+        val request = when (message) {
+            is TextMessageRequest -> SendMessageRequest(
+                type = "text",
+                message = json.encodeToString(message),
+            )
+
+            is ImageMessageRequest -> SendMessageRequest(
+                type = "image",
+                message = json.encodeToString(message),
+            )
+        }
+        val response = networkManager.runPost<SendMessageRequest, HttpResponse>(
+            relativePath = "/messages",
+            request = request,
+        )
+        if (message.replyToMessageId != null) {
+            if (response.contentType()?.match(ContentType.Application.Json) == true) {
+                return response.body<SendMessageResponse>().acceptedRecipientIds
+            }
+            /** Older servers confirm with plain text. Keep the recipients sent by this client. */
+            return message.recipients.map { it.recipientId }
+        }
+        return null
     }
 
     private suspend fun publishEvent(request: ChatEventPublishRequest) {

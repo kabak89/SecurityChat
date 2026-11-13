@@ -19,6 +19,7 @@ import androidx.work.Operation
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.await
@@ -27,6 +28,7 @@ import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
 import com.security.chat.multiplatform.common.log.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -77,13 +79,19 @@ private class AndroidBackgroundWorkManager(
         mutex.withLock {
             when (val schedule = conditions.schedule) {
                 BackgroundWorkSchedule.OneShot -> {
-                    if (policy == BackgroundWorkPolicy.APPEND_OR_REPLACE) {
+                    if (policy != BackgroundWorkPolicy.KEEP) {
                         val existing = workManager.getWorkInfosForUniqueWorkFlow(name).first()
                         val hasActivePeriodicWork = existing.any {
                             it.periodicityInfo != null && !it.state.isFinished
                         }
                         require(!hasActivePeriodicWork) {
                             "Cannot append to repeating background work: $key"
+                        }
+                        val hasPendingWork = existing.any {
+                            it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED
+                        }
+                        if (policy == BackgroundWorkPolicy.KEEP_PENDING && hasPendingWork) {
+                            return@withLock
                         }
                     }
                     submitOneShot(
@@ -143,6 +151,22 @@ private class AndroidBackgroundWorkManager(
             policy = policy,
             priority = priority,
         )
+        if (policy == BackgroundWorkPolicy.KEEP_PENDING) {
+            return scope.async(start = CoroutineStart.UNDISPATCHED) {
+                enqueue(
+                    key = key,
+                    worker = worker,
+                    conditions = BackgroundWorkConditions(
+                        schedule = BackgroundWorkSchedule.OneShot,
+                        requiresInternet = requiresInternet,
+                    ),
+                    type = type,
+                    policy = policy,
+                    priority = priority,
+                    input = input,
+                )
+            }
+        }
         val operation = submitOneShot(
             name = "$WORK_NAME_PREFIX$key",
             workerId = registry.get(worker).id,
@@ -189,7 +213,9 @@ private class AndroidBackgroundWorkManager(
         }
         val existingPolicy = when (policy) {
             BackgroundWorkPolicy.KEEP -> ExistingWorkPolicy.KEEP
-            BackgroundWorkPolicy.APPEND_OR_REPLACE -> ExistingWorkPolicy.APPEND_OR_REPLACE
+            BackgroundWorkPolicy.APPEND_OR_REPLACE,
+            BackgroundWorkPolicy.KEEP_PENDING,
+                -> ExistingWorkPolicy.APPEND_OR_REPLACE
         }
         return workManager.enqueueUniqueWork(
             uniqueWorkName = name,

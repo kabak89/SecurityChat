@@ -77,12 +77,17 @@ internal class JvmBackgroundWorkManager(
                     return
                 }
                 if (!queue.job.isCancelled) {
-                    if (policy == BackgroundWorkPolicy.APPEND_OR_REPLACE) {
+                    if (policy != BackgroundWorkPolicy.KEEP) {
                         val head = queue.pending.first()
                         require(head.conditions.schedule == BackgroundWorkSchedule.OneShot) {
                             "Cannot append to repeating background work: $key"
                         }
-                        queue.pending.addLast(work)
+                        val runningCount = if (queue.running) 1 else 0
+                        if (policy == BackgroundWorkPolicy.APPEND_OR_REPLACE ||
+                            queue.pending.size == runningCount
+                        ) {
+                            queue.pending.addLast(work)
+                        }
                     }
                     return
                 }
@@ -141,8 +146,9 @@ internal class JvmBackgroundWorkManager(
     private suspend fun runQueue(key: String, pending: ArrayDeque<ScheduledWork>) {
         while (true) {
             val work = mutex.withLock { pending.first() }
-            val succeeded = runSchedule(work)
+            val succeeded = runSchedule(key, work)
             mutex.withLock {
+                queues.getValue(key).running = false
                 pending.removeFirst()
                 if (!succeeded || pending.isEmpty()) {
                     queues.remove(key)
@@ -152,13 +158,14 @@ internal class JvmBackgroundWorkManager(
         }
     }
 
-    private suspend fun runSchedule(work: ScheduledWork): Boolean {
+    private suspend fun runSchedule(key: String, work: ScheduledWork): Boolean {
         do {
             currentCoroutineContext().ensureActive()
             if (work.conditions.requiresInternet) {
                 while (!isOnline()) delay(5.seconds)
             }
             currentCoroutineContext().ensureActive()
+            mutex.withLock { queues.getValue(key).running = true }
             val succeeded = work.worker.run(work.input)
             when (val schedule = work.conditions.schedule) {
                 BackgroundWorkSchedule.OneShot -> return succeeded
@@ -173,7 +180,9 @@ internal class JvmBackgroundWorkManager(
         val input: Map<String, String>,
     )
 
-    private class WorkQueue(val pending: ArrayDeque<ScheduledWork>, val job: Job)
+    private class WorkQueue(val pending: ArrayDeque<ScheduledWork>, val job: Job) {
+        var running = false
+    }
 }
 
 private suspend fun canConnect(host: String, port: Int): Boolean {

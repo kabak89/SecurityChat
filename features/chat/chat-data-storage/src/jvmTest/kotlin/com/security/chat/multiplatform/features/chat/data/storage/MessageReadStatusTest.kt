@@ -346,6 +346,67 @@ class MessageReadStatusTest {
             }
         }
 
+    @Test
+    fun `unsent messages are selected across chats for the active author in send order`() =
+        runTest {
+            withStorage { storage, _ ->
+                val pending = outgoing(Status.Created)
+                storage.saveMessages(
+                    listOf(
+                        pending.copy(id = "later", timestamp = 3),
+                        pending.copy(id = "second", chatId = "other"),
+                        pending.copy(id = "first"),
+                        pending.copy(id = "another-author", authorId = "someone"),
+                        outgoing(Status.Sent).copy(id = "sent"),
+                        pending.copy(id = "deleted"),
+                    ),
+                )
+                storage.deleteMessage(
+                    chatId = "chat",
+                    messageId = "deleted",
+                    deletedByUserId = "me",
+                )
+
+                assertEquals(
+                    listOf("first", "second", "later"),
+                    storage.getUnsentMessages("me").map { it.id },
+                )
+
+                storage.markMessageSent("first")
+                assertEquals(
+                    listOf("second", "later"),
+                    storage.getUnsentMessages("me").map { it.id },
+                )
+            }
+        }
+
+    @Test
+    fun `a message pending deletion is excluded from outgoing work`() = runTest {
+        withStorage { storage, _ ->
+            val pending = outgoing(Status.Created)
+            storage.saveMessages(listOf(pending, pending.copy(id = "other-message")))
+            assertTrue(
+                storage.enqueueMessageDeletion(
+                    chatId = pending.chatId,
+                    messageId = pending.id,
+                    authorId = pending.authorId,
+                ),
+            )
+
+            assertTrue(
+                storage.isMessageDeletionPending(
+                    chatId = pending.chatId,
+                    messageId = pending.id,
+                    authorId = pending.authorId,
+                ),
+            )
+            val stored = storage.getMessage(chatId = pending.chatId, messageId = pending.id)
+            assertEquals(pending.id, stored?.id)
+            assertTrue(stored?.recipients.orEmpty().any { it.status == Status.Created })
+            assertEquals(listOf("other-message"), storage.getUnsentMessages("me").map { it.id })
+        }
+    }
+
     private suspend fun TestScope.withStorage(
         databaseUrl: String = JdbcSqliteDriver.IN_MEMORY,
         initializeSchema: Boolean = true,

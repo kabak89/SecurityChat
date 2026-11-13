@@ -10,6 +10,7 @@ import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
 import com.security.chat.multiplatform.di.initDI
 import com.security.chat.multiplatform.di.startMeshModel
+import com.security.chat.multiplatform.di.startOutgoingMessages
 import com.security.chat.multiplatform.features.mesh.data.startMeshBluetooth
 import com.security.chat.multiplatform.features.root.component.RootComponentImpl
 import com.security.chat.multiplatform.features.root.ui.screens.root.RootContent
@@ -18,6 +19,7 @@ import javax.swing.SwingUtilities
 
 public fun main() {
     initDI()
+    startOutgoingMessages()
     startMeshModel()
     startMeshBluetooth()
 

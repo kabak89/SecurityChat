@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.koin.core)
+            implementation(libs.ktor.client.core)
             implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(projects.common.coreNetwork)

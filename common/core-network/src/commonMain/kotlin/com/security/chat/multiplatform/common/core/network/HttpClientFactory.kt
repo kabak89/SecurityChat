@@ -6,21 +6,20 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.plugins.api.Send
+import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.AttributeKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 
 public interface HttpClientFactory {
     public fun build(needAuthorization: Boolean): HttpClient
@@ -29,7 +28,8 @@ public interface HttpClientFactory {
 internal class HttpClientFactoryImpl(
     private val json: Json,
     private val engine: HttpClientEngine,
-) : HttpClientFactory, KoinComponent {
+    private val tokenManager: Lazy<TokenManagerImpl>,
+) : HttpClientFactory {
 
     override fun build(needAuthorization: Boolean): HttpClient {
         val networkLogger: Logger = object : Logger {
@@ -66,28 +66,33 @@ internal class HttpClientFactoryImpl(
                 }
             }
             if (needAuthorization) {
-                val tokenManager: TokenManager = get()
-
-                install(Auth) {
-                    bearer {
-                        loadTokens {
-                            val tokens = tokenManager.getTokens() ?: return@loadTokens null
-                            BearerTokens(
-                                accessToken = tokens.accessToken.value,
-                                refreshToken = tokens.refreshToken.value,
-                            )
-                        }
-                        refreshTokens {
-                            val tokens = tokenManager.refreshTokens() ?: return@refreshTokens null
-
-                            BearerTokens(
-                                accessToken = tokens.accessToken.value,
-                                refreshToken = tokens.refreshToken.value,
-                            )
-                        }
-                    }
-                }
+                install(sessionAuthorization(tokenManager.value))
             }
         }
     }
 }
+
+private fun sessionAuthorization(tokenManager: TokenManagerImpl) =
+    createClientPlugin("SessionAuthorization") {
+        val requestTokenKey = AttributeKey<SessionAccessToken>("SessionAccessToken")
+
+        onRequest { request, _ ->
+            val session = tokenManager.getSessionAccessToken() ?: return@onRequest
+            request.attributes.put(requestTokenKey, session)
+            request.headers[HttpHeaders.Authorization] = "Bearer ${session.token.value}"
+        }
+
+        on(Send) { request ->
+            val call = proceed(request)
+            if (call.response.status != HttpStatusCode.Unauthorized ||
+                call.request.headers[HttpHeaders.Authorization] == null
+            ) {
+                return@on call
+            }
+
+            val requestToken = request.attributes.getOrNull(requestTokenKey) ?: return@on call
+            val tokens = tokenManager.refreshTokensForRequest(requestToken) ?: return@on call
+            request.headers[HttpHeaders.Authorization] = "Bearer ${tokens.accessToken.value}"
+            proceed(request)
+        }
+    }

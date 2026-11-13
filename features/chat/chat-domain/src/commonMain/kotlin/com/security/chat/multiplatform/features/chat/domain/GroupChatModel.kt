@@ -74,7 +74,6 @@ internal class GroupChatModelImpl(
                     current
                 }
             }
-            chatRepo.uploadMessages(chatId = chatId)
         }
 
     override val sendMessage: Task0<Unit> =
@@ -100,8 +99,6 @@ internal class GroupChatModelImpl(
                     replyQuote = current.replyQuote.takeUnless { it === draft.replyQuote },
                 )
             }
-
-            chatRepo.uploadMessages(chatId = chatId)
         }
 
     override val syncMessages: Task0<Unit> =

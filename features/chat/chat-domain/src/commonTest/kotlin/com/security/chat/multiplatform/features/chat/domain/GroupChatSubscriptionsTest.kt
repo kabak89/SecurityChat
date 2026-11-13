@@ -178,7 +178,6 @@ class GroupChatSubscriptionsTest {
             replyToMessageId: String?,
         ) = Unit
 
-        override suspend fun uploadMessages(chatId: String) = Unit
         override suspend fun markMessagesReadUpTo(chatId: String, messageId: String) {
             assertEquals("chat", chatId)
             readMessageIds += messageId

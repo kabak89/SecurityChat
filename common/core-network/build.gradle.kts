@@ -51,7 +51,6 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.websockets)
-            implementation(libs.ktor.client.auth)
             implementation(libs.kotlinx.io.core)
 
             implementation(projects.common.coreComponent)

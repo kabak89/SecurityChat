@@ -7,6 +7,7 @@ import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
 import com.security.chat.multiplatform.common.platformspecific.MainActivity
 import com.security.chat.multiplatform.di.initDI
 import com.security.chat.multiplatform.di.startMeshModel
+import com.security.chat.multiplatform.di.startOutgoingMessages
 import com.security.chat.multiplatform.features.mesh.data.MeshScanWakeHandler
 import com.security.chat.multiplatform.features.mesh.data.startMeshBluetooth
 import com.security.chat.multiplatform.features.mesh.domain.LogManager
@@ -28,6 +29,7 @@ public class SecurityChatApplication : Application(), MeshScanWakeHandler {
         initDI {
             androidContext(this@SecurityChatApplication)
         }
+        startOutgoingMessages()
         startMeshModel()
         startMeshBluetooth()
         schedulePeriodicMeshSync(this)

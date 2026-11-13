@@ -18,6 +18,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -241,36 +242,142 @@ class TokenManagerTest {
         }
     }
 
+    @Test
+    fun `an existing HTTP client uses the new account token after login`() = runTest {
+        withFixture { f ->
+            f.manager.saveTokens(oldTokens)
+            val client = f.authorizedClient()
+            assertEquals(HttpStatusCode.OK, client.get("http://localhost/messages").status)
+
+            f.manager.clearTokens()
+            f.manager.saveTokens(newTokens)
+            assertEquals(HttpStatusCode.OK, client.get("http://localhost/messages").status)
+
+            assertEquals(
+                listOf<String?>("Bearer old-access", "Bearer new-access"),
+                f.authorizationHeaders,
+            )
+            assertTrue(f.requests.isEmpty())
+        }
+    }
+
+    @Test
+    fun `a late HTTP unauthorized response cannot refresh or resend under another account`() =
+        runTest {
+            withFixture { f ->
+                val response = CompletableDeferred<Unit>()
+                f.manager.saveTokens(oldTokens)
+                f.requestHandler = {
+                    response.await()
+                    Reply(HttpStatusCode.Unauthorized, "Expired")
+                }
+                val client = f.authorizedClient()
+                val request = async {
+                    assertFailsWith<NetworkError> { client.get("http://localhost/messages") }
+                }
+                runCurrent()
+                assertEquals(listOf<String?>("Bearer old-access"), f.authorizationHeaders)
+
+                f.manager.clearTokens()
+                f.manager.saveTokens(newTokens)
+                response.complete(Unit)
+
+                assertEquals(HttpStatusCode.Unauthorized.value, request.await().statusCode)
+                assertEquals(listOf<String?>("Bearer old-access"), f.authorizationHeaders)
+                assertTrue(f.requests.isEmpty())
+                assertEquals(newTokens, f.manager.getTokens())
+                assertEquals(0, f.logoutCount)
+            }
+        }
+
+    @Test
+    fun `HTTP unauthorized retries once with a refreshed token in the same session`() = runTest {
+        withFixture { f ->
+            f.manager.saveTokens(oldTokens)
+            f.requestHandler = { authorization ->
+                if (authorization == "Bearer new-access") {
+                    Reply(HttpStatusCode.OK, "{}")
+                } else {
+                    Reply(HttpStatusCode.Unauthorized, "Expired")
+                }
+            }
+
+            val client = f.authorizedClient()
+            assertEquals(HttpStatusCode.OK, client.get("http://localhost/messages").status)
+            assertEquals(
+                listOf<String?>("Bearer old-access", "Bearer new-access"),
+                f.authorizationHeaders,
+            )
+            assertEquals(1, f.requests.size)
+        }
+    }
+
+    @Test
+    fun `an HTTP request reuses a token already rotated in the same session`() = runTest {
+        withFixture { f ->
+            val response = CompletableDeferred<Unit>()
+            f.manager.saveTokens(oldTokens)
+            f.requestHandler = { authorization ->
+                if (authorization == "Bearer new-access") {
+                    Reply(HttpStatusCode.OK, "{}")
+                } else {
+                    response.await()
+                    Reply(HttpStatusCode.Unauthorized, "Expired")
+                }
+            }
+            val client = f.authorizedClient()
+            val request = async { client.get("http://localhost/messages").status }
+            runCurrent()
+            assertEquals(listOf<String?>("Bearer old-access"), f.authorizationHeaders)
+
+            assertEquals(newTokens, f.manager.refreshTokens())
+            response.complete(Unit)
+
+            assertEquals(HttpStatusCode.OK, request.await())
+            assertEquals(
+                listOf<String?>("Bearer old-access", "Bearer new-access"),
+                f.authorizationHeaders,
+            )
+            assertEquals(1, f.requests.size)
+        }
+    }
+
     private suspend fun TestScope.withFixture(block: suspend (Fixture) -> Unit) {
         val fixture = Fixture(this)
         try {
             block(fixture)
         } finally {
-            fixture.appScope.cancel()
-            fixture.client.close()
-            fixture.engine.close()
+            fixture.close()
         }
     }
 
     private class Fixture(private val scope: TestScope) {
         val settings = MemorySettings()
         val requests = mutableListOf<RefreshRequest>()
+        val authorizationHeaders = mutableListOf<String?>()
+        var requestHandler: suspend (String?) -> Reply = { Reply(HttpStatusCode.OK, "{}") }
         var logoutCount = 0
         var handler: suspend (RefreshRequest) -> Reply = { success() }
         private val dispatcher = StandardTestDispatcher(scope.testScheduler)
-        val appScope = CoroutineScope(
+        private val appScope = CoroutineScope(
             scope.backgroundScope.coroutineContext +
                     SupervisorJob(scope.backgroundScope.coroutineContext[Job]),
         )
-        val engine = MockEngine(
+        private val engine = MockEngine(
             MockEngineConfig().apply {
                 this.dispatcher = this@Fixture.dispatcher
                 addHandler { request ->
-                    val body = (request.body as OutgoingContent.ByteArrayContent)
-                        .bytes().decodeToString()
-                    val payload = Json.decodeFromString<RefreshRequest>(body)
-                    requests += payload
-                    val reply = handler(payload)
+                    val reply = if (request.url.encodedPath == "/refresh") {
+                        val body = (request.body as OutgoingContent.ByteArrayContent)
+                            .bytes().decodeToString()
+                        val payload = Json.decodeFromString<RefreshRequest>(body)
+                        requests += payload
+                        handler(payload)
+                    } else {
+                        val authorization = request.headers[HttpHeaders.Authorization]
+                        authorizationHeaders += authorization
+                        requestHandler(authorization)
+                    }
                     respond(
                         reply.body, reply.status,
                         headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
@@ -278,7 +385,7 @@ class TokenManagerTest {
                 }
             },
         )
-        val client = HttpClient(engine) {
+        private val client = HttpClient(engine) {
             expectSuccess = true
             install(ContentNegotiation) { json(Json) }
             HttpResponseValidator {
@@ -290,8 +397,21 @@ class TokenManagerTest {
             }
         }
         val manager = newManager()
+        private val authorizedClient = lazy {
+            HttpClientFactoryImpl(json = Json, engine = engine, tokenManager = lazyOf(manager))
+                .build(needAuthorization = true)
+        }
 
-        fun newManager(): TokenManager =
+        fun authorizedClient(): HttpClient = authorizedClient.value
+
+        fun close() {
+            appScope.cancel()
+            if (authorizedClient.isInitialized()) authorizedClient.value.close()
+            client.close()
+            engine.close()
+        }
+
+        fun newManager(): TokenManagerImpl =
             TokenManagerImpl(
                 settings,
                 object : LogoutErrorAlerter {

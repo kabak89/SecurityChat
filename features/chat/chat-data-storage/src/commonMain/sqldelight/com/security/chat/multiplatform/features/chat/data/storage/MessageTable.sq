@@ -109,3 +109,27 @@ FROM MessageTable
 LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
 LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
 WHERE MessageTable.chatId = :chatId AND MessageTable.id IN :messageIds;
+
+getUnsent:
+SELECT MessageTable.id, MessageTable.chatId, MessageTable.authorId, MessageTable.timestamp, MessageTable.type, TextMessageTable.text, ImageMessageTable.fileId, ImageMessageTable.key, ImageMessageTable.isDownloaded, MessageTable.replyToMessageId
+FROM MessageTable
+LEFT JOIN TextMessageTable ON TextMessageTable.id = MessageTable.id
+LEFT JOIN ImageMessageTable ON ImageMessageTable.id = MessageTable.id
+WHERE MessageTable.authorId = :userId
+  AND EXISTS (
+    SELECT 1 FROM MessageRecipients
+    WHERE MessageRecipients.messageId = MessageTable.id AND MessageRecipients.status = 'Created'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM DeletedMessages
+    WHERE DeletedMessages.messageId = MessageTable.id
+      AND DeletedMessages.chatId = MessageTable.chatId
+      AND DeletedMessages.deletedByUserId = MessageTable.authorId
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM PendingMessageDeletions
+    WHERE PendingMessageDeletions.chatId = MessageTable.chatId
+      AND PendingMessageDeletions.messageId = MessageTable.id
+      AND PendingMessageDeletions.authorId = MessageTable.authorId
+  )
+ORDER BY MessageTable.timestamp ASC, MessageTable.id ASC;
