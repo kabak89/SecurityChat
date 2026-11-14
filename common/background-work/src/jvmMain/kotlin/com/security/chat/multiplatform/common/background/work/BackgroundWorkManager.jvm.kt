@@ -2,47 +2,42 @@ package com.security.chat.multiplatform.common.background.work
 
 import com.security.chat.multiplatform.common.background.work.BackgroundWorkManager.Type
 import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
-import com.security.chat.multiplatform.common.core.network.entity.NetworkConfig
+import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.net.URI
 import kotlin.reflect.KClass
-import kotlin.time.Duration.Companion.seconds
 
 internal actual fun Scope.createBackgroundWorkManager(
     registry: BackgroundWorkerRegistry,
 ): BackgroundWorkManager {
-    val networkConfig: NetworkConfig = get()
-    val host = URI(networkConfig.host).host
+    val connectivityObserver: ConnectivityObserver = get()
     return JvmBackgroundWorkManager(
         scope = get(named(SCOPE_ID_APP)),
         registry = registry,
-        isOnline = { canConnect(host, networkConfig.port) },
+        isOnline = connectivityObserver.isOnline,
     )
 }
 
 internal class JvmBackgroundWorkManager(
     private val scope: CoroutineScope,
     private val registry: BackgroundWorkerRegistry,
-    private val isOnline: suspend () -> Boolean,
+    private val isOnline: StateFlow<Boolean>,
 ) : BackgroundWorkManager {
 
     private val mutex = Mutex()
@@ -162,7 +157,7 @@ internal class JvmBackgroundWorkManager(
         do {
             currentCoroutineContext().ensureActive()
             if (work.conditions.requiresInternet) {
-                while (!isOnline()) delay(5.seconds)
+                isOnline.first { it }
             }
             currentCoroutineContext().ensureActive()
             mutex.withLock { queues.getValue(key).running = true }
@@ -182,16 +177,5 @@ internal class JvmBackgroundWorkManager(
 
     private class WorkQueue(val pending: ArrayDeque<ScheduledWork>, val job: Job) {
         var running = false
-    }
-}
-
-private suspend fun canConnect(host: String, port: Int): Boolean {
-    return withContext(Dispatchers.IO) {
-        try {
-            Socket().use { it.connect(InetSocketAddress(host, port), 2_000) }
-            true
-        } catch (_: IOException) {
-            false
-        }
     }
 }

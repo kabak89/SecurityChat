@@ -1,13 +1,19 @@
 package com.security.chat.multiplatform.common.background.work
 
 import com.security.chat.multiplatform.common.background.work.BackgroundWorkManager.Type
+import com.security.chat.multiplatform.common.core.component.SCOPE_ID_APP
+import com.security.chat.multiplatform.common.core.network.ConnectivityObserver
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.koin.core.KoinApplication
+import org.koin.core.qualifier.named
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import kotlin.test.AfterTest
@@ -27,15 +33,24 @@ class BackgroundWorkManagerTest {
 
     @Test
     fun `one time work waits for the network and runs once with the original input`() = runTest {
-        var online = false
+        val online = MutableStateFlow(false)
         val received = mutableListOf<Map<String, String>>()
-        val manager = manager(isOnline = { online }) { TestWorker { received += it } }
+        val manager = manager(onlineState = online) { TestWorker { received += it } }
         val conditions = BackgroundWorkConditions(
             schedule = BackgroundWorkSchedule.OneShot,
             requiresInternet = true,
         )
 
         val input = mutableMapOf("chatId" to "chat-1", "messages" to "first")
+        manager.enqueue(
+            key = "local",
+            worker = TestWorker::class,
+            conditions = conditions.copy(requiresInternet = false),
+            type = Type.Silent,
+            policy = BackgroundWorkPolicy.KEEP,
+            priority = BackgroundWorkPriority.Normal,
+            input = mapOf("messages" to "local"),
+        )
         manager.enqueue(
             key = "chat-1",
             worker = TestWorker::class,
@@ -56,12 +71,12 @@ class BackgroundWorkManagerTest {
             input = mapOf("messages" to "second"),
         )
         runCurrent()
-        assertEquals(emptyList(), received)
+        val local = listOf(mapOf("messages" to "local"))
+        assertEquals(local, received)
 
-        online = true
-        advanceTimeBy(5.seconds)
+        online.value = true
         runCurrent()
-        val expected = listOf(mapOf("chatId" to "chat-1", "messages" to "first"))
+        val expected = local + mapOf("chatId" to "chat-1", "messages" to "first")
         assertEquals(expected, received)
 
         advanceTimeBy(30.seconds)
@@ -245,9 +260,9 @@ class BackgroundWorkManagerTest {
 
     @Test
     fun `keep pending combines offline requests into one run`() = runTest {
-        var online = false
+        val online = MutableStateFlow(false)
         val started = mutableListOf<String>()
-        val manager = manager(isOnline = { online }) {
+        val manager = manager(onlineState = online) {
             TestWorker { started += it.getValue("message") }
         }
 
@@ -259,8 +274,7 @@ class BackgroundWorkManagerTest {
         runCurrent()
         assertEquals(emptyList(), started)
 
-        online = true
-        advanceTimeBy(5.seconds)
+        online.value = true
         runCurrent()
 
         assertEquals(listOf("first"), started)
@@ -316,13 +330,19 @@ class BackgroundWorkManagerTest {
     }
 
     private fun TestScope.manager(
-        isOnline: suspend () -> Boolean = { true },
+        onlineState: StateFlow<Boolean> = MutableStateFlow(true),
         create: () -> TestWorker,
     ): BackgroundWorkManager {
         app = koinApplication {
             modules(
                 backgroundWorkModule,
                 module {
+                    single<CoroutineScope>(named(SCOPE_ID_APP)) { backgroundScope }
+                    single<ConnectivityObserver> {
+                        object : ConnectivityObserver {
+                            override val isOnline = onlineState
+                        }
+                    }
                     backgroundWorker(
                         id = "test-worker",
                         worker = TestWorker::class,
@@ -331,11 +351,7 @@ class BackgroundWorkManagerTest {
                 },
             )
         }
-        return JvmBackgroundWorkManager(
-            scope = backgroundScope,
-            registry = app.koin.get(),
-            isOnline = isOnline,
-        )
+        return app.koin.get()
     }
 
     private class TestWorker(
