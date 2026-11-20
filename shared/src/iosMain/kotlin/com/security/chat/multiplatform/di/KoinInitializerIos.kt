@@ -17,6 +17,6 @@ public fun doInitKoin() {
     initDI()
     registerIosBackgroundWork()
     startOutgoingMessages()
-    startMeshModel()
+    startMeshMessages()
     startMeshBluetooth()
 }

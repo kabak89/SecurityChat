@@ -5,6 +5,9 @@ import com.security.chat.multiplatform.applifecycle.AppLifecycleImpl
 import com.security.chat.multiplatform.common.app.lifecycle.AppLifecycle
 import com.security.chat.multiplatform.features.chat.data.common.ChatEventsPublisher
 import com.security.chat.multiplatform.features.chat.data.common.OutgoingMessageScheduler
+import com.security.chat.multiplatform.features.mesh.data.MeshIncomingNotifier
+import com.security.chat.multiplatform.features.mesh.data.MeshMessageService
+import com.security.chat.multiplatform.features.push.data.LocalChatNotifications
 import com.security.chat.multiplatform.features.settings.data.common.SettingsCleanupHook
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -20,9 +23,15 @@ internal val sharedModule: Module =
         single<SettingsCleanupHook> {
             val chatEventsPublisher: ChatEventsPublisher = get()
             val outgoingMessageScheduler: OutgoingMessageScheduler = get()
+            val mesh: MeshMessageService = get()
             SettingsCleanupHook {
+                mesh.clear()
                 outgoingMessageScheduler.cancel()
                 chatEventsPublisher.stop()
             }
+        }
+        single<MeshIncomingNotifier> {
+            val notifications: LocalChatNotifications = get()
+            MeshIncomingNotifier(notifications::notifyMeshMessage)
         }
     }

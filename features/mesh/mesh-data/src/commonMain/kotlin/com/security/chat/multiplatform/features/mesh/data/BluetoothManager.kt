@@ -34,7 +34,8 @@ internal class BluetoothPacket(val peer: MeshPeer, val payload: ByteArray)
 
 internal expect class BluetoothManagerImpl(logManager: LogManager) : BluetoothManager
 
-internal abstract class BluetoothManagerBase : BluetoothManager {
+internal abstract class BluetoothManagerBase(protected val logManager: LogManager) :
+    BluetoothManager {
 
     private val readyPeers: MutableStateFlow<List<MeshPeer>> by lazy {
         MutableStateFlow(emptyList())
@@ -42,6 +43,7 @@ internal abstract class BluetoothManagerBase : BluetoothManager {
     private val readyPeersView: StateFlow<List<MeshPeer>> by lazy { readyPeers.asStateFlow() }
     private val incomingPackets = Channel<BluetoothPacket>(Channel.BUFFERED)
     private val incomingMessages = mutableMapOf<MeshPeer, IncomingMessage>()
+    private val rejectedTransferIds = mutableMapOf<MeshPeer, Int>()
     private val sendQueue = Mutex()
     private var nextMessageId = Random.nextInt(0x10000)
 
@@ -51,10 +53,13 @@ internal abstract class BluetoothManagerBase : BluetoothManager {
         incomingPackets.receiveAsFlow()
 
     final override fun handleIncomingPacket(peer: MeshPeer, payload: ByteArray): Boolean {
-        if (payload.size > MAX_MESH_PAYLOAD_BYTES) return false
+        if (payload.size > MAX_MESH_PAYLOAD_BYTES) {
+            logManager.e("Rejected oversized BLE frame (session=${peer.sessionId}, ${payload.meshFrameDetails()})")
+            return false
+        }
         if (payload.firstOrNull() != FRAME_MARKER) {
-            incomingMessages.remove(peer)
-            return incomingPackets.trySend(BluetoothPacket(peer, payload.copyOf())).isSuccess
+            discardIncomplete(peer = peer, reason = "unfragmented frame arrived")
+            return queueReceivedPacket(peer = peer, payload = payload.copyOf(), transferId = null)
         }
         return acceptFragment(peer, payload)
     }
@@ -71,32 +76,45 @@ internal abstract class BluetoothManagerBase : BluetoothManager {
 
             val messageId = nextMessageId
             nextMessageId = (nextMessageId + 1) and 0xffff
+            logManager.d {
+                "Started BLE transfer (session=${peer.sessionId}, transfer=$messageId, bytes=${payload.size})"
+            }
             var offset = 0
             var index = 0
-            while (offset < payload.size) {
-                val headerSize = if (index == 0) FIRST_FRAME_HEADER_SIZE else FRAME_HEADER_SIZE
-                val end = minOf(offset + MAX_MESH_PAYLOAD_BYTES - headerSize, payload.size)
-                val frame = ByteArray(headerSize + end - offset)
-                frame[0] = FRAME_MARKER
-                frame.writeUnsignedShort(MESSAGE_ID_OFFSET, messageId)
-                frame.writeUnsignedShort(FRAGMENT_INDEX_OFFSET, index)
-                if (index == 0) frame.writeUnsignedShort(FRAME_HEADER_SIZE, payload.size)
-                payload.copyInto(
-                    destination = frame,
-                    destinationOffset = headerSize,
-                    startIndex = offset,
-                    endIndex = end,
-                )
-                sendQueuedFrame(peer, frame)
-                offset = end
-                index++
+            try {
+                while (offset < payload.size) {
+                    val headerSize = if (index == 0) FIRST_FRAME_HEADER_SIZE else FRAME_HEADER_SIZE
+                    val end = minOf(offset + MAX_MESH_PAYLOAD_BYTES - headerSize, payload.size)
+                    val frame = ByteArray(headerSize + end - offset)
+                    frame[0] = FRAME_MARKER
+                    frame.writeUnsignedShort(MESSAGE_ID_OFFSET, messageId)
+                    frame.writeUnsignedShort(FRAGMENT_INDEX_OFFSET, index)
+                    if (index == 0) frame.writeUnsignedShort(FRAME_HEADER_SIZE, payload.size)
+                    payload.copyInto(
+                        destination = frame,
+                        destinationOffset = headerSize,
+                        startIndex = offset,
+                        endIndex = end,
+                    )
+                    sendQueuedFrame(peer, frame)
+                    offset = end
+                    index++
+                }
+            } finally {
+                logManager.d {
+                    "Finished local BLE transfer attempt (session=${peer.sessionId}, transfer=$messageId, " +
+                            "completed=${offset == payload.size}, localFragments=$index, localBytes=$offset/${payload.size})"
+                }
             }
         }
     }
 
     /** Call this on the same platform callback queue as [handleIncomingPacket]. */
     protected fun updateReadyPeers(peers: List<MeshPeer>) {
-        incomingMessages.keys.retainAll(peers)
+        for (peer in incomingMessages.keys - peers.toSet()) {
+            discardIncomplete(peer = peer, reason = "session ended")
+        }
+        rejectedTransferIds.keys.retainAll(peers)
         readyPeers.value = peers
     }
 
@@ -110,24 +128,53 @@ internal abstract class BluetoothManagerBase : BluetoothManager {
     }
 
     private fun acceptFragment(peer: MeshPeer, frame: ByteArray): Boolean {
-        if (frame.size <= FRAME_HEADER_SIZE) return false
+        if (frame.size <= FRAME_HEADER_SIZE) {
+            logManager.e("Rejected BLE fragment with a short header (session=${peer.sessionId}, bytes=${frame.size})")
+            return false
+        }
         val messageId = frame.readUnsignedShort(MESSAGE_ID_OFFSET)
         val index = frame.readUnsignedShort(FRAGMENT_INDEX_OFFSET)
         val headerSize = if (index == 0) FIRST_FRAME_HEADER_SIZE else FRAME_HEADER_SIZE
         val message = if (index == 0) {
-            incomingMessages.remove(peer)
-            if (frame.size <= headerSize) return false
+            discardIncomplete(peer = peer, reason = "new transfer=$messageId started")
+            rejectedTransferIds.remove(peer)
+            if (frame.size <= headerSize) {
+                logManager.e("Rejected first BLE fragment without data (session=${peer.sessionId}, ${frame.meshFrameDetails()})")
+                return false
+            }
             val size = frame.readUnsignedShort(FRAME_HEADER_SIZE)
-            if (size < frame.size - headerSize) return false
+            if (size < frame.size - headerSize) {
+                logManager.e(
+                    "Rejected first BLE fragment with invalid size (session=${peer.sessionId}, " +
+                            "${frame.meshFrameDetails()}, declaredBytes=$size)",
+                )
+                return false
+            }
+            logManager.d { "Started receiving BLE transfer (session=${peer.sessionId}, transfer=$messageId, bytes=$size)" }
             IncomingMessage(messageId, ByteArray(size))
         } else {
-            incomingMessages[peer]?.takeIf { it.id == messageId } ?: return false
+            val active = incomingMessages[peer]
+            if (active?.id != messageId) {
+                if (rejectedTransferIds.put(peer, messageId) != messageId) {
+                    logManager.e(
+                        "Rejected BLE fragment without matching first fragment (session=${peer.sessionId}, " +
+                                "${frame.meshFrameDetails()}, activeTransfer=${active?.id})",
+                    )
+                }
+                return false
+            }
+            active
         }
         val end = message.size + frame.size - headerSize
         if (index != message.nextIndex || end > message.payload.size ||
             (frame.size < MAX_MESH_PAYLOAD_BYTES && end < message.payload.size)
         ) {
             incomingMessages.remove(peer)
+            rejectedTransferIds[peer] = messageId
+            logManager.e(
+                "Rejected BLE fragment during assembly (session=${peer.sessionId}, ${frame.meshFrameDetails()}, " +
+                        "expectedFragment=${message.nextIndex}, assembledBytes=${message.size}/${message.payload.size})",
+            )
             return false
         }
         frame.copyInto(
@@ -137,12 +184,44 @@ internal abstract class BluetoothManagerBase : BluetoothManager {
         )
         if (end == message.payload.size) {
             incomingMessages.remove(peer)
-            return incomingPackets.trySend(BluetoothPacket(peer, message.payload)).isSuccess
+            logManager.d {
+                "Assembled BLE transfer (session=${peer.sessionId}, transfer=$messageId, fragments=${index + 1}, bytes=$end)"
+            }
+            return queueReceivedPacket(
+                peer = peer,
+                payload = message.payload,
+                transferId = messageId,
+            )
         }
         message.size = end
         message.nextIndex++
+        if (message.nextIndex % RECEIVE_PROGRESS_INTERVAL == 0) {
+            logManager.d {
+                "Receiving BLE transfer (session=${peer.sessionId}, transfer=$messageId, " +
+                        "nextFragment=${message.nextIndex}, assembledBytes=$end/${message.payload.size})"
+            }
+        }
         incomingMessages[peer] = message
         return true
+    }
+
+    private fun discardIncomplete(peer: MeshPeer, reason: String) {
+        val message = incomingMessages.remove(peer) ?: return
+        logManager.e(
+            "Discarded incomplete BLE transfer (session=${peer.sessionId}, transfer=${message.id}, " +
+                    "nextFragment=${message.nextIndex}, assembledBytes=${message.size}/${message.payload.size}, reason=$reason)",
+        )
+    }
+
+    private fun queueReceivedPacket(peer: MeshPeer, payload: ByteArray, transferId: Int?): Boolean {
+        val result = incomingPackets.trySend(BluetoothPacket(peer, payload))
+        if (!result.isSuccess) {
+            logManager.e(
+                "Could not queue received BLE packet (session=${peer.sessionId}, transfer=$transferId, " +
+                        "bytes=${payload.size}, queueClosed=${result.isClosed})",
+            )
+        }
+        return result.isSuccess
     }
 
     private class IncomingMessage(val id: Int, val payload: ByteArray) {
@@ -158,12 +237,25 @@ internal const val MESH_NOTIFY_UUID = "DDC1B612-6B19-4D08-AD8A-0C7036F6CD82"
 internal const val MAX_MESH_PAYLOAD_BYTES = 20
 internal const val MAX_MESH_MESSAGE_BYTES = 0xffff
 
+internal fun ByteArray.meshFrameDetails(): String {
+    if (size < FRAME_HEADER_SIZE || first() != FRAME_MARKER) return "bytes=$size"
+    return "transfer=${readUnsignedShort(MESSAGE_ID_OFFSET)}, " +
+            "fragment=${readUnsignedShort(FRAGMENT_INDEX_OFFSET)}, bytes=$size"
+}
+
+internal fun ByteArray.isFirstMeshFragment(): Boolean {
+    return size > FRAME_HEADER_SIZE && first() == FRAME_MARKER && readUnsignedShort(
+        FRAGMENT_INDEX_OFFSET,
+    ) == 0
+}
+
 /** 0xff is invalid in UTF-8, so legacy short text packets need no header. */
 private const val FRAME_MARKER: Byte = -1
 private const val MESSAGE_ID_OFFSET = 1
 private const val FRAGMENT_INDEX_OFFSET = 3
 private const val FRAME_HEADER_SIZE = 5
 private const val FIRST_FRAME_HEADER_SIZE = 7
+private const val RECEIVE_PROGRESS_INTERVAL = 32
 
 private fun ByteArray.readUnsignedShort(offset: Int): Int {
     return ((this[offset].toInt() and 0xff) shl 8) or (this[offset + 1].toInt() and 0xff)

@@ -513,6 +513,7 @@ class CallSessionTest {
     }
 
     private class FakeUserStorage : UserStorage {
+        override val sessionUserId = MutableStateFlow<String?>(null)
         override suspend fun getUserId(): String = "me"
         override suspend fun isUserAuthorized(): Boolean = true
         override suspend fun saveUserId(userId: String) = Unit

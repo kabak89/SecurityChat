@@ -49,13 +49,13 @@ internal class SignUpRepoImpl(
         )
 
         userStorage.saveKeys(cryptoKeys)
-        userStorage.saveUserId(userId = response.userId)
         tokenManager.saveTokens(
             tokens = Tokens(
                 accessToken = AccessToken(response.accessToken),
                 refreshToken = RefreshToken(response.refreshToken),
             ),
         )
+        userStorage.saveUserId(userId = response.userId)
     }
 
     override suspend fun isOnboardingPassed(): Boolean {

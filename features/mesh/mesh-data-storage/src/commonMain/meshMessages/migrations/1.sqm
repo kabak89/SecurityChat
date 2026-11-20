@@ -1,0 +1,6 @@
+ALTER TABLE MeshPacketRow ADD COLUMN relayExpiresAt INTEGER;
+
+-- Legacy rows lack a receive timestamp. Use the signed creation time plus one day.
+UPDATE MeshPacketRow
+SET relayExpiresAt = expiresAt - 6 * 24 * 60 * 60 * 1000
+WHERE outgoing = 0;

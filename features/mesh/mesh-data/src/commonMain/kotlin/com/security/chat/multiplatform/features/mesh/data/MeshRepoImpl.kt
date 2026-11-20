@@ -19,13 +19,12 @@ internal class MeshRepoImpl(
     override fun getIncomingPacketsFlow(): Flow<MeshIncomingPacket> {
         return bluetoothManager.getIncomingPacketsFlow().map { packet ->
             val text = packet.payload.decodeToString()
-            logManager.d { "MeshRepoImpl getIncomingPacketsFlow. info = $text" }
+            logManager.d { "Received BLE frame (session=${packet.peer.sessionId}, bytes=${packet.payload.size})" }
             MeshIncomingPacket(peer = packet.peer, text = text)
         }
     }
 
     override suspend fun send(peer: MeshPeer, text: String) {
-        logManager.d { "MeshRepoImpl send" }
         bluetoothManager.send(peer = peer, payload = text.encodeToByteArray())
     }
 }

@@ -1,0 +1,21 @@
+CREATE TABLE MeshPeerPacketRow (
+    packetHash TEXT NOT NULL,
+    peerId TEXT NOT NULL,
+    PRIMARY KEY(packetHash, peerId)
+);
+
+rememberSource:
+INSERT OR IGNORE INTO MeshPeerPacketRow VALUES (?, ?);
+
+getSources:
+SELECT peerId FROM MeshPeerPacketRow WHERE packetHash = :packetHash;
+
+deleteOrphanSources:
+DELETE FROM MeshPeerPacketRow
+WHERE packetHash NOT IN (
+    SELECT packetHash FROM MeshPacketRow
+    WHERE relayExpiresAt IS NULL OR relayExpiresAt > :now OR receipt IS NOT NULL
+);
+
+clearSources:
+DELETE FROM MeshPeerPacketRow;

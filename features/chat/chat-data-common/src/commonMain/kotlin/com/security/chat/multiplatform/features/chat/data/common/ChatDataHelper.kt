@@ -128,10 +128,12 @@ internal class ChatDataHelperImpl(
     ): List<String> {
         migrateMessageStatuses()
         val messages = chatNetworkManager.processNewMessages(serializedMessages)
-        saveAndConfirmReceivingOfMessages(messages = messages, chatId = chatId)
+        val saved = saveAndConfirmReceivingOfMessages(messages = messages, chatId = chatId)
+        val userId = checkNotNull(userStorage.getUserId())
+        if (saved.none { it.authorId != userId }) return emptyList()
         val unreadMessages = chatStorage.getUnreadMessages(
             chatId = chatId,
-            userId = checkNotNull(userStorage.getUserId()),
+            userId = userId,
         )
 
         return unreadMessages.map { message ->
@@ -344,7 +346,8 @@ internal class ChatDataHelperImpl(
             )
         }
 
-        chatStorage.saveReceivedMessages(messages = messagesToStore, receivedByUserId = userId)
+        val newMessages =
+            chatStorage.saveSyncedMessages(messages = messagesToStore, userId = userId)
         for (message in messagesToStore.filterIsInstance<MessageSM.Image>()) {
             if (chatStorage.isMessageDeleted(
                     chatId = chatId,
@@ -365,7 +368,7 @@ internal class ChatDataHelperImpl(
             messageIds = messageIds,
         )
 
-        return messagesToStore
+        return newMessages
     }
 
     private suspend fun getOtherParticipantIds(chatId: String, userId: String): List<String> {

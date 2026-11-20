@@ -9,12 +9,16 @@ import com.security.chat.multiplatform.features.chat.data.storage.entity.Message
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 public interface OutgoingMessageScheduler {
     public val sendDeleteMutex: Mutex
+    public val savedMessages: SharedFlow<String>
 
     public suspend fun saveAndSchedule(message: MessageSM)
     public suspend fun schedule(userId: String)
@@ -28,6 +32,8 @@ internal class OutgoingMessageSchedulerImpl(
 ) : OutgoingMessageScheduler {
 
     override val sendDeleteMutex = Mutex()
+    private val saved = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    override val savedMessages = saved.asSharedFlow()
     private val schedulingMutex = Mutex()
 
     override suspend fun saveAndSchedule(message: MessageSM) {
@@ -36,6 +42,7 @@ internal class OutgoingMessageSchedulerImpl(
             chatStorage.migrateMessageStatuses(message.authorId)
             withContext(NonCancellable) {
                 chatStorage.saveMessage(message)
+                saved.tryEmit(message.authorId)
                 enqueue(message.authorId)
             }
         }

@@ -3,14 +3,15 @@ package com.security.chat.multiplatform.common.platform
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import androidx.work.WorkManager
 import com.security.chat.multiplatform.applifecycle.AppLifecycleChanger
 import com.security.chat.multiplatform.common.platformspecific.MainActivity
 import com.security.chat.multiplatform.di.initDI
-import com.security.chat.multiplatform.di.startMeshModel
+import com.security.chat.multiplatform.di.startMeshMessages
 import com.security.chat.multiplatform.di.startOutgoingMessages
+import com.security.chat.multiplatform.features.mesh.data.MeshMessageService
 import com.security.chat.multiplatform.features.mesh.data.MeshScanWakeHandler
 import com.security.chat.multiplatform.features.mesh.data.startMeshBluetooth
-import com.security.chat.multiplatform.features.mesh.domain.LogManager
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
@@ -21,8 +22,6 @@ import org.koin.dsl.module
 
 public class SecurityChatApplication : Application(), MeshScanWakeHandler {
 
-    private var hasScheduledMeshDiscoverySync = false
-
     override fun onCreate() {
         super.onCreate()
 
@@ -30,9 +29,10 @@ public class SecurityChatApplication : Application(), MeshScanWakeHandler {
             androidContext(this@SecurityChatApplication)
         }
         startOutgoingMessages()
-        startMeshModel()
+        startMeshMessages()
         startMeshBluetooth()
-        schedulePeriodicMeshSync(this)
+        WorkManager.getInstance(this).cancelUniqueWork("mesh_sync")
+        WorkManager.getInstance(this).cancelUniqueWork("mesh_sync_on_discovery")
 
         val appLifecycleChanger: AppLifecycleChanger = get()
         appLifecycleChanger.onAppStarted()
@@ -41,10 +41,7 @@ public class SecurityChatApplication : Application(), MeshScanWakeHandler {
     }
 
     override fun onMeshScanWake() {
-        if (hasScheduledMeshDiscoverySync) return
-        hasScheduledMeshDiscoverySync = true
-        get<LogManager>().d { "Android mesh received background scan result, scheduling sync" }
-        scheduleMeshDiscoverySync(this)
+        get<MeshMessageService>().scheduleExchange()
     }
 
     private fun observeActivity() {

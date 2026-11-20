@@ -1,0 +1,27 @@
+CREATE TABLE MeshPeerTransferRow (
+    peerId TEXT NOT NULL,
+    packetHash TEXT NOT NULL,
+    PRIMARY KEY(peerId, packetHash)
+);
+
+rememberTransfer:
+INSERT OR IGNORE INTO MeshPeerTransferRow (peerId, packetHash)
+SELECT :peerId, packetHash FROM MeshPacketRow
+WHERE ownerId = :ownerId AND packetHash = :packetHash
+  AND packet IS NOT NULL AND expiresAt > :now
+  AND (relayExpiresAt IS NULL OR relayExpiresAt > :now);
+
+hasTransfer:
+SELECT EXISTS (
+    SELECT 1 FROM MeshPeerTransferRow WHERE peerId = :peerId AND packetHash = :packetHash
+);
+
+deleteExpiredTransfers:
+DELETE FROM MeshPeerTransferRow
+WHERE packetHash NOT IN (
+    SELECT packetHash FROM MeshPacketRow
+    WHERE packet IS NOT NULL AND expiresAt > :now
+);
+
+clearTransfers:
+DELETE FROM MeshPeerTransferRow;

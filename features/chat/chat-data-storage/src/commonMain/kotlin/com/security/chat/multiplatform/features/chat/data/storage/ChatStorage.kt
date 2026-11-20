@@ -33,6 +33,11 @@ public interface ChatStorage {
     public suspend fun saveMessage(message: MessageSM)
     public suspend fun saveMessages(messages: List<MessageSM>)
     public suspend fun saveReceivedMessages(messages: List<MessageSM>, receivedByUserId: String)
+    public suspend fun saveNewIncomingMessage(message: MessageSM, receivedByUserId: String): Boolean
+    public suspend fun saveSyncedMessages(
+        messages: List<MessageSM>,
+        userId: String,
+    ): List<MessageSM>
     public suspend fun enqueueStoredReceivedEvents(chatId: String, receivedByUserId: String)
     public fun observePendingReceivedEvents(receivedByUserId: String): Flow<List<MessageReceivedEventSM>>
     public suspend fun markReceivedEventPublished(id: String, receivedByUserId: String)
@@ -118,6 +123,8 @@ public interface ChatStorage {
         messageId: String,
         authorId: String,
     ): Boolean
+
+    public suspend fun getOutgoingTextForMesh(userId: String): List<MessageSM.Text>
 }
 
 internal class ChatStorageImpl(
@@ -196,6 +203,45 @@ internal class ChatStorageImpl(
                     receivedByUserId = receivedByUserId,
                     messageIds = messages.map { it.id },
                 )
+            }
+        }
+    }
+
+    override suspend fun saveNewIncomingMessage(
+        message: MessageSM,
+        receivedByUserId: String,
+    ): Boolean {
+        return saveSyncedMessages(
+            messages = listOf(message),
+            userId = receivedByUserId,
+        ).isNotEmpty()
+    }
+
+    override suspend fun saveSyncedMessages(
+        messages: List<MessageSM>,
+        userId: String,
+    ): List<MessageSM> {
+        if (messages.isEmpty()) return emptyList()
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                val newMessages = messages.filter { message ->
+                    if (message.authorId != userId &&
+                        db.messageTableQueries.containsMessage(message.id).executeAsOne()
+                    ) {
+                        return@filter false
+                    }
+                    db.persistMessage(message)
+                    db.messageTableQueries.containsMessage(message.id).executeAsOne()
+                }
+                if (newMessages.isNotEmpty()) {
+                    db.messageReceivedEventsQueries.enqueue(
+                        eventIdPrefix = "message.received:${userId.length}:$userId:",
+                        receivedByUserId = userId,
+                        messageIds = newMessages.map { it.id },
+                    )
+                }
+                newMessages
             }
         }
     }
@@ -708,6 +754,20 @@ internal class ChatStorageImpl(
             dbCreator.getDb().pendingMessageDeletionsQueries
                 .isPending(chatId = chatId, messageId = messageId, authorId = authorId)
                 .executeAsOne() > 0L
+        }
+    }
+
+    override suspend fun getOutgoingTextForMesh(userId: String): List<MessageSM.Text> {
+        return withContext(dispatcherProvider.IO) {
+            val db = dbCreator.getDb()
+            db.transactionWithResult {
+                db.messageTableQueries
+                    .getOutgoingTextForMesh(userId = userId, mapper = ::JoinedMessageRow)
+                    .executeAsList()
+                    .chunked(500)
+                    .flatMap { db.attachRecipients(it) }
+                    .filterIsInstance<MessageSM.Text>()
+            }
         }
     }
 

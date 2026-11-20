@@ -162,6 +162,56 @@ class MessageDeliveryStatusTest {
         }
     }
 
+    @Test
+    fun `mesh selects unsent text and text with recipients still awaiting delivery`() = runTest {
+        withStorage { storage ->
+            val pending =
+                message().copy(recipients = listOf(MessageRecipientSM("peer", Status.Sent)))
+            storage.saveMessage(pending.copy(id = "awaiting-delivery"))
+            storage.saveMessage(
+                pending.copy(
+                    id = "unsent",
+                    recipients = listOf(MessageRecipientSM("peer", Status.Created)),
+                ),
+            )
+            storage.saveMessage(
+                pending.copy(
+                    id = "delivered",
+                    recipients = listOf(
+                        MessageRecipientSM("me", Status.Sent),
+                        MessageRecipientSM("peer", Status.ReceivedByReceiver),
+                        MessageRecipientSM("other", Status.Read),
+                    ),
+                ),
+            )
+            storage.saveMessage(pending.copy(id = "incoming", authorId = "other"))
+            storage.saveMessage(pending.copy(id = "awaiting-deletion"))
+            storage.enqueueMessageDeletion(
+                chatId = pending.chatId,
+                messageId = "awaiting-deletion",
+                authorId = "me",
+            )
+            storage.saveMessage(
+                MessageSM.Image(
+                    id = "image",
+                    chatId = pending.chatId,
+                    recipients = pending.recipients,
+                    authorId = pending.authorId,
+                    timestamp = pending.timestamp,
+                    fileId = "file",
+                    key = "key",
+                    isDownloaded = true,
+                ),
+            )
+
+            assertEquals(
+                listOf("awaiting-delivery", "unsent"),
+                storage.getOutgoingTextForMesh("me").map { it.id },
+            )
+            assertEquals(listOf("unsent"), storage.getUnsentMessages("me").map { it.id })
+        }
+    }
+
     private suspend fun TestScope.withStorage(block: suspend (ChatStorage) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {

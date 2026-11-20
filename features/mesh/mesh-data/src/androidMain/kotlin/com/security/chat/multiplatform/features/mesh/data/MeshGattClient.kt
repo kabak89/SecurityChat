@@ -71,8 +71,14 @@ internal class MeshGattClient(
                 characteristic.value = payload
                 connection.writeCharacteristic(characteristic)
             }
+            if (!accepted) {
+                logManager.e("Android rejected GATT write submission (session=${peer.sessionId}, ${payload.meshFrameDetails()})")
+            }
             check(accepted) { "Bluetooth rejected the mesh write" }
             val status = withTimeoutOrNull(WRITE_TIMEOUT_MS) { result.await() }
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                logManager.e("Android GATT write failed (session=${peer.sessionId}, ${payload.meshFrameDetails()}, status=$status)")
+            }
             if (status == null) close()
             check(status == BluetoothGatt.GATT_SUCCESS) { "Mesh GATT write failed: $status" }
         } finally {
@@ -83,6 +89,7 @@ internal class MeshGattClient(
     override fun onConnectionStateChange(connection: BluetoothGatt, status: Int, newState: Int) {
         handler.post {
             if (gatt !== connection) return@post
+            logManager.d { "Android GATT client connection changed (session=${peer.sessionId}, status=$status, state=$newState)" }
             when {
                 status != BluetoothGatt.GATT_SUCCESS -> fail("Mesh GATT connection failed: $status")
                 newState == BluetoothProfile.STATE_DISCONNECTED -> close()
@@ -126,7 +133,7 @@ internal class MeshGattClient(
             }
             handler.removeCallbacks(setupTimeout)
             readyPeer = peer
-            logManager.d { "Android mesh GATT subscription confirmed" }
+            logManager.d { "Android mesh GATT subscription confirmed (session=${peer.sessionId})" }
             onStateChanged(this)
         }
     }
@@ -148,7 +155,12 @@ internal class MeshGattClient(
         characteristic: BluetoothGattCharacteristic,
         value: ByteArray,
     ) {
-        receive(connection = connection, characteristic = characteristic, value = value)
+        receive(
+            connection = connection,
+            characteristic = characteristic,
+            value = value,
+            callback = "modern",
+        )
     }
 
     @Suppress("OVERRIDE_DEPRECATION")
@@ -158,7 +170,12 @@ internal class MeshGattClient(
     ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             val value = characteristic.value?.copyOf() ?: return
-            receive(connection = connection, characteristic = characteristic, value = value)
+            receive(
+                connection = connection,
+                characteristic = characteristic,
+                value = value,
+                callback = "legacy",
+            )
         }
     }
 
@@ -180,12 +197,27 @@ internal class MeshGattClient(
         connection: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
         value: ByteArray,
+        callback: String,
     ) {
+        val firstFragment = value.isFirstMeshFragment()
+        if (firstFragment) {
+            logManager.d {
+                "Android GATT onCharacteristicChanged (session=${peer.sessionId}, callback=$callback, " +
+                        "${value.meshFrameDetails()})"
+            }
+        }
         handler.post {
             if (gatt !== connection || readyPeer == null || characteristic.uuid != NOTIFY_UUID) {
+                if (firstFragment) {
+                    logManager.e(
+                        "Android GATT client ignored the first notification fragment (session=${peer.sessionId}, " +
+                                "${value.meshFrameDetails()}, sameConnection=${gatt === connection}, " +
+                                "ready=${readyPeer != null}, meshCharacteristic=${characteristic.uuid == NOTIFY_UUID})",
+                    )
+                }
                 return@post
             }
-            if (!onPacket(peer, value)) logManager.e("Could not queue a mesh Bluetooth packet")
+            onPacket(peer, value)
         }
     }
 

@@ -39,8 +39,8 @@ import platform.darwin.dispatch_get_main_queue
 
 @OptIn(ExperimentalForeignApi::class)
 internal actual class BluetoothManagerImpl actual constructor(
-    private val logManager: LogManager,
-) : BluetoothManagerBase() {
+    logManager: LogManager,
+) : BluetoothManagerBase(logManager) {
 
     private val serviceUuid = CBUUID.UUIDWithString(MESH_SERVICE_UUID)
     private val writeUuid = CBUUID.UUIDWithString(MESH_WRITE_UUID)

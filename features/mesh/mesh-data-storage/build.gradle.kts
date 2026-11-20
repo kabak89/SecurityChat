@@ -16,6 +16,12 @@ sqldelight {
             generateAsync = true
             dialect(libs.sqlite.dialect)
         }
+        create("MeshMessagesDb") {
+            packageName = moduleNamespace
+            srcDirs.setFrom("src/commonMain/meshMessages")
+            generateAsync = true
+            dialect(libs.sqlite.dialect)
+        }
     }
     linkSqlite = false
 }

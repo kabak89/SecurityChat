@@ -6,7 +6,7 @@ import com.security.chat.multiplatform.common.core.threading.DispatcherProviderI
 import com.security.chat.multiplatform.common.crash.report.initCrashReporting
 import com.security.chat.multiplatform.common.log.Log
 import com.security.chat.multiplatform.features.chat.data.common.OutgoingMessageScheduler
-import com.security.chat.multiplatform.features.mesh.domain.MeshModel
+import com.security.chat.multiplatform.features.mesh.data.MeshMessageService
 import com.security.chat.multiplatform.features.user.data.storage.UserStorage
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
@@ -51,9 +51,9 @@ public fun initDI(appDeclaration: KoinAppDeclaration = {}) {
 
 internal expect fun initKoin(appDeclaration: KoinAppDeclaration = {})
 
-internal fun startMeshModel() {
+internal fun startMeshMessages() {
     val koin = KoinPlatform.getKoin()
-    koin.get<MeshModel>().start(parentScope = koin.get(named(SCOPE_ID_APP)))
+    koin.get<MeshMessageService>().start(scope = koin.get(named(SCOPE_ID_APP)))
 }
 
 internal fun startOutgoingMessages() {

@@ -23,10 +23,9 @@ public val pushBackgroundWorkModule: Module = module {
         worker = ProcessNewMessageWorker::class,
         create = {
             ProcessNewMessageWorker(
-                applicationContext = get(),
                 pushRepository = get(),
-                intentBuilder = get(),
                 pushStorage = get(),
+                presenter = get(),
             )
         },
         foregroundNotification = { text -> createSyncNotification(context = get(), text = text) },

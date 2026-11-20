@@ -1,0 +1,5 @@
+CREATE TABLE MeshPeerTransferRow (
+    peerId TEXT NOT NULL,
+    packetHash TEXT NOT NULL,
+    PRIMARY KEY(peerId, packetHash)
+);

@@ -67,6 +67,7 @@ public class PushRepositoryImpl(
             serializedMessages = serializedMessages,
             chatId = chatId,
         )
+        if (messagesTexts.isEmpty()) return NotificationInfo(title = "", messages = emptyList())
 
         val groupChat = chatsDataHelper.getChatInfo(chatId) ?: run {
             chatsDataHelper.fetchChatInfo(chatId)

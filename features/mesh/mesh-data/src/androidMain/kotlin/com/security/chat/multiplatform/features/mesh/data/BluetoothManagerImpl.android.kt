@@ -46,8 +46,8 @@ import android.bluetooth.BluetoothManager as AndroidBluetoothManager
 
 @SuppressLint("MissingPermission")
 internal actual class BluetoothManagerImpl actual constructor(
-    private val logManager: LogManager,
-) : BluetoothManagerBase(), KoinComponent {
+    logManager: LogManager,
+) : BluetoothManagerBase(logManager), KoinComponent {
 
     private val context: Context by inject()
     private val handler = Handler(Looper.getMainLooper())
@@ -137,6 +137,7 @@ internal actual class BluetoothManagerImpl actual constructor(
     fun onBackgroundScanResults(results: List<ScanResult>) {
         handler.post {
             val currentScan = scan?.takeIf { it.usesPendingIntent } ?: return@post
+            logManager.d { "Android mesh background BLE scan returned results (count=${results.size})" }
             results.forEach(currentScan::handleResult)
         }
     }
@@ -368,6 +369,12 @@ internal actual class BluetoothManagerImpl actual constructor(
             val result = CompletableDeferred<Int>()
             pendingNotification = device to result
             try {
+                val traceFirstFragment = payload.isFirstMeshFragment()
+                if (traceFirstFragment) {
+                    logManager.d {
+                        "Submitting Android GATT notification (session=${peer.sessionId}, ${payload.meshFrameDetails()})"
+                    }
+                }
                 val accepted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     gatt.notifyCharacteristicChanged(device, outgoing, false, payload) ==
                             BluetoothStatusCodes.SUCCESS
@@ -375,8 +382,25 @@ internal actual class BluetoothManagerImpl actual constructor(
                     outgoing.value = payload
                     gatt.notifyCharacteristicChanged(device, outgoing, false)
                 }
+                if (!accepted) {
+                    logManager.e(
+                        "Android rejected GATT notification submission " +
+                                "(session=${peer.sessionId}, ${payload.meshFrameDetails()})",
+                    )
+                }
                 check(accepted) { "Bluetooth rejected the mesh notification" }
                 val status = withTimeoutOrNull(NOTIFICATION_TIMEOUT_MS) { result.await() }
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    logManager.e(
+                        "Android GATT notification failed (session=${peer.sessionId}, " +
+                                "${payload.meshFrameDetails()}, status=$status)",
+                    )
+                } else if (traceFirstFragment) {
+                    logManager.d {
+                        "Android GATT onNotificationSent succeeded locally " +
+                                "(session=${peer.sessionId}, ${payload.meshFrameDetails()}, status=$status)"
+                    }
+                }
                 if (status == null) {
                     sessions.remove(device)
                     publishReadyPeers()
@@ -413,7 +437,10 @@ internal actual class BluetoothManagerImpl actual constructor(
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             handler.post {
                 if (host !== this || newState != BluetoothProfile.STATE_DISCONNECTED) return@post
-                sessions.remove(device)
+                val peer = sessions.remove(device)
+                if (peer != null) {
+                    logManager.d { "Android GATT server peer disconnected (session=${peer.sessionId}, status=$status)" }
+                }
                 publishReadyPeers()
                 if (pendingNotification?.first == device) {
                     pendingNotification?.second?.complete(BluetoothGatt.GATT_FAILURE)
@@ -475,10 +502,15 @@ internal actual class BluetoothManagerImpl actual constructor(
                 if (status != BluetoothGatt.GATT_SUCCESS) return@post
 
                 if (enabled) {
-                    sessions.getOrPut(device) { MeshPeer(sessionId = UUID.randomUUID().toString()) }
-                    logManager.d { "Android mesh peer subscribed to GATT notifications" }
+                    val peer = sessions.getOrPut(device) {
+                        MeshPeer(
+                            sessionId = UUID.randomUUID().toString(),
+                        )
+                    }
+                    logManager.d { "Android mesh peer subscribed to GATT notifications (session=${peer.sessionId})" }
                 } else {
-                    sessions.remove(device)
+                    val peer = sessions.remove(device)
+                    logManager.d { "Android mesh peer disabled GATT notifications (session=${peer?.sessionId})" }
                 }
                 publishReadyPeers()
             }
@@ -495,6 +527,11 @@ internal actual class BluetoothManagerImpl actual constructor(
         ) {
             handler.post {
                 val peer = sessions[device]
+                if (value.isFirstMeshFragment()) {
+                    logManager.d {
+                        "Android GATT server received a write request (session=${peer?.sessionId}, ${value.meshFrameDetails()})"
+                    }
+                }
                 val status = when {
                     characteristic.uuid != WRITE_UUID || preparedWrite ->
                         BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
@@ -504,7 +541,25 @@ internal actual class BluetoothManagerImpl actual constructor(
                     peer != null && handleIncomingPacket(peer, value) -> BluetoothGatt.GATT_SUCCESS
                     else -> BluetoothGatt.GATT_FAILURE
                 }
-                if (responseNeeded) server?.sendResponse(device, requestId, status, offset, null)
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    logManager.e(
+                        "Android GATT server rejected a write request (session=${peer?.sessionId}, " +
+                                "${value.meshFrameDetails()}, status=$status)",
+                    )
+                }
+                if (responseNeeded && server?.sendResponse(
+                        device,
+                        requestId,
+                        status,
+                        offset,
+                        null,
+                    ) != true
+                ) {
+                    logManager.e(
+                        "Android GATT server could not respond to a write request (session=${peer?.sessionId}, " +
+                                "${value.meshFrameDetails()}, status=$status)",
+                    )
+                }
             }
         }
 

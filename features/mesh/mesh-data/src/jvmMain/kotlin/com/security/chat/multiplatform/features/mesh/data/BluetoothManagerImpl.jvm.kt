@@ -39,8 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.uuid.Uuid
 
 internal actual class BluetoothManagerImpl actual constructor(
-    private val logManager: LogManager,
-) : BluetoothManagerBase(), KoinComponent {
+    logManager: LogManager,
+) : BluetoothManagerBase(logManager), KoinComponent {
 
     private val appScope: CoroutineScope by inject(named(SCOPE_ID_APP))
     private val dispatcher = Dispatchers.IO.limitedParallelism(1)

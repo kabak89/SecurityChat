@@ -3,9 +3,13 @@ package com.security.chat.multiplatform.features.user.data.storage
 import com.security.chat.multiplatform.common.core.threading.DispatcherProviderInterface
 import com.security.chat.multiplatform.common.encryption.entity.CryptoKeys
 import com.security.chat.multiplatform.common.settings.EncryptedSettings
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 public interface UserStorage {
+    public val sessionUserId: StateFlow<String?>
     public suspend fun isUserAuthorized(): Boolean
     public suspend fun saveUserId(userId: String)
     public suspend fun getUserId(): String?
@@ -25,6 +29,9 @@ internal class UserStorageImpl(
     private val encryptedSettings: EncryptedSettings,
 ) : UserStorage {
 
+    private val activeUserId by lazy { MutableStateFlow(encryptedSettings.getString(KEY_USER_ID)) }
+    override val sessionUserId: StateFlow<String?> get() = activeUserId.asStateFlow()
+
     override suspend fun isUserAuthorized(): Boolean {
         return withContext(dispatcherProvider.IO) {
             encryptedSettings.getString(KEY_USER_ID) != null
@@ -37,6 +44,7 @@ internal class UserStorageImpl(
                 key = KEY_USER_ID,
                 value = userId,
             )
+            activeUserId.value = userId
         }
     }
 
@@ -147,6 +155,7 @@ internal class UserStorageImpl(
                 key = KEY_DEVICE_ID,
                 value = null,
             )
+            activeUserId.value = null
         }
     }
 }

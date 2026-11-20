@@ -1,0 +1,64 @@
+CREATE TABLE MeshPacketRow (
+    packetHash TEXT NOT NULL PRIMARY KEY,
+    ownerId TEXT NOT NULL,
+    messageId TEXT NOT NULL,
+    expiresAt INTEGER NOT NULL,
+    outgoing INTEGER NOT NULL,
+    packet TEXT,
+    receipt TEXT,
+    pendingDisplay INTEGER NOT NULL,
+    relayExpiresAt INTEGER
+);
+
+CREATE INDEX mesh_packet_owner_idx ON MeshPacketRow(ownerId, expiresAt);
+CREATE INDEX mesh_packet_message_idx ON MeshPacketRow(ownerId, messageId, outgoing);
+
+getPacket:
+SELECT * FROM MeshPacketRow WHERE ownerId = :ownerId AND packetHash = :packetHash;
+
+getOutgoing:
+SELECT * FROM MeshPacketRow
+WHERE ownerId = :ownerId AND messageId = :messageId AND outgoing = 1
+ORDER BY rowid DESC
+LIMIT 1;
+
+getPackets:
+SELECT * FROM MeshPacketRow
+WHERE ownerId = :ownerId AND expiresAt > :now
+  AND (receipt IS NOT NULL OR (packet IS NOT NULL AND (relayExpiresAt IS NULL OR relayExpiresAt > :now)))
+ORDER BY rowid;
+
+countRelayPackets:
+SELECT count(*) FROM MeshPacketRow
+WHERE ownerId = :ownerId AND outgoing = 0 AND relayExpiresAt > :now;
+
+insertPacket:
+INSERT OR IGNORE INTO MeshPacketRow VALUES ?;
+
+saveReceipt:
+UPDATE MeshPacketRow
+SET receipt = :receipt, packet = CASE WHEN outgoing = 1 OR pendingDisplay THEN packet ELSE NULL END
+WHERE ownerId = :ownerId AND packetHash = :packetHash;
+
+finishDisplay:
+UPDATE MeshPacketRow
+SET pendingDisplay = 0, packet = CASE WHEN receipt IS NULL THEN packet ELSE NULL END
+WHERE ownerId = :ownerId AND packetHash = :packetHash;
+
+deleteExpired:
+DELETE FROM MeshPacketRow WHERE expiresAt <= :now AND outgoing = 0;
+
+discardExpiredRelayPackets:
+UPDATE MeshPacketRow SET packet = NULL, pendingDisplay = 0
+WHERE relayExpiresAt <= :now AND packet IS NOT NULL;
+
+discardPacket:
+UPDATE MeshPacketRow SET packet = NULL, pendingDisplay = 0
+WHERE ownerId = :ownerId AND packetHash = :packetHash;
+
+discardExpiredOutgoing:
+UPDATE MeshPacketRow SET packet = NULL, receipt = NULL
+WHERE expiresAt <= :now AND outgoing = 1 AND (packet IS NOT NULL OR receipt IS NOT NULL);
+
+clearPackets:
+DELETE FROM MeshPacketRow;

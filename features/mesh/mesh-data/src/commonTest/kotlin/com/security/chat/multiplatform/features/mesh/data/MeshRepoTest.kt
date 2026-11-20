@@ -29,7 +29,7 @@ class MeshRepoTest {
     @Test
     fun `fragmented UTF-8 is reassembled before the consumer starts`() = runTest {
         val frameSizes = mutableListOf<Int>()
-        val loopback = TestBluetoothManager { peer, frame ->
+        val loopback = TestBluetoothManager(logManager) { peer, frame ->
             frameSizes += frame.size
             assertTrue(handleIncomingPacket(peer, frame))
             frame.fill(0)
@@ -53,7 +53,7 @@ class MeshRepoTest {
         val firstFrameStarted = CompletableDeferred<Unit>()
         val releaseFirstFrame = CompletableDeferred<Unit>()
         val frames = mutableListOf<ByteArray>()
-        val loopback = TestBluetoothManager { peer, frame ->
+        val loopback = TestBluetoothManager(logManager) { peer, frame ->
             frames += frame
             if (frames.size == 1) {
                 firstFrameStarted.complete(Unit)
@@ -86,7 +86,13 @@ class MeshRepoTest {
     @Test
     fun `incomplete messages are discarded on a missing frame or disconnect`() = runTest {
         val frames = mutableListOf<ByteArray>()
-        val manager = TestBluetoothManager { _, frame -> frames += frame }
+        val errors = mutableListOf<String>()
+        val logger = object : LogManager by logManager {
+            override fun e(message: String, error: Throwable?) {
+                errors += message
+            }
+        }
+        val manager = TestBluetoothManager(logger) { _, frame -> frames += frame }
         val repo = MeshRepoImpl(bluetoothManager = manager, logManager = logManager)
         val peer = MeshPeer(sessionId = "session")
         val text = "A complete message ".repeat(4)
@@ -96,10 +102,14 @@ class MeshRepoTest {
         assertTrue(manager.handleIncomingPacket(peer, frames.first()))
         assertFalse(manager.handleIncomingPacket(peer, frames[2]))
         assertFalse(manager.handleIncomingPacket(peer, frames[1]))
+        assertTrue(errors.single().contains("fragment=2"))
+        assertTrue(errors.single().contains("expectedFragment=1"))
 
         assertTrue(manager.handleIncomingPacket(peer, frames.first()))
         manager.setReadyPeers(emptyList())
         assertFalse(manager.handleIncomingPacket(peer, frames[1]))
+        assertTrue(errors[1].contains("reason=session ended"))
+        assertTrue(errors[2].contains("without matching first fragment"))
 
         manager.setReadyPeers(listOf(peer))
         frames.forEach { assertTrue(manager.handleIncomingPacket(peer, it)) }
@@ -107,8 +117,9 @@ class MeshRepoTest {
     }
 
     private class TestBluetoothManager(
+        logManager: LogManager,
         private val onSend: suspend TestBluetoothManager.(MeshPeer, ByteArray) -> Unit,
-    ) : BluetoothManagerBase() {
+    ) : BluetoothManagerBase(logManager) {
 
         override fun start() = Unit
 
